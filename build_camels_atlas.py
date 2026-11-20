@@ -27,6 +27,10 @@ Usage
   python3 build_camels_atlas.py --artifact      # body-only HTML, for publishing as a claude.ai artifact
   python3 build_camels_atlas.py --recluster     # redo the topic clustering (then check/rename topics)
 
+Layout positions are stored in atlas_positions.json (--positions) and reused on later builds, so the
+maps keep their shape as papers are added; only new papers and authors are placed. --relayout
+recomputes every layout from scratch.
+
 Safety: before writing anything, the script checks that it found at least 90% as many papers as the
 previous build in --out, that arXiv returned >= 95% of the requested records and that >= 90% of
 entries have embeddings. If not, it stops without touching the page or the cache (--force overrides).
@@ -336,6 +340,117 @@ def ads_author(a):
     return f"{first.strip()} {last.strip()}".strip()
 
 
+# ----------------------------------------------------------------------------- layouts
+# Positions are stored in a JSON file (--positions) and kept fixed on later builds, so the maps
+# don't rearrange when papers are added. Only new papers/authors are placed.
+
+def spiral3d(n):
+    """Deterministic start positions on a spherical spiral."""
+    i = np.arange(n)
+    r = 12 * np.cbrt(0.5 + i)
+    th = i * np.pi * (3 - np.sqrt(5))
+    ph = np.arccos(1 - 2 * (i + 0.5) / max(n, 1))
+    return np.stack([r * np.sin(ph) * np.cos(th), r * np.sin(ph) * np.sin(th), r * np.cos(ph)], 1)
+
+
+def force3d(pos, s, t, length, k, r, charge, gravity, fixed, iters=300):
+    """3D force layout (d3-force style: springs, many-body repulsion, collision, centering).
+    Nodes with fixed=True keep their position but still push and pull the others."""
+    pos, vel = pos.astype(float).copy(), np.zeros_like(pos, dtype=float)
+    deg = np.bincount(np.concatenate([s, t]), minlength=len(pos)).astype(float)
+    bias = deg[s] / np.maximum(deg[s] + deg[t], 1)
+    # all nodes are updated at once, so links on highly connected nodes are weakened (as d3 does by
+    # default) to keep their summed pull from overshooting; a step cap is a further safeguard
+    k = np.minimum(k, 1.0 / np.maximum(np.minimum(deg[s], deg[t]), 1)) if len(s) else k
+    free = ~fixed
+    rr = r[:, None] + r[None, :] + 1.5
+    alpha, decay = 1.0, 1 - 0.001 ** (1 / 300)
+    for _ in range(iters):
+        if len(s):
+            d = pos[t] + vel[t] - pos[s] - vel[s]
+            dist = np.maximum(np.linalg.norm(d, axis=1), 1e-6)
+            dv = d * ((dist - length) / dist * alpha * k)[:, None]
+            np.subtract.at(vel, t, dv * bias[:, None])
+            np.add.at(vel, s, dv * (1 - bias)[:, None])
+        diff = pos[None, :, :] - pos[:, None, :]          # [i, j] = pos_j - pos_i
+        d2 = np.maximum((diff ** 2).sum(-1), 1.0)
+        np.fill_diagonal(d2, np.inf)
+        f = charge * alpha / d2
+        dd = np.sqrt(d2)
+        f = f + np.where(dd < rr, (rr - dd) / dd * 0.35, 0.0)  # collision
+        vel -= (diff * f[..., None]).sum(1)
+        vel -= pos * gravity * alpha
+        vel *= 0.6
+        step = np.linalg.norm(vel, axis=1, keepdims=True)
+        vel *= np.minimum(1.0, 30.0 / np.maximum(step, 1e-9))
+        vel[~free] = 0
+        pos += vel
+        alpha -= alpha * decay
+    return pos
+
+
+def network_positions(keys, s, t, length, k, r, charge, gravity, old):
+    """Positions for a network. Known keys keep their stored position; new nodes start next to
+    their known neighbours (or on the outer spiral) and settle while the known ones stay fixed."""
+    n = len(keys)
+    fixed = np.array([key in old for key in keys], bool)
+    if not fixed.any():
+        return force3d(spiral3d(n), s, t, length, k, r, charge, gravity, fixed)
+    pos = spiral3d(n) * 3.0
+    nb = defaultdict(list)
+    for a, b in zip(s, t):
+        nb[a].append(b)
+        nb[b].append(a)
+    for i, key in enumerate(keys):
+        if fixed[i]:
+            pos[i] = old[key]
+    for i in np.where(~fixed)[0]:
+        known = [j for j in nb[i] if fixed[j]]
+        if known:
+            pos[i] = np.mean(pos[known], 0) + np.cos(np.arange(3) + i) * 5
+    if fixed.all():
+        return pos
+    return force3d(pos, s, t, length, k, r, charge, gravity, fixed)
+
+
+def tsne(X, dim):
+    Y = TSNE(dim, perplexity=12, metric="cosine", init="pca", random_state=1, learning_rate="auto").fit_transform(X)
+    Y = Y - Y.mean(0)
+    return Y / np.abs(Y).max()
+
+
+def topic_positions(X, T, emb, uids, titles, store):
+    """2D and 3D topic-map positions. First build: t-SNE of the embeddings. Later builds: stored
+    positions; new papers go to the mean position of their 3 most similar placed papers."""
+    old2, old3 = store.get("topics2d", {}), store.get("topics3d", {})
+    N, row = len(uids), {n: j for j, n in enumerate(emb)}
+    pos2, pos3 = {}, {}
+    known = [n for n in range(N) if uids[n] in old2 and uids[n] in old3]
+    if known:
+        for n in known:
+            pos2[n], pos3[n] = np.array(old2[uids[n]]), np.array(old3[uids[n]])
+    else:
+        Y2, Y3 = tsne(X, 2), tsne(X, 3)
+        for j, n in enumerate(emb):
+            pos2[n], pos3[n] = Y2[j], Y3[j]
+    placed = list(pos3)
+    for n in range(N):
+        if n in pos3:
+            continue
+        cand = [m for m in placed if m in row]
+        if n in row and cand:      # by embedding similarity
+            sims = X[[row[m] for m in cand]] @ X[row[n]]
+        else:                      # no embedding: by title/abstract word similarity
+            cand = placed
+            sims = (T[cand] @ T[n].T).toarray().ravel()
+        nn = [cand[i] for i in np.argsort(-sims)[:3]]
+        jit = 0.03 * np.cos(np.arange(3) + n)
+        pos3[n] = np.mean([pos3[m] for m in nn], 0) + jit
+        pos2[n] = np.mean([pos2[m] for m in nn], 0) + jit[:2]
+        log(f"placed next to similar papers: {titles[n][:70]}")
+    return pos2, pos3
+
+
 def recluster_topics(X, T, tv, emb):
     """Fresh k-means clustering. Names are matched to clusters by the probe keywords in TOPICS,
     so check the printed titles and edit TOPICS (and TOPIC_SEED) if the clusters have changed."""
@@ -355,7 +470,7 @@ def recluster_topics(X, T, tv, emb):
     return {n: lab2topic[L[j]] for j, n in enumerate(emb)}
 
 
-def build_data(entries, arx, s2, ads_rec, ads_cit, recluster=False):
+def build_data(entries, arx, s2, ads_rec, ads_cit, store, recluster=False):
     # ---- one record per entry on the publications page
     recs = []
     for e, p in zip(entries, s2):
@@ -382,7 +497,7 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, recluster=False):
             c, cs, bib = p["citationCount"], 1, ""
         else:
             c, cs, bib = 0, 2, ""  # unknown
-        recs.append({"uid": ax or e["bibcode"] or f"entry-{e['n']}", "title": title, "abstract": abstract,
+        recs.append({"uid": ax or e["bibcode"] or "title:" + norm_title(e["title"])[:80], "title": title, "abstract": abstract,
                      "date": date_, "authors": authors or ["Unknown"], "link": link, "url": url,
                      "c": c, "cs": cs, "bib": bib, "venue": p.get("venue") or (rec or {}).get("pub") or "",
                      "s2": p, "dq": False})
@@ -418,23 +533,12 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, recluster=False):
             if uid not in TOPIC_SEED:
                 log(f"new paper -> topic '{TOPICS[topic[n]][0]}':  {recs[n]['title'][:60]}")
 
-    def tsne(dim):
-        Y = TSNE(dim, perplexity=12, metric="cosine", init="pca", random_state=1,
-                 learning_rate="auto").fit_transform(X)
-        Y = Y - Y.mean(0)
-        return Y / np.abs(Y).max()
-    Y2, Y3 = tsne(2), tsne(3)
-    pos2 = {n: Y2[j] for j, n in enumerate(emb)}
-    pos3 = {n: Y3[j] for j, n in enumerate(emb)}
-    for n in range(N):  # no embedding: place next to the papers with the most similar title/abstract words
-        if n in pos3:
-            continue
-        sims = (T[emb] @ T[n].T).toarray().ravel()
-        nn = np.argsort(-sims)[:3]
-        pos2[n] = np.mean([Y2[j] for j in nn], 0) + 0.03
-        pos3[n] = np.mean([Y3[j] for j in nn], 0) + 0.03
-        topic[n] = TOPIC_SEED.get(recs[n]["uid"], Counter(topic[emb[j]] for j in nn).most_common(1)[0][0])
-        log(f"no embedding: placed by word similarity  {recs[n]['title'][:70]}")
+    for n in range(N):  # no embedding: most common topic among the 3 papers with the most similar words
+        if n not in topic:
+            sims = (T[emb] @ T[n].T).toarray().ravel()
+            nn = np.argsort(-sims)[:3]
+            topic[n] = TOPIC_SEED.get(recs[n]["uid"], Counter(topic[emb[j]] for j in nn).most_common(1)[0][0])
+            log(f"no embedding: topic from word similarity  {recs[n]['title'][:60]}")
 
     # ---- citation links between listed entries (match by Semantic Scholar ID, arXiv ID or DOI)
     by_pid, by_ax, by_doi = {}, {}, {}
@@ -461,6 +565,47 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, recluster=False):
     canon = canonical_authors([nm for r in recs for nm in r["authors"]])
     authors = sorted(set(canon.values()))
     aidx = {a: n for n, a in enumerate(authors)}
+    au_of = []
+    for r in recs:
+        au = []
+        for nm in r["authors"]:
+            if aidx[canon[nm]] not in au:
+                au.append(aidx[canon[nm]])
+        au_of.append(au)
+
+    # ---- layouts (stored positions are kept; only new items are placed)
+    uids = [r["uid"] for r in recs]
+    pos2, pos3 = topic_positions(X, T, emb, uids, [r["title"] for r in recs], store)
+    cs_ = np.array([n for n in range(N) for j in refs[n]], int)
+    ct_ = np.array([j for n in range(N) for j in refs[n]], int)
+    citers = np.bincount(ct_, minlength=N)
+    cit = network_positions(uids, cs_, ct_, np.full(len(cs_), 40.0), np.full(len(cs_), 0.35),
+                            3 + np.sqrt(citers) * 2.2, 90, 0.18, store.get("citations", {}))
+    npap = Counter(a for au in au_of for a in au)
+    pairs = Counter()
+    for au in au_of:
+        for x in range(len(au)):
+            for y in range(x + 1, len(au)):
+                pairs[(min(au[x], au[y]), max(au[x], au[y]))] += 1
+    co = {}
+    for mode, keep in (("2", [a for a in range(len(authors)) if npap[a] >= 2]), ("1", list(range(len(authors))))):
+        loc = {a: i for i, a in enumerate(keep)}
+        pl = [(loc[a], loc[b], c) for (a, b), c in pairs.items() if a in loc and b in loc]
+        s_ = np.array([x[0] for x in pl], int)
+        t_ = np.array([x[1] for x in pl], int)
+        c_ = np.array([x[2] for x in pl], float)
+        pos = network_positions([authors[a] for a in keep], s_, t_, 60 / np.sqrt(c_), np.minimum(0.6, 0.04 * c_),
+                                2.5 + np.sqrt(np.array([npap[a] for a in keep], float)) * 2,
+                                240 if mode == "2" else 70, 0.12, store.get("coauthors" + mode, {}))
+        co[mode] = {a: pos[i] for i, a in enumerate(keep)}
+    rd = lambda v, nd=2: [round(float(x), nd) for x in v]
+    new_store = {
+        "topics2d": {uids[n]: rd(pos2[n], 4) for n in range(N)},
+        "topics3d": {uids[n]: rd(pos3[n], 4) for n in range(N)},
+        "citations": {uids[n]: rd(cit[n]) for n in range(N)},
+        "coauthors2": {authors[a]: rd(v) for a, v in co["2"].items()},
+        "coauthors1": {authors[a]: rd(v) for a, v in co["1"].items()},
+    }
 
     papers = []
     for n, r in enumerate(recs):
@@ -474,7 +619,8 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, recluster=False):
             "y": int(r["date"][:4]), "au": au, "c": r["c"], "cs": r["cs"], "bib": r["bib"], "v": r["venue"],
             "lk": r["link"], "url": r["url"],
             "x": round(float(pos2[n][0]), 4), "yy": round(float(pos2[n][1]), 4),
-            "p3": [round(float(v), 4) for v in pos3[n]], "k": topic[n], "r": refs[n],
+            "p3": [round(float(v), 4) for v in pos3[n]], "c3": new_store["citations"][uids[n]],
+            "k": topic[n], "r": refs[n],
         })
 
     log(f"\n{len(papers)} papers, {len(authors)} authors, {sum(len(p['r']) for p in papers)} citation links")
@@ -483,8 +629,10 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, recluster=False):
         log(f"\n[{k}] {name}  ({len(mem)} papers)")
         for p in mem[:4]:
             log(f"      - {p['t'][:90]}")
-    return {"topics": [n for n, _ in TOPICS], "authors": authors, "papers": papers,
+    data = {"topics": [n for n, _ in TOPICS], "authors": authors, "papers": papers,
+            "co": {m: [new_store["coauthors" + m].get(a) for a in authors] for m in ("1", "2")},
             "fetched": date.today().isoformat(), "nads": sum(1 for p in papers if p["cs"] == 0)}
+    return data, new_store
 
 
 # ----------------------------------------------------------------------------- main
@@ -495,6 +643,10 @@ def main():
     ap.add_argument("--offline", action="store_true", help="rebuild from the cached downloads, no network")
     ap.add_argument("--recluster", action="store_true",
                     help="redo the k-means topic clustering instead of using the fixed TOPIC_SEED assignments")
+    ap.add_argument("--positions", default="atlas_positions.json",
+                    help="file with the stored layout positions (default: atlas_positions.json)")
+    ap.add_argument("--relayout", action="store_true",
+                    help="ignore the stored positions and compute all layouts from scratch")
     ap.add_argument("--force", action="store_true",
                     help="build even if the sanity checks fail (e.g. papers were really removed from the list)")
     ap.add_argument("--artifact", action="store_true",
@@ -520,7 +672,10 @@ def main():
         with open(path, "w") as f:
             json.dump(d, f)
 
-    data = build_data(entries, arx, s2, ads_rec, ads_cit, recluster=args.recluster)
+    store = {}
+    if not args.relayout and os.path.exists(args.positions):
+        store = json.load(open(args.positions))
+    data, new_store = build_data(entries, arx, s2, ads_rec, ads_cit, store, recluster=args.recluster)
     blob = json.dumps(data, separators=(",", ":"), ensure_ascii=False).replace("</", "<\\/")
     html = TEMPLATE.replace("__DATA__", blob)
     if not args.artifact:  # a complete document that opens directly in a browser or on GitHub Pages
@@ -537,7 +692,9 @@ def main():
                 + head.strip() + '\n<style>body{margin:0}</style>\n</head>\n<body>\n<header>' + body + '\n</body>\n</html>\n')
     with open(args.out, "w", encoding="utf-8") as f:
         f.write(html)
-    log(f"\nwrote {args.out} ({len(html) / 1e3:.0f} kB). Open it in a browser, or publish it as an artifact.")
+    with open(args.positions, "w") as f:
+        json.dump(new_store, f, separators=(",", ":"), sort_keys=True)
+    log(f"\nwrote {args.out} ({len(html) / 1e3:.0f} kB) and {args.positions}.")
 
 
 # ----------------------------------------------------------------------------- page template
@@ -741,40 +898,6 @@ function applyFilters() {
 
 // ---------- layouts (world coords) ----------
 const L = {};
-// Shared 3D force layout (d3-force style: many-body repulsion, springs, centering, collision), run once, deterministic.
-function force3d(nodes, links, o) {
-  const N = nodes.length;
-  nodes.forEach((n, i) => { // deterministic spherical spiral start
-    const r = 12 * Math.cbrt(0.5 + i), th = i * Math.PI * (3 - Math.sqrt(5)), ph = Math.acos(1 - 2 * (i + 0.5) / N);
-    n.x3 = r * Math.sin(ph) * Math.cos(th); n.y3 = r * Math.sin(ph) * Math.sin(th); n.z3 = r * Math.cos(ph); n.vx = n.vy = n.vz = 0;
-  });
-  const deg = new Map(); links.forEach(l => { deg.set(l.s, (deg.get(l.s) || 0) + 1); deg.set(l.t, (deg.get(l.t) || 0) + 1); });
-  links.forEach(l => { l.bias = deg.get(l.s) / (deg.get(l.s) + deg.get(l.t)); });
-  const decay = 1 - Math.pow(0.001, 1 / 300);
-  let alpha = 1;
-  for (let it = 0; it < 300; it++) {
-    for (const l of links) {
-      const a = l.source, b = l.target;
-      let dx = b.x3 + b.vx - a.x3 - a.vx, dy = b.y3 + b.vy - a.y3 - a.vy, dz = b.z3 + b.vz - a.z3 - a.vz;
-      const d = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1e-6, f = (d - l.len) / d * alpha * l.k;
-      dx *= f; dy *= f; dz *= f;
-      b.vx -= dx * l.bias; b.vy -= dy * l.bias; b.vz -= dz * l.bias;
-      a.vx += dx * (1 - l.bias); a.vy += dy * (1 - l.bias); a.vz += dz * (1 - l.bias);
-    }
-    for (let i = 0; i < N; i++) { const a = nodes[i];
-      for (let j = i + 1; j < N; j++) { const b = nodes[j];
-        const dx = b.x3 - a.x3, dy = b.y3 - a.y3, dz = b.z3 - a.z3, d2 = Math.max(dx * dx + dy * dy + dz * dz, 1);
-        const f = o.charge * alpha / d2; a.vx -= dx * f; a.vy -= dy * f; a.vz -= dz * f; b.vx += dx * f; b.vy += dy * f; b.vz += dz * f;
-        const m = a.r + b.r + 1.5; if (d2 < m * m) { const d = Math.sqrt(d2), p = (m - d) / d * 0.35; a.vx -= dx * p; a.vy -= dy * p; a.vz -= dz * p; b.vx += dx * p; b.vy += dy * p; b.vz += dz * p; }
-      } }
-    for (const n of nodes) {
-      n.vx -= n.x3 * o.gravity * alpha; n.vy -= n.y3 * o.gravity * alpha; n.vz -= n.z3 * o.gravity * alpha;
-      n.vx *= 0.6; n.vy *= 0.6; n.vz *= 0.6; n.x3 += n.vx; n.y3 += n.vy; n.z3 += n.vz;
-    }
-    alpha += (0 - alpha) * decay;
-  }
-  return centre3d(nodes);
-}
 // centre on the mean and return a framing radius from the bulk (90th percentile), so far islands don't shrink the view
 function centre3d(nodes) {
   const N = nodes.length, c = ['x3', 'y3', 'z3'].map(k => nodes.reduce((s, n) => s + n[k], 0) / N);
@@ -791,22 +914,20 @@ function topicLayout() {
   });
   return { nodes, links: [], labels, R, is3d: true };
 }
+// Network positions are computed by the Python build script and shipped with the data.
 function citationLayout() {
-  const nodes = P.map(p => ({ id: p.i, kind: 'p', r: 3 + Math.sqrt(p.citers.length) * 2.2 }));
-  const links = CE.map(e => ({ source: nodes[e.s], target: nodes[e.t], s: e.s, t: e.t, w: 0.45, len: 40, k: 0.35 }));
-  const R = force3d(nodes, links, { charge: 90, gravity: 0.18 });
-  return { nodes, links, labels: [], R, is3d: true };
+  const nodes = P.map(p => ({ id: p.i, kind: 'p', r: 3 + Math.sqrt(p.citers.length) * 2.2, x3: p.c3[0], y3: p.c3[1], z3: p.c3[2] }));
+  const links = CE.map(e => ({ source: nodes[e.s], target: nodes[e.t], s: e.s, t: e.t, w: 0.45 }));
+  return { nodes, links, labels: [], R: centre3d(nodes), is3d: true };
 }
 function coauthorLayout(min2) {
-  const keep = AU.filter(a => !min2 || a.papers.length >= 2);
-  const nodes = keep.map(a => ({ id: a.i, kind: 'a', r: 2.5 + Math.sqrt(a.papers.length) * 2 }));
+  const pos = D.co[min2 ? '2' : '1'], keep = AU.filter(a => pos[a.i]);
+  const nodes = keep.map(a => ({ id: a.i, kind: 'a', r: 2.5 + Math.sqrt(a.papers.length) * 2, x3: pos[a.i][0], y3: pos[a.i][1], z3: pos[a.i][2] }));
   const byId = new Map(nodes.map(n => [n.id, n]));
   const links = [...EM.values()].filter(e => byId.has(e.s) && byId.has(e.t)).map(e => ({
     source: byId.get(e.s), target: byId.get(e.t), s: e.s, t: e.t, papers: e.papers,
-    w: e.papers.reduce((s, j) => s + 1 / (P[j].au.length - 1), 0),  // Newman collaboration strength
-    len: 60 / Math.sqrt(e.papers.length), k: Math.min(0.6, 0.04 * e.papers.length) }));
-  const R = force3d(nodes, links, { charge: min2 ? 240 : 70, gravity: 0.12 });
-  return { nodes, links, labels: [], R, is3d: true };
+    w: e.papers.reduce((s, j) => s + 1 / (P[j].au.length - 1), 0) }));  // Newman collaboration strength
+  return { nodes, links, labels: [], R: centre3d(nodes), is3d: true };
 }
 // camera for the 3D view
 const CAM = { yaw: 0.6, pitch: -0.25, spin: !matchMedia('(prefers-reduced-motion: reduce)').matches, pv: [0, 0, 0], snap: true };

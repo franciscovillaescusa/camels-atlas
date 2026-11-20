@@ -34,6 +34,12 @@ python build_camels_atlas.py --out index.html      # fetch fresh data and rebuil
 python build_camels_atlas.py --offline --out index.html   # rebuild from ./atlas_cache, no network
 ```
 
+Layouts are computed once and stored in `atlas_positions.json`. Later builds keep every known paper
+and author where it is and place only new ones next to their most similar or most connected neighbours,
+so the maps keep their shape as the list grows. Commit this file together with `index.html`.
+`--relayout` recomputes all layouts from scratch. Package versions are pinned in `requirements.txt`
+so local and automated builds give the same result.
+
 Before writing anything, the script checks that it found at least 90% as many papers as the current
 `index.html`, that arXiv returned at least 95% of the requested records and that at least 90% of the
 entries have embeddings. If a check fails it stops without changing the page or the cache, so a broken
