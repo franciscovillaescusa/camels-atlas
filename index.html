@@ -229,6 +229,12 @@ a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: un
 .list .tt { font-size: 13px; color: var(--ink); line-height: 1.35; }
 .list .num { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .back { align-self: flex-start; }
+.howto summary { list-style: none; cursor: pointer; font-size: 13.5px; color: var(--ink-2); line-height: 1.45; }
+.howto summary::-webkit-details-marker { display: none; }
+.howto summary .more { color: var(--accent); font-size: 12px; white-space: nowrap; }
+.howto summary:hover .more { text-decoration: underline; }
+.howto[open] summary .more { color: var(--muted); }
+.howto > p { margin: 10px 0 8px; font-size: 13px; }
 .how { display: grid; gap: 6px; font-size: 13px; color: var(--ink-2); }
 .how div { display: grid; grid-template-columns: 74px 1fr; gap: 8px; }
 .how b { color: var(--ink); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
@@ -847,6 +853,14 @@ const VIEWINFO = {
 };
 const USE_TXT = 'Drag to rotate (or use the arrow keys), scroll or pinch to zoom. Rotation pauses while you hover. Click a dot for details; your selection stays highlighted when you switch views.';
 const USE2 = 'Drag to pan (or use the arrow keys), scroll or pinch to zoom. Click a dot for details; your selection stays highlighted when you switch views.';
+// one-line summary per view; the full explanation opens under "How to read"
+const SHORT = {
+  topics: 'Each dot is a paper; papers with similar abstracts sit close together.',
+  citations: 'Each dot is a paper; lines show which CAMELS papers cite which.',
+  coauthors: 'Each dot is an author; lines join people who wrote a paper together.',
+  table: 'All papers in a sortable table.',
+  trends: 'Papers per year, by topic, method or suite.',
+};
 const USE_TR = 'Hover a segment for its count; click it to see those papers in the table.';
 const USE = { topics: USE_TXT, citations: USE_TXT, coauthors: USE_TXT, trends: USE_TR };
 function overview() {
@@ -856,7 +870,8 @@ function overview() {
   if (S.view === 'citations' && !S.selfc) size += ', not counting papers that share an author (self-citations hidden)';
   let list = '';
   if (FLAT[S.view]) {
-    panel.innerHTML = `<div><h3>How to read this view</h3><p>${what}</p></div><p>${nShown} of ${P.length} papers shown.</p>`;
+    panel.innerHTML = `<details class="howto"${S.helpOpen ? ' open' : ''}><summary><span>${SHORT[S.view]}</span> <span class="more">ⓘ How to read</span></summary><p>${what}</p></details><p>${nShown} of ${P.length} papers shown.</p>`;
+    panel.querySelector('.howto').addEventListener('toggle', e => { S.helpOpen = e.target.open; });
     return;
   }
   if (S.view === 'coauthors') {
@@ -872,9 +887,11 @@ function overview() {
       `<li><button data-p="${p.i}">${dot(p.k)}<span class="tt">${r + 1}. ${esc(p.t)}</span><span class="num">${key(p)}</span></button></li>`).join('')}</ul>
       ${left > 0 ? `<div style="display:flex;gap:8px;margin-top:8px"><button class="ghost" data-more="25">Show ${Math.min(25, left)} more</button><button class="ghost" data-more="all">Show all ${all.length}</button></div>` : ''}</div>`;
   }
-  panel.innerHTML = `<div><h3>How to read this view</h3><p>${what}</p></div>
+  panel.innerHTML = `<details class="howto"${S.helpOpen ? ' open' : ''}><summary><span>${SHORT[S.view]}</span> <span class="more">ⓘ How to read</span></summary>
+    <p>${what}</p>
     <div class="how"><div><b>Size</b><span>${size}</span></div><div><b>Color</b><span>${color}</span></div>
-    <div><b>Use</b><span>${S.dim === 2 && !FLAT[S.view] ? USE2 : USE[S.view]}</span></div></div>${list}`;
+    <div><b>Use</b><span>${S.dim === 2 && !FLAT[S.view] ? USE2 : USE[S.view]}</span></div></div></details>${list}`;
+  panel.querySelector('.howto').addEventListener('toggle', e => { S.helpOpen = e.target.open; });
 }
 function tagBlock(p) {
   if (!p.tg) return '<div><h3>Tags</h3><p>Not tagged yet.</p></div>';
