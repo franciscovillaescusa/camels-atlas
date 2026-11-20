@@ -894,6 +894,7 @@ def main():
     html = TEMPLATE.replace("__DATA__", blob)
     if not args.artifact:  # a complete document that opens directly in a browser or on GitHub Pages
         head, body = html.split("<header>", 1)
+        head = head.replace('<meta name="claude:viewport-fit-sides" content="cover">\n', "")  # claude.ai-only
         n = len(data["papers"])
         desc = (f"Interactive 3D map of the {n} papers that use the CAMELS simulations: "
                 "topics, citation network and co-author network.")
