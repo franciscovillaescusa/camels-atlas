@@ -21,7 +21,7 @@
 :root {
   --bg: #f4f6f9; --surface: #ffffff; --ink: #12151c; --ink-2: #4c5361; --muted: #7d8492;
   --line: #e1e5eb; --edge: rgba(18,21,28,0.13); --edge-hi: #12151c; --accent: #2a78d6; --wash: rgba(42,120,214,0.08);
-  --t0: #896e2f; --t1: #23811f; --t2: #e181a4; --t3: #6256ca; --t4: #da5551; --t5: #3bac7d; --t6: #3879cb; --t7: #e6a438; --t8: #32a3b1; --t9: #e27045; --t10: #8b9099;
+  --t0: #896e2f; --t1: #23811f; --t2: #e181a4; --t3: #6256ca; --t4: #da5551; --t5: #3bac7d; --t6: #3879cb; --t7: #e6a438; --t8: #32a3b1; --t9: #e27045; --t10: #8b9099; --seq0: #9ec5f4; --seq1: #104281;
   --f-display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
   --f-body: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
@@ -29,11 +29,11 @@
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #0e1116; --surface: #161a21; --ink: #eef0f4; --ink-2: #b6bcc8; --muted: #858c99;
   --line: #2a303b; --edge: rgba(238,240,244,0.12); --edge-hi: #eef0f4; --accent: #3987e5; --wash: rgba(57,135,229,0.14);
-  --t0: #977c36; --t1: #23811f; --t2: #cd5a82; --t3: #9088df; --t4: #de6e6d; --t5: #359b73; --t6: #4688da; --t7: #c3882d; --t8: #349daa; --t9: #d06138; --t10: #7b808a; color-scheme: dark; } }
+  --t0: #977c36; --t1: #23811f; --t2: #cd5a82; --t3: #9088df; --t4: #de6e6d; --t5: #359b73; --t6: #4688da; --t7: #c3882d; --t8: #349daa; --t9: #d06138; --t10: #7b808a; --seq0: #1c5cab; --seq1: #cde2fb; color-scheme: dark; } }
 :root[data-theme="dark"] {
   --bg: #0e1116; --surface: #161a21; --ink: #eef0f4; --ink-2: #b6bcc8; --muted: #858c99;
   --line: #2a303b; --edge: rgba(238,240,244,0.12); --edge-hi: #eef0f4; --accent: #3987e5; --wash: rgba(57,135,229,0.14);
-  --t0: #977c36; --t1: #23811f; --t2: #cd5a82; --t3: #9088df; --t4: #de6e6d; --t5: #359b73; --t6: #4688da; --t7: #c3882d; --t8: #349daa; --t9: #d06138; --t10: #7b808a; color-scheme: dark; }
+  --t0: #977c36; --t1: #23811f; --t2: #cd5a82; --t3: #9088df; --t4: #de6e6d; --t5: #359b73; --t6: #4688da; --t7: #c3882d; --t8: #349daa; --t9: #d06138; --t10: #7b808a; --seq0: #1c5cab; --seq1: #cde2fb; color-scheme: dark; }
 
 html, body { height: 100%; }
 body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.5;
@@ -81,8 +81,8 @@ dialog#about::backdrop { background: rgba(10,12,16,.45); }
 .toolbar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
 .field { display: flex; align-items: center; gap: 6px; color: var(--ink-2); font-size: 13px; }
 .search { flex: 1 1 220px; max-width: 320px; position: relative; }
-.qcount { position: absolute; right: 30px; top: 50%; transform: translateY(-50%); font-size: 11.5px; color: var(--muted); pointer-events: none; font-variant-numeric: tabular-nums; }
-.search input { width: 100%; padding: 7px 92px 7px 32px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.qcount { position: absolute; right: 28px; top: 50%; transform: translateY(-50%); font-size: 11.5px; color: var(--muted); pointer-events: none; font-variant-numeric: tabular-nums; }
+.search input { width: 100%; padding: 7px 70px 7px 32px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
 .search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--muted); }
 select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-variant-numeric: tabular-nums; }
 .toolbar select { max-width: 175px; }
@@ -94,6 +94,14 @@ select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; ba
 .dlmenu button { all: unset; padding: 7px 10px; border-radius: 6px; font-size: 13px; color: var(--ink); cursor: pointer; }
 .dlmenu button:hover, .dlmenu button:focus-visible { background: var(--wash); }
 .mapopts { position: absolute; left: 10px; top: 10px; z-index: 2; display: flex; flex-direction: column; gap: 4px; }
+.mapopts select { font-size: 12px; padding: 1px 4px; margin-left: 4px; border-radius: 6px; }
+.cbkey { background: color-mix(in srgb, var(--surface) 92%, transparent); border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px;
+  font-size: 11.5px; color: var(--ink-2); display: grid; gap: 3px; max-width: 230px; }
+.cbkey .row { display: flex; align-items: center; gap: 6px; }
+.cbkey i { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.cbkey .ramp { height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--seq0), var(--seq1)); }
+.cbkey .ends { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; }
+.cbkey .hint { color: var(--muted); }
 .mapopts .chk { background: color-mix(in srgb, var(--surface) 88%, transparent); border: 1px solid var(--line); border-radius: 8px; padding: 4px 9px; font-size: 12.5px; }
 .tablewrap { position: absolute; inset: 0; overflow: auto; }
 .trendswrap { position: absolute; inset: 0; overflow: auto; padding: 16px 20px; }
@@ -254,7 +262,7 @@ footer { font-size: 12px; color: var(--muted); }
 
 <div class="toolbar">
   <label class="search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3.5 3.5"/></svg>
-    <input id="q" type="search" placeholder="Search papers, authors, abstracts…  ( / )" aria-label="Search papers, authors, abstracts and tags"><span class="qcount" id="qcount" aria-live="polite"></span></label>
+    <input id="q" type="search" placeholder="Search papers and authors  ( / )" aria-label="Search papers, authors, abstracts and tags"><span class="qcount" id="qcount" aria-live="polite"></span></label>
   <span class="field"><label for="y0">Years</label> <select id="y0"></select> <span aria-hidden="true">–</span> <select id="y1" aria-label="To year"></select></span>
   <span class="field"><label for="f-suite">Suite</label> <select id="f-suite"></select></span>
   <span class="field"><label for="f-data">Data</label> <select id="f-data"></select></span>
@@ -267,7 +275,7 @@ footer { font-size: 12px; color: var(--muted); }
 
 <main>
   <div class="stage" id="stage">
-    <div class="mapopts"><label class="chk" id="selfwrap" hidden><input type="checkbox" id="selfc" checked> Count self-citations</label></div>
+    <div class="mapopts"><label class="chk" id="cbwrap">Color by <select id="colorby" aria-label="Color dots by"><option value="topic">Topic</option><option value="year">Year</option><option value="method">Method</option><option value="suite">Suite</option></select></label><div class="cbkey" id="cbkey" hidden></div><label class="chk" id="selfwrap" hidden><input type="checkbox" id="selfc" checked> Count self-citations</label></div>
     <canvas id="cv" aria-label="Interactive map of CAMELS publications" role="img"></canvas>
     <div class="zoom">
       <div class="dimtoggle" role="group" aria-label="Layout"><button id="d2" type="button" aria-pressed="true" title="Flat layout (drag to pan)">2D</button><button id="d3" type="button" aria-pressed="false" title="Rotatable 3D layout (drag to rotate)">3D</button></div>
@@ -350,12 +358,64 @@ const CE = []; P.forEach(p => p.r.forEach(j => CE.push({ s: p.i, t: j, self: sha
 const years = [...new Set(P.map(p => p.y))].sort();
 
 // ---------- state ----------
-const S = { view: 'topics', sel: null, hover: null, q: '', y0: years[0], y1: years[years.length - 1], on: new Set(TOP.map((_, k) => k)), selfc: true, newOnly: false, dim: 2, tag: { s: '', d: '', m: '' }, nTop: { topics: 25, citations: 25, coauthors: 25 } };
+const S = { view: 'topics', sel: null, hover: null, q: '', y0: years[0], y1: years[years.length - 1], on: new Set(TOP.map((_, k) => k)), selfc: true, newOnly: false, colorBy: 'topic', dim: 2, tag: { s: '', d: '', m: '' }, nTop: { topics: 25, citations: 25, coauthors: 25 } };
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 let C = {};
-const readColors = () => { C = { surface: css('--surface'), ink: css('--ink'), ink2: css('--ink-2'), muted: css('--muted'), edge: css('--edge'), edgeHi: css('--edge-hi'), accent: css('--accent'), t: TOP.map((_, k) => css('--t' + k)) }; };
+const readColors = () => { C = { surface: css('--surface'), ink: css('--ink'), ink2: css('--ink-2'), muted: css('--muted'), edge: css('--edge'), edgeHi: css('--edge-hi'), accent: css('--accent'), t: TOP.map((_, k) => css('--t' + k)), seq0: css('--seq0'), seq1: css('--seq1') }; };
+
+// ---------- color by topic / year / method / suite ----------
+function cbSeries(axis) {   // tag values in a fixed order; rare suites folded into "Other" (color slot 10)
+  const ax = axis === 'method' ? 'm' : 's', cnt = tg => P.filter(p => p.tg && p.tg[ax].includes(tg)).length;
+  let names = D.tagaxes[axis].filter(tg => cnt(tg) > 0), small = [];
+  if (axis === 'suite') { small = names.filter(tg => cnt(tg) < 5); names = names.filter(tg => cnt(tg) >= 5); }
+  const slot = tg => { const i = names.indexOf(tg); return i >= 0 ? i % 10 : 10; };
+  return { names, small, slot, ax };
+}
+const CB = { method: cbSeries('method'), suite: cbSeries('suite') };
+const yMin = Math.min(...P.map(p => p.y)), yMax = Math.max(...P.map(p => p.y));
+AU.forEach(a => {
+  a.y0 = Math.min(...a.papers.map(j => P[j].y));
+  ['method', 'suite'].forEach(axis => {   // an author's most frequent tag
+    const c = {}; a.papers.forEach(j => (P[j].tg ? P[j].tg[CB[axis].ax] : []).forEach(tg => { c[tg] = (c[tg] || 0) + 1; }));
+    a['cb_' + axis] = Object.keys(c).sort((x, y) => c[y] - c[x])[0] || null;
+  });
+});
+function mix(h0, h1, f) {
+  const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)), a = p(h0), b = p(h1);
+  return '#' + a.map((v, i) => Math.round(v + (b[i] - v) * f).toString(16).padStart(2, '0')).join('');
+}
+function colorOf(n, isP) {   // {fill, ring} for a node in the current color mode
+  const by = S.colorBy;
+  if (isP) {
+    const p = P[n.id];
+    if (by === 'year') return { fill: mix(C.seq0, C.seq1, (p.y - yMin) / Math.max(1, yMax - yMin)) };
+    if (by === 'method' || by === 'suite') {
+      const tg = p.tg ? p.tg[CB[by].ax] : [];
+      if (!tg.length) return { fill: C.t[10] };
+      return { fill: C.t[CB[by].slot(tg[0])], ring: tg.length > 1 ? C.t[CB[by].slot(tg[1])] : null };
+    }
+    return { fill: C.t[p.k] };
+  }
+  const a = AU[n.id];
+  if (by === 'year') return { fill: mix(C.seq0, C.seq1, (a.y0 - yMin) / Math.max(1, yMax - yMin)) };
+  if (by === 'method' || by === 'suite') return { fill: a['cb_' + by] ? C.t[CB[by].slot(a['cb_' + by])] : C.t[10] };
+  return { fill: C.t[a.topic] };
+}
+function colorKey() {
+  const k = $('cbkey'), by = S.colorBy;
+  if (by === 'topic' || FLAT[S.view]) { k.hidden = true; return; }
+  if (by === 'year') {
+    k.innerHTML = `<div class="ramp"></div><div class="ends"><span>${yMin}</span><span>${yMax}</span></div><div class="hint">${S.view === 'coauthors' ? 'Year of first CAMELS paper' : 'Year of first appearance'}</div>`;
+  } else {
+    const s = CB[by];
+    k.innerHTML = s.names.map(tg => `<div class="row"><i style="background:var(--t${s.slot(tg)})"></i>${esc(tg)}</div>`).join('') +
+      (s.small.length ? `<div class="row"><i style="background:var(--t10)"></i>Other / none</div>` : `<div class="row"><i style="background:var(--t10)"></i>No tag</div>`) +
+      `<div class="hint">${S.view === 'coauthors' ? 'Each author’s most frequent ' + by : 'First ' + by + ' tag; a ring shows a second one'}</div>`;
+  }
+  k.hidden = false;
+}
 
 // ---------- filters ----------
 let pOn = [], aOn = [], nShown = 0;
@@ -613,7 +673,7 @@ function render() {
       if (!on(n)) continue;
       const x = sx(n), y = sy(n); if (x < -gr || y < -gr || x > W + gr || y > H + gr) continue;
       const g = ctx.createRadialGradient(x, y, 0, x, y, gr);
-      g.addColorStop(0, C.t[P[n.id].k]); g.addColorStop(1, 'transparent');
+      g.addColorStop(0, colorOf(n, true).fill); g.addColorStop(1, 'transparent');
       ctx.globalAlpha = (F ? 0.05 : 0.15) * (lay.is3d ? n.fog : 1); ctx.fillStyle = g;
       ctx.beginPath(); ctx.arc(x, y, gr, 0, 6.2832); ctx.fill();
     }
@@ -625,9 +685,10 @@ function render() {
     : (a, b) => (on(a) && hot(a)) - (on(b) && hot(b)) || b.r - a.r);
   for (const n of order) {
     const x = sx(n), y = sy(n); if (x < -30 || y < -30 || x > W + 30 || y > H + 30) continue;
-    const k = isP ? P[n.id].k : AU[n.id].topic, lit = on(n) && hot(n);
+    const col = colorOf(n, isP), lit = on(n) && hot(n);
     ctx.globalAlpha = (!on(n) ? 0.08 : lit ? 1 : 0.22) * (lay.is3d && lit && !F ? n.fog : 1);
-    ctx.beginPath(); ctx.arc(x, y, rad(n), 0, 6.2832); ctx.fillStyle = C.t[k]; ctx.fill();
+    ctx.beginPath(); ctx.arc(x, y, rad(n), 0, 6.2832); ctx.fillStyle = col.fill; ctx.fill();
+    if (col.ring) { ctx.lineWidth = 2; ctx.strokeStyle = col.ring; ctx.beginPath(); ctx.arc(x, y, rad(n) + 1.5, 0, 6.2832); ctx.stroke(); ctx.beginPath(); ctx.arc(x, y, rad(n), 0, 6.2832); }
     ctx.lineWidth = 1.5; ctx.strokeStyle = C.surface; ctx.stroke();
   }
   ctx.globalAlpha = 1;
@@ -740,6 +801,7 @@ const USE_TR = 'Hover a segment for its count; click it to see those papers in t
 const USE = { topics: USE_TXT, citations: USE_TXT, coauthors: USE_TXT, trends: USE_TR };
 function overview() {
   let [what, size, color] = VIEWINFO[S.view];
+  if (!FLAT[S.view] && S.colorBy !== 'topic') color = { year: S.view === 'coauthors' ? 'Year of first CAMELS paper' : 'Year of first appearance (light = early, dark = recent)', method: S.view === 'coauthors' ? 'Most frequent method' : 'Method tag (ring: a second method)', suite: S.view === 'coauthors' ? 'Most frequent suite' : 'Suite tag (ring: a second suite)' }[S.colorBy];
   if (S.dim === 2) what = what.replace(', laid out in 3D', '').replace(/ Nearer (papers|authors) look larger and brighter\./, '');
   if (S.view === 'citations' && !S.selfc) size += ', not counting papers that share an author (self-citations hidden)';
   let list = '';
@@ -880,7 +942,7 @@ $('tablewrap').addEventListener('keydown', e => {
 // ---------- controls ----------
 function setView(v, animate) {
   S.view = v; CAM.snap = true; ['topics', 'citations', 'coauthors', 'table', 'trends'].forEach(x => $('m-' + x).setAttribute('aria-pressed', x === v));
-  $('selfwrap').hidden = v !== 'citations'; $('zspin').hidden = S.dim === 2; spinBtn();
+  $('selfwrap').hidden = v !== 'citations'; $('cbwrap').hidden = !!FLAT[v]; $('zspin').hidden = S.dim === 2; spinBtn();
   const flat = !!FLAT[v];
   cv.hidden = flat; $('note').hidden = flat; document.querySelector('.zoom').hidden = flat;
   $('tablewrap').hidden = v !== 'table'; $('trendswrap').hidden = v !== 'trends';
@@ -889,7 +951,7 @@ function setView(v, animate) {
   cv.tabIndex = 0;
   $('note').textContent = noteText(v);
   writeHash(false);
-  S.hover = null; hideTip(); userMoved = false; fit(animate); if (!S.sel) overview(); draw(); updateStats(); tapCard();
+  S.hover = null; hideTip(); userMoved = false; fit(animate); if (!S.sel) overview(); draw(); updateStats(); tapCard(); colorKey();
 }
 document.querySelectorAll('.modes button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view, true)));
 window.addEventListener('hashchange', applyHash);
@@ -917,6 +979,7 @@ document.addEventListener('keydown', e => {   // "/" jumps to the search box
     e.preventDefault(); $('q').focus(); $('q').select();
   }
 });
+$('colorby').addEventListener('change', e => { S.colorBy = e.target.value; colorKey(); if (!S.sel) overview(); draw(); writeHash(false); });
 const noteText = v => (v === 'topics' ? (S.dim === 2 ? 'Layout: 2D t-SNE of SPECTER2 abstract embeddings · axes have no units'
     : 'Layout: each paper pulled toward its 4 most similar papers (SPECTER2) · axes have no units')
   : v === 'citations' ? citeNote().replace(' · drag to rotate', '') : `${AU.length} authors · ${EM.size} co-author pairs`)
@@ -1113,6 +1176,7 @@ function stateHash() {
   if (S.dim === 3) q.set('dim', '3');
   if (!S.selfc) q.set('self', '0');
   if (S.newOnly) q.set('new', '1');
+  if (S.colorBy !== 'topic') q.set('color', S.colorBy);
   const s = q.toString();
   return '#' + S.view + (s ? '&' + s : '');
 }
@@ -1135,6 +1199,7 @@ function applyHash() {
       S.y1 = years.includes(yr[1]) ? yr[1] : years[years.length - 1];
       $('y0').value = S.y0; $('y1').value = S.y1;
       S.newOnly = q.get('new') === '1';
+      S.colorBy = ['year', 'method', 'suite'].includes(q.get('color')) ? q.get('color') : 'topic'; $('colorby').value = S.colorBy;
       S.on = q.get('topics') ? new Set(q.get('topics').split('.').map(Number).filter(k => k >= 0 && k < TOP.length)) : new Set(TOP.map((_, k) => k));
       renderLegend();
       [['suite', 's'], ['data', 'd'], ['method', 'm']].forEach(([a, ax]) => {
