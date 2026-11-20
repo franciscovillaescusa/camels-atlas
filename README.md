@@ -79,6 +79,7 @@ Set `GA_ID = ""` to disable it.
 | `atlas_tags.json` | suite / data / method tags per paper (hand-editable) |
 | `atlas_overrides.json` | hand corrections per paper |
 | `atlas_positions.json` | stored layout positions (generated; commit it) |
+| `check_atlas.py` | headless-browser check of the built page (run by the weekly job) |
 | `preview.png` | link-preview image shown when the site is shared (generated; commit it) |
 
 ## Rebuilding
@@ -104,6 +105,13 @@ fetch is never published; use `--force` when a drop is real.
 
 For ADS citation counts, put your [ADS API token](https://ui.adsabs.harvard.edu/user/settings/token)
 in `~/.ads/dev_key` or the `ADS_TOKEN` environment variable.
+
+### Checking the page
+
+`check_atlas.py` opens the built `index.html` in a headless browser, goes through all five views, the
+2D/3D switch, filters, selection and search, and fails on any JavaScript error. The weekly job runs it
+before committing, so a broken page is never published. Locally: `pip install playwright`, then
+`python3 check_atlas.py --chrome` (uses your installed Chrome).
 
 ### Automatic weekly updates
 

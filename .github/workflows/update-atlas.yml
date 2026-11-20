@@ -35,6 +35,12 @@ jobs:
           S2_API_KEY: ${{ secrets.S2_API_KEY }}   # optional; avoids Semantic Scholar rate limits
         run: python build_camels_atlas.py --out index.html
 
+      - name: Check the built page in a headless browser
+        run: |
+          pip install playwright==1.48.0
+          python -m playwright install --with-deps chromium
+          python check_atlas.py
+
       - name: Commit if changed
         run: |
           if git diff --quiet -- index.html atlas_positions.json preview.png; then
