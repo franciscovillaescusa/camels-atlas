@@ -849,7 +849,7 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
         s_ = np.array([x[0] for x in pl], int)
         t_ = np.array([x[1] for x in pl], int)
         c_ = np.array([x[2] for x in pl], float)
-        co_args = ([authors[a] for a in keep], s_, t_, 60 / np.sqrt(c_), np.minimum(0.6, 0.04 * c_),
+        co_args = ([authors[a] for a in keep], s_, t_, 60 / np.sqrt(c_), np.ones(len(c_)),   # strength = 1/min(degree) via force3d (d3 default): small teams stay together
                    2.5 + np.sqrt(np.array([npap[a] for a in keep], float)) * 2, 70, 0.12)
         pos = network_positions(*co_args, store.get("coauthors" + mode, {}))
         pos2d = network_positions(*co_args, store.get("coauthors" + mode + "_2d", {}), dim=2)
