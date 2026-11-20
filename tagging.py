@@ -69,6 +69,10 @@ def main():
         print(f"Allowed tag names (projects/{proj}/tags.json uses exactly these):")
         for axis, names in D["tagaxes"].items():
             print(f"  {axis}: " + " | ".join(names))
+        if D.get("notes"):
+            print("\nProblems on the publications page (fix them there or in overrides.json):")
+            for n_ in D["notes"]:
+                print(f"  - {n_}")
         ren = renamed(proj, P)
         if ren:
             print("\n" + "\n".join(rename_lines(proj, ren)))
@@ -93,6 +97,9 @@ def main():
                  "tagged yet (they are already on the site, shown as \"Not tagged yet\"):", ""]
         lines += [f"- [{p['t']}]({p['url'] or ''}) ({p['id']})" for p in untagged]
         lines += [""] + rename_lines(proj, renamed(proj, P))
+        if D.get("notes"):
+            lines += ["**Problems on the publications page** (fix them there, or in "
+                      f"`projects/{proj}/overrides.json`):", ""] + [f"- {n_}" for n_ in D["notes"]] + [""]
         lines += ["", "**To tag them:** open Claude Code in your local `literature-atlas` folder and say "
                   f"*\"pull, then tag the new {name} papers\"*. It follows `CLAUDE.md` and closes this issue when done.",
                   "", "@franciscovillaescusa"]

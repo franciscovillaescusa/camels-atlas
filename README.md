@@ -115,6 +115,15 @@ fetch is never published; use `--force` when a drop is real.
 For ADS citation counts, put your [ADS API token](https://ui.adsabs.harvard.edu/user/settings/token)
 in `~/.ads/dev_key` or the `ADS_TOKEN` environment variable.
 
+### Problems on the publications page
+
+The build also reports entries that need a person to look at them, without stopping: a title that is empty
+or a link, no authors, an arXiv ID that arXiv does not know (typo?), an arXiv link that probably points to
+a different paper (different title *and* authors), duplicate entries (only the first is used) and links
+that are not `http(s)` (dropped; relative links are resolved against the publications page). They are
+listed in the build log, by `tagging.py <name> list`, as warnings of the validator and in the
+"New papers need tags" issue. Fix them on the publications page or with `overrides.json`.
+
 ### Validating the data
 
 `python validate_atlas.py --project <name>` checks the data in the site against the downloaded sources and

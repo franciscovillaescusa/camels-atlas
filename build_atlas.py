@@ -364,6 +364,44 @@ def compare_with_previous(data, prev, drop=0.9):
     return problems
 
 
+# ----------------------------------------------------------------------------- publications-page problems
+def surnames(names):
+    return {re.sub(r"[^a-z]", "", unicodedata.normalize("NFKD", n).encode("ascii", "ignore").decode().lower().split()[-1])
+            for n in names if n.split()}
+
+
+def entry_problems(entries, arx):
+    """Problems in the publications-page entries that a person should look at (the build goes on):
+    arXiv IDs that arXiv does not know, arXiv links that probably point to a different paper (different
+    title AND different authors; a paper retitled between arXiv versions keeps its authors), and duplicates."""
+    out, seen = [], {}
+    for e in entries:
+        where = f"entry {e['n']} ({e['title'][:60]!r})"
+        ax = e["arxiv"]
+        if ax and ax not in arx:
+            out.append(f"{where}: arXiv returned no record for {ax} (typo in the link?)")
+        elif ax and e["title"] and e["authors"]:
+            a = arx[ax]
+            if similar_title(e["title"], a["title"]) < 0.6 and len(surnames(e["authors"]) & surnames(a["authors"])) < 0.5 * len(surnames(e["authors"])):
+                out.append(f"{where}: the link {ax} is to {a['title'][:60]!r} by {', '.join(a['authors'][:2])}: wrong link?")
+        key = ax or e["bibcode"] or "title:" + norm_title(e["title"])
+        if key in seen:
+            out.append(f"{where}: duplicate of entry {seen[key]}; only the first is used")
+        seen.setdefault(key, e["n"])
+    return out
+
+
+def safe_url(url):
+    """Links on the page must be http(s): relative links are resolved against the publications page,
+    anything else (e.g. javascript:) is dropped. Returns (url, problem or None)."""
+    url = (url or "").strip()
+    if not url or re.match(r"https?://", url, re.I):
+        return url, None
+    if not re.match(r"[a-z][a-z0-9+.-]*:", url, re.I):   # relative
+        return urllib.parse.urljoin(PUBS_URL, url), None
+    return "", f"link {url[:60]!r} is not http(s); dropped"
+
+
 # ----------------------------------------------------------------------------- analysis
 def norm_name(s):
     s = unicodedata.normalize("NFKD", s)
@@ -741,9 +779,15 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
                recluster=False):
     # ---- one record per entry on the publications page
     recs = []
+    notes = entry_problems(entries, arx)
+    seen_ids = set()
     for e, p in zip(entries, s2):
         p = p or {}
         ax, rec = e["arxiv"], ads_rec.get(e["bibcode"] or "")
+        uid0 = ax or e["bibcode"] or "title:" + norm_title(e["title"])[:80]
+        if uid0 in seen_ids:   # duplicate entry on the publications page (reported above)
+            continue
+        seen_ids.add(uid0)
         if ax and ax in arx:
             a = arx[ax]
             title, abstract, date_, authors = a["title"], a["abstract"], a["published"], a["authors"]
@@ -771,7 +815,7 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
             c, cs, bib = 0, 2, ""  # unknown
         # drop "names" without letters (arXiv records occasionally list e.g. " :" as an author)
         authors = [nm for nm in authors if norm_name(nm)]
-        recs.append({"uid": ax or e["bibcode"] or "title:" + norm_title(e["title"])[:80], "title": title, "abstract": abstract,
+        recs.append({"uid": uid0, "title": title, "abstract": abstract,
                      "date": date_, "authors": authors or ["Unknown"], "link": link, "url": url,
                      "c": c, "cs": cs, "bib": bib, "venue": p.get("venue") or (rec or {}).get("pub") or "",
                      "doi": (p.get("externalIds") or {}).get("DOI") or ((rec or {}).get("doi") or [""])[0],
@@ -781,6 +825,19 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
 
     # ---- hand corrections from the overrides file (applied before anything is derived from them)
     recs, topic_override, kept_ids = apply_overrides(recs, overrides)
+    for r in recs:   # after the overrides, which can fix these
+        where = f"{r['uid'][:40]} ({r['title'][:60]!r})"
+        r["url"], bad = safe_url(r["url"])
+        if bad:
+            notes.append(f"{where}: {bad}")
+        if not r["title"].strip() or re.match(r"(https?://|www\.)", r["title"].strip(), re.I):
+            notes.append(f"{where}: the title is empty or a link; set \"title\" in overrides.json")
+        if r["authors"] == ["Unknown"]:
+            notes.append(f"{where}: no authors on the publications page or in arXiv/ADS; set \"authors\" in overrides.json")
+    if notes:
+        log(f"{len(notes)} problem(s) on the publications page (also listed in the \"needs tags\" issue):")
+        for n_ in notes:
+            log(f"      - {n_}")
 
     # ---- entries with no date: estimate from neighbours (the list is newest first)
     years = [int(r["date"][:4]) if r["date"] else None for r in recs]
@@ -994,7 +1051,7 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
             "co2d": {"1": [new_store["coauthors1_2d"].get(a) for a in authors]},
             "refsrc": {"both": n_both, "s2": n_s2, "ads": n_ads}, "tagaxes": TAG_AXES,
             "fetched": fetched, "nads": sum(1 for p in papers if p["cs"] == 0),
-            "proj": {"name": NAME, "pubs": PUBS_URL, "repo": REPO_URL, "home": HOMEPAGE}}
+            "proj": {"name": NAME, "pubs": PUBS_URL, "repo": REPO_URL, "home": HOMEPAGE}, "notes": notes}
     return data, new_store
 
 

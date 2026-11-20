@@ -94,8 +94,13 @@ def run():
 
     # ------------------------------------------------------------------ 1. completeness vs the source list
     titles_src = Counter(norm_title(e["title"]) for e in E)
+    n_unique = len({e["arxiv"] or e["bibcode"] or "title:" + norm_title(e["title"])[:80] for e in E})   # duplicates count once
     check("every entry on the publications page is on the site",
-          N == len(E) - len(hidden), f"{N} papers, {len(E)} entries, {len(hidden)} hidden by overrides")
+          N == n_unique - len(hidden), f"{N} papers, {len(E)} entries ({len(E) - n_unique} duplicates), {len(hidden)} hidden by overrides")
+    check("every link is http(s)", all(re.match(r"https?://", p["url"]) for p in P if p["url"]),
+          f"{[p['url'][:40] for p in P if p['url'] and not re.match(r'https?://', p['url'])][:3]}")
+    for n_ in D.get("notes", []):   # problems on the publications page that a person should fix
+        WARNINGS.append(f"publications page: {n_}")
     ids_src = {e["arxiv"] for e in E if e["arxiv"]}
     ids_site = {p["id"] for p in P if re.fullmatch(r"\d{4}\.\d{4,5}", p["id"])}
     check("site arXiv IDs == publications page arXiv IDs", ids_site == ids_src,
