@@ -59,6 +59,24 @@ h1 { font-family: var(--f-display); font-weight: 700; font-size: 22px; letter-sp
 .search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--muted); }
 select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-variant-numeric: tabular-nums; }
 .toolbar select { max-width: 190px; }
+.tablewrap { position: absolute; inset: 0; overflow: auto; }
+.ptable { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ptable caption { text-align: left; padding: 10px 12px; color: var(--muted); font-size: 12px; }
+.ptable th { position: sticky; top: 0; background: var(--surface); text-align: left; font-weight: 600; font-size: 12px;
+  color: var(--ink-2); border-bottom: 1px solid var(--line); padding: 0; z-index: 1; white-space: nowrap; }
+.ptable th button { all: unset; display: block; padding: 9px 10px; cursor: pointer; }
+.ptable th button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.ptable th[aria-sort="ascending"] button::after { content: " ▲"; font-size: 9px; }
+.ptable th[aria-sort="descending"] button::after { content: " ▼"; font-size: 9px; }
+.ptable td { padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.ptable td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ptable td.tt { min-width: 260px; color: var(--ink); }
+.ptable td.sm { color: var(--ink-2); font-size: 12px; min-width: 110px; }
+.ptable tbody tr { cursor: pointer; }
+.ptable tbody tr:hover { background: var(--wash); }
+.ptable tbody tr[aria-selected="true"] { background: var(--wash); box-shadow: inset 3px 0 0 var(--accent); }
+.ptable tbody tr:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.ptable i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
 .tagrow { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 8px; align-items: baseline; margin-bottom: 4px; }
 .tagax { font-size: 12px; color: var(--muted); }
 .tag { border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; font-size: 12px; color: var(--ink); background: var(--wash); }
@@ -144,6 +162,9 @@ footer { font-size: 12px; color: var(--muted); }
     <button id="m-coauthors" data-view="coauthors" aria-pressed="false">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="5.5" cy="5" r="2.3"/><circle cx="11.5" cy="6" r="1.8"/><path d="M1.5 14c.5-2.7 2-4 4-4s3.5 1.3 4 4M10 10.3c.5-.2 1-.3 1.5-.3 1.6 0 2.7 1.2 3 3.5"/></svg>
       <span>Co-authors</span></button>
+    <button id="m-table" data-view="table" aria-pressed="false">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="2.5" width="12" height="11" rx="1.5"/><path d="M2 6h12M2 9.5h12M6.5 6v7.5"/></svg>
+      <span>Table</span></button>
   </div>
 </header>
 
@@ -166,6 +187,7 @@ footer { font-size: 12px; color: var(--muted); }
     <div class="zoom"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button><button id="zfit" aria-label="Fit to view">⤢</button><button id="zspin" aria-label="Pause rotation" aria-pressed="true" hidden>⏸</button></div>
     <div class="stage-note" id="note"></div>
     <div class="tip" id="tip" hidden></div>
+    <div class="tablewrap" id="tablewrap" hidden></div>
   </div>
   <aside id="panel" aria-live="polite"></aside>
 </main>
@@ -301,6 +323,7 @@ function resize() {
   W = r.width; H = r.height; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); draw();
 }
 function fit(animate) {
+  if (S.view === 'table') return;
   const lay = layout(), { nodes } = lay; if (!nodes.length || !W) return;
   const reduce0 = matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (lay.is3d) {
@@ -327,6 +350,7 @@ function focusSets() {
   return { f, papers, authors };
 }
 function render() {
+  if (S.view === 'table') return;
   readColors();
   const lay = layout(), { nodes, links, labels } = lay;
   if (lay.is3d) project(lay);
@@ -455,7 +479,7 @@ cv.addEventListener('keydown', e => {
   e.preventDefault(); CAM.yaw += m[0]; CAM.pitch = Math.max(-1.45, Math.min(1.45, CAM.pitch + m[1])); draw();
 });
 (function spin() {
-  if (CAM.spin && !rot && !S.hover && !document.hidden) { CAM.yaw += 0.0025; render(); }
+  if (CAM.spin && !rot && !S.hover && !document.hidden && S.view !== 'table') { CAM.yaw += 0.0025; render(); }
   requestAnimationFrame(spin);
 })();
 cv.addEventListener('click', e => { if (dragged) { dragged = false; return; } const r = cv.getBoundingClientRect(); select(pick(e.clientX - r.left, e.clientY - r.top)); });
@@ -467,6 +491,7 @@ const pItem = (j, sh) => `<li><button data-p="${j}">${dot(P[j].k)}<span class="t
 const VIEWINFO = {
   topics: ['Each dot is a paper, laid out in 3D. Papers with similar abstracts sit close together. Nearer papers look larger and brighter.', (D.nads ? 'Total citations (NASA ADS)' : 'Total citations (Semantic Scholar)'), 'Topic cluster'],
   citations: ['Each dot is a paper, laid out in 3D. A line means one CAMELS paper cites another. Select a paper to see arrows pointing to the work it cites. Nearer papers look larger and brighter.', 'Citations from other CAMELS papers', 'Topic cluster'],
+  table: ['Every paper as a row of a table. Click a column header to sort; click a row (or select it with Tab and press Enter) to see its details. The search box and filters apply here too.', 'Not used', 'Topic shown by the colored dot'],
   coauthors: ['Each dot is an author, laid out in 3D. A line joins people who wrote a CAMELS paper together. Darker lines mean a closer collaboration: each shared paper counts more when it has fewer authors, so links from 40-author papers stay faint. Nearer authors look larger and brighter.', 'Number of CAMELS papers', 'Author’s most frequent topic'],
 };
 const USE_TXT = 'Drag to rotate (or use the arrow keys), scroll or pinch to zoom. Rotation pauses while you hover. Click a dot for details; your selection stays highlighted when you switch views.';
@@ -474,7 +499,11 @@ const USE = { topics: USE_TXT, citations: USE_TXT, coauthors: USE_TXT };
 function overview() {
   let [what, size, color] = VIEWINFO[S.view];
   if (S.view === 'citations' && !S.selfc) size += ', not counting papers that share an author (self-citations hidden)';
-  let list;
+  let list = '';
+  if (S.view === 'table') {
+    panel.innerHTML = `<div><h3>How to read this view</h3><p>${what}</p></div><p>${nShown} of ${P.length} papers shown.</p>`;
+    return;
+  }
   if (S.view === 'coauthors') {
     const all = AU.filter(a => aOn[a.i]).sort((a, b) => b.papers.length - a.papers.length || a.name.localeCompare(b.name));
     const top = all.slice(0, S.nTop[S.view]), left = all.length - top.length;
@@ -532,12 +561,53 @@ panel.addEventListener('click', e => {
   else if (b.dataset.p) select({ kind: 'p', i: +b.dataset.p });
   else if (b.dataset.a) select({ kind: 'a', i: +b.dataset.a });
 });
-function select(s) { S.sel = s; renderPanel(); draw(); }
+function select(s) { S.sel = s; renderPanel(); draw(); if (S.view === 'table') markTableSelection(); }
+
+// ---------- table view (accessible alternative to the canvas views)
+const COLS = [
+  { k: 't', label: 'Title', v: p => p.t, cls: 'tt' },
+  { k: 'a', label: 'First author', v: p => p.au.length ? AU[p.au[0]].name : '', cls: 'sm' },
+  { k: 'y', label: 'Year', v: p => p.d, show: p => p.dq ? p.y + '*' : p.y, cls: 'num' },
+  { k: 'k', label: 'Topic', v: p => TOP[p.k], show: p => `<i style="background:var(--t${p.k})"></i>${esc(TOP[p.k])}`, cls: 'sm', html: true },
+  { k: 'm', label: 'Methods', v: p => p.tg ? p.tg.m.join(', ') : '', cls: 'sm' },
+  { k: 'c', label: 'Citations', v: p => p.cs === 2 ? -1 : p.c, show: p => p.cs === 2 ? '–' : p.c, cls: 'num', num: true },
+  { k: 'ci', label: 'Cited in CAMELS', v: p => citeCount(p), cls: 'num', num: true },
+];
+S.sort = { k: 'c', dir: -1 };
+function renderTable() {
+  const col = COLS.find(c => c.k === S.sort.k);
+  const rows = P.filter(p => pOn[p.i]).sort((a, b) => {
+    const x = col.v(a), y = col.v(b);
+    return (typeof x === 'number' ? x - y : String(x).localeCompare(String(y))) * S.sort.dir || b.c - a.c;
+  });
+  const head = COLS.map(c => `<th scope="col" aria-sort="${c.k === S.sort.k ? (S.sort.dir > 0 ? 'ascending' : 'descending') : 'none'}"><button data-sort="${c.k}">${c.label}</button></th>`).join('');
+  const body = rows.map(p => `<tr tabindex="0" data-p="${p.i}" aria-selected="${!!(S.sel && S.sel.kind === 'p' && S.sel.i === p.i)}">${COLS.map(c => {
+    const val = c.show ? c.show(p) : c.v(p);
+    return `<td class="${c.cls}">${c.html ? val : esc(val)}</td>`; }).join('')}</tr>`).join('');
+  $('tablewrap').innerHTML = `<table class="ptable"><caption>${rows.length} of ${P.length} papers. Click a header to sort. * year estimated.</caption><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+}
+function markTableSelection() {
+  document.querySelectorAll('#tablewrap tbody tr').forEach(tr => tr.setAttribute('aria-selected', !!(S.sel && S.sel.kind === 'p' && S.sel.i === +tr.dataset.p)));
+}
+$('tablewrap').addEventListener('click', e => {
+  const b = e.target.closest('button[data-sort]');
+  if (b) { const k = b.dataset.sort; S.sort = { k, dir: S.sort.k === k ? -S.sort.dir : (COLS.find(c => c.k === k).num ? -1 : 1) }; renderTable();
+    const nb = document.querySelector(`#tablewrap button[data-sort="${k}"]`); if (nb) nb.focus(); return; }
+  const tr = e.target.closest('tr[data-p]'); if (tr) select({ kind: 'p', i: +tr.dataset.p });
+});
+$('tablewrap').addEventListener('keydown', e => {
+  const tr = e.target.closest('tr[data-p]'); if (!tr) return;
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select({ kind: 'p', i: +tr.dataset.p }); }
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const n = e.key === 'ArrowDown' ? tr.nextElementSibling : tr.previousElementSibling; if (n) n.focus(); }
+});
 
 // ---------- controls ----------
 function setView(v, animate) {
-  S.view = v; CAM.snap = true; ['topics', 'citations', 'coauthors'].forEach(x => $('m-' + x).setAttribute('aria-pressed', x === v));
+  S.view = v; CAM.snap = true; ['topics', 'citations', 'coauthors', 'table'].forEach(x => $('m-' + x).setAttribute('aria-pressed', x === v));
   $('minwrap').hidden = v !== 'coauthors'; $('selfwrap').hidden = v !== 'citations'; $('zspin').hidden = false; spinBtn();
+  const tbl = v === 'table';
+  cv.hidden = tbl; $('note').hidden = tbl; document.querySelector('.zoom').hidden = tbl; $('tablewrap').hidden = !tbl;
+  if (tbl) renderTable();
   cv.tabIndex = 0;
   $('note').textContent = v === 'topics' ? 'Layout: 3D t-SNE of SPECTER2 abstract embeddings · axes have no units · drag to rotate'
     : v === 'citations' ? citeNote() : `${AU.length} authors · ${EM.size} co-author pairs · drag to rotate`;
@@ -582,7 +652,7 @@ function updateStats() {
   const filtered = nShown < P.length;
   $('stats').innerHTML = `<b>${filtered ? nShown + ' of ' : ''}${P.length}</b> papers · <b>${AU.length}</b> authors · <b>${CE.length}</b> citation links · ${years[0]}–${years[years.length - 1]}`;
 }
-function refresh() { applyFilters(); updateStats(); if (!S.sel) overview(); draw(); }
+function refresh() { applyFilters(); updateStats(); if (!S.sel) overview(); if (S.view === 'table') renderTable(); draw(); }
 $('foot').innerHTML = `Papers listed on the <a href="https://camels.readthedocs.io/en/latest/publications.html" target="_blank" rel="noopener">CAMELS publications page</a> (all ${P.length} entries). Abstracts and authors from arXiv, or from ADS and the publications page for entries without an arXiv ID; ${D.nads ? 'citation counts from NASA ADS (Semantic Scholar where ADS has no record)' : 'citation counts from Semantic Scholar'}; SPECTER2 embeddings from Semantic Scholar; citation links between papers from ${D.refsrc && D.refsrc.ads ? `Semantic Scholar and ADS combined (${D.refsrc.both} in both, ${D.refsrc.s2} only in Semantic Scholar, ${D.refsrc.ads} only in ADS)` : 'Semantic Scholar'}; data as of ${D.fetched}. Topics are k-means clusters of the embeddings, named by hand. Suite, data and method tags were assigned with AI assistance from each abstract and have not all been checked by hand; dashed tags marked "?" are uncertain.`;
 
 // ---------- boot ----------
