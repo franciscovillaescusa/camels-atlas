@@ -21,7 +21,8 @@ stays highlighted when you switch views. Drag to rotate, scroll or pinch to zoom
 
 - Paper list: every entry on the [CAMELS publications page](https://camels.readthedocs.io/en/latest/publications.html)
 - Titles, abstracts, authors, dates: [arXiv API](https://info.arxiv.org/help/api/); for entries without an arXiv ID, NASA ADS or the publications page itself (theses without a known date get a year estimated from their position in the list, marked as estimated on the site)
-- Embeddings and the citation links between CAMELS papers: [Semantic Scholar API](https://www.semanticscholar.org/product/api)
+- Embeddings: [Semantic Scholar API](https://www.semanticscholar.org/product/api)
+- Citation links between CAMELS papers: Semantic Scholar and NASA ADS reference lists combined (a link counts if either source has it)
 - Total citation counts: [NASA ADS](https://ui.adsabs.harvard.edu) (Semantic Scholar counts if no ADS token is available)
 
 ## Rebuilding

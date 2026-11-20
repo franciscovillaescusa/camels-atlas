@@ -145,8 +145,13 @@ def fetch_arxiv(ids):
     out = {}
     for i in range(0, len(ids), 50):
         chunk = ids[i:i + 50]
-        r = requests.get("http://export.arxiv.org/api/query", headers=UA, timeout=120,
-                         params={"id_list": ",".join(chunk), "max_results": len(chunk)})
+        for attempt in range(6):  # back off when arXiv rate-limits (HTTP 429) or is busy (503)
+            r = requests.get("http://export.arxiv.org/api/query", headers=UA, timeout=120,
+                             params={"id_list": ",".join(chunk), "max_results": len(chunk)})
+            if r.status_code not in (429, 503):
+                break
+            log(f"arXiv HTTP {r.status_code}, retrying in {15 * (attempt + 1)} s...")
+            time.sleep(15 * (attempt + 1))
         r.raise_for_status()
         for e in ET.fromstring(r.text).findall("a:entry", ns):
             aid = re.sub(r"v\d+$", "", e.find("a:id", ns).text.rsplit("/abs/", 1)[-1])
@@ -254,6 +259,25 @@ def fetch_ads_citations(ids):
         log(f"{err} -> using Semantic Scholar counts")
         return {}
     log(f"ADS citations: matched {len(out)}/{len(ids)}")
+    return out
+
+
+def fetch_ads_references(bibcodes):
+    """ADS reference lists (bibcodes) and alternative identifiers for every paper with an ADS record."""
+    if not bibcodes or not ads_token():
+        return {}
+    out = {}
+    try:
+        for i in range(0, len(bibcodes), 50):
+            chunk = bibcodes[i:i + 50]
+            for d in ads_query("bibcode:(" + " OR ".join(f'"{b}"' for b in chunk) + ")",
+                               "bibcode,identifier,reference", rows=len(chunk) + 10):
+                out[d["bibcode"]] = {"ids": d.get("identifier", []), "refs": d.get("reference", [])}
+            time.sleep(1)
+    except RuntimeError as err:
+        log(f"{err} -> citation links from Semantic Scholar only")
+        return {}
+    log(f"ADS reference lists: {sum(1 for v in out.values() if v['refs'])}/{len(bibcodes)} papers")
     return out
 
 
@@ -481,7 +505,7 @@ def recluster_topics(X, T, tv, emb):
     return {n: lab2topic[L[j]] for j, n in enumerate(emb)}
 
 
-def build_data(entries, arx, s2, ads_rec, ads_cit, store, fetched, recluster=False):
+def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, recluster=False):
     # ---- one record per entry on the publications page
     recs = []
     for e, p in zip(entries, s2):
@@ -561,17 +585,32 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, store, fetched, recluster=Fal
             by_ax[ext["ArXiv"]] = n
         if ext.get("DOI"):
             by_doi[ext["DOI"].lower()] = n
-    refs = []
+    # ADS: references are bibcodes; match them against every identifier of every listed paper
+    by_bib = {}
     for n, r in enumerate(recs):
-        out = []
+        if r["bib"]:
+            by_bib[r["bib"]] = n
+            for ident in (ads_refs.get(r["bib"]) or {}).get("ids", []):
+                by_bib.setdefault(ident, n)
+    refs, n_s2, n_ads, n_both = [], 0, 0, 0
+    for n, r in enumerate(recs):
+        s2_set, ads_set = set(), set()
         for ref in r["s2"].get("references") or []:
             ext = ref.get("externalIds") or {}
             j = by_pid.get(ref.get("paperId"))
             j = j if j is not None else by_ax.get(ext.get("ArXiv"))
             j = j if j is not None else by_doi.get((ext.get("DOI") or "").lower())
-            if j is not None and j != n and j not in out:
-                out.append(j)
-        refs.append(out)
+            if j is not None and j != n:
+                s2_set.add(j)
+        for b in (ads_refs.get(r["bib"]) or {}).get("refs", []) if r["bib"] else []:
+            j = by_bib.get(b)
+            if j is not None and j != n:
+                ads_set.add(j)
+        n_both += len(s2_set & ads_set)
+        n_s2 += len(s2_set - ads_set)
+        n_ads += len(ads_set - s2_set)
+        refs.append(sorted(s2_set | ads_set))
+    log(f"citation links: {n_both} in both sources, {n_s2} Semantic Scholar only, {n_ads} ADS only")
 
     canon = canonical_authors([nm for r in recs for nm in r["authors"]])
     authors = sorted(set(canon.values()))
@@ -642,6 +681,7 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, store, fetched, recluster=Fal
             log(f"      - {p['t'][:90]}")
     data = {"topics": [n for n, _ in TOPICS], "authors": authors, "papers": papers,
             "co": {m: [new_store["coauthors" + m].get(a) for a in authors] for m in ("1", "2")},
+            "refsrc": {"both": n_both, "s2": n_s2, "ads": n_ads},
             "fetched": fetched, "nads": sum(1 for p in papers if p["cs"] == 0)}
     return data, new_store
 
@@ -672,6 +712,12 @@ def main():
     ads_rec = load_or_fetch(args.cache, "ads_records.json", lambda: fetch_ads_records(bibs), args.offline)
     s2 = load_or_fetch(args.cache, "s2.json", lambda: fetch_semantic_scholar(entries, ads_rec), args.offline)
     ads_cit = load_or_fetch(args.cache, "ads.json", lambda: fetch_ads_citations(ax_ids), args.offline)
+    all_bibs = sorted({v["bibcode"] for v in ads_cit.values()} | set(ads_rec))
+    refs_path = os.path.join(args.cache, "ads_refs.json")
+    if args.offline and not os.path.exists(refs_path):
+        ads_refs = {}  # caches made before ADS references were used
+    else:
+        ads_refs = load_or_fetch(args.cache, "ads_refs.json", lambda: fetch_ads_references(all_bibs), args.offline)
 
     fetched = fetch_date(args.cache, args.offline)
     prev = previous_data(args.out)
@@ -688,7 +734,7 @@ def main():
     store = {}
     if not args.relayout and os.path.exists(args.positions):
         store = json.load(open(args.positions))
-    data, new_store = build_data(entries, arx, s2, ads_rec, ads_cit, store, fetched, recluster=args.recluster)
+    data, new_store = build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, recluster=args.recluster)
     # same papers, citations and positions as the current page: keep its date, so nothing changes
     strip = lambda d: json.dumps({k: v for k, v in d.items() if k != "fetched"}, sort_keys=True)
     if prev and strip(prev) == strip(data):
@@ -1255,7 +1301,7 @@ function updateStats() {
   $('stats').innerHTML = `<b>${filtered ? nShown + ' of ' : ''}${P.length}</b> papers · <b>${AU.length}</b> authors · <b>${CE.length}</b> citation links · ${years[0]}–${years[years.length - 1]}`;
 }
 function refresh() { applyFilters(); updateStats(); if (!S.sel) overview(); draw(); }
-$('foot').innerHTML = `Papers listed on the <a href="https://camels.readthedocs.io/en/latest/publications.html" target="_blank" rel="noopener">CAMELS publications page</a> (all ${P.length} entries). Abstracts and authors from arXiv, or from ADS and the publications page for entries without an arXiv ID; ${D.nads ? 'citation counts from NASA ADS (Semantic Scholar where ADS has no record)' : 'citation counts from Semantic Scholar'}; SPECTER2 embeddings and the citation links between papers from Semantic Scholar; data as of ${D.fetched}. Topics are k-means clusters of the embeddings, named by hand.`;
+$('foot').innerHTML = `Papers listed on the <a href="https://camels.readthedocs.io/en/latest/publications.html" target="_blank" rel="noopener">CAMELS publications page</a> (all ${P.length} entries). Abstracts and authors from arXiv, or from ADS and the publications page for entries without an arXiv ID; ${D.nads ? 'citation counts from NASA ADS (Semantic Scholar where ADS has no record)' : 'citation counts from Semantic Scholar'}; SPECTER2 embeddings from Semantic Scholar; citation links between papers from ${D.refsrc && D.refsrc.ads ? `Semantic Scholar and ADS combined (${D.refsrc.both} in both, ${D.refsrc.s2} only in Semantic Scholar, ${D.refsrc.ads} only in ADS)` : 'Semantic Scholar'}; data as of ${D.fetched}. Topics are k-means clusters of the embeddings, named by hand.`;
 
 // ---------- boot ----------
 renderLegend(); applyFilters(); renderPanel();
