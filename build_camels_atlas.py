@@ -243,7 +243,7 @@ def fetch_ads_records(bibcodes):
     if not bibcodes or not ads_token():
         return {}
     q = "bibcode:(" + " OR ".join(f'"{b}"' for b in bibcodes) + ")"
-    docs = ads_query(q, "bibcode,title,author,abstract,pubdate,citation_count,doi,identifier,pub")
+    docs = ads_query(q, "bibcode,title,author,abstract,pubdate,entry_date,citation_count,doi,identifier,pub")
     log(f"ADS records for non-arXiv entries: {len(docs)}/{len(bibcodes)}")
     return {d["bibcode"]: d for d in docs}
 
@@ -681,7 +681,11 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
             link, url = f"arXiv:{ax}", f"https://arxiv.org/abs/{ax}"
         elif rec:
             title, abstract = (rec.get("title") or [e["title"]])[0], rec.get("abstract") or ""
-            date_ = rec.get("pubdate", "")[:7].replace("-00", "")
+            # date of first appearance: the earlier of the issue date and when ADS first listed it
+            # (journal issues can be dated months after the paper came out online)
+            issue = rec.get("pubdate", "")[:7].replace("-00", "")
+            entry = (rec.get("entry_date") or "")[:10]
+            date_ = min(d for d in (issue, entry) if d) if (issue or entry) else ""
             authors = e["authors"] or [ads_author(x) for x in rec.get("author", [])]
             link, url = rec.get("pub") or "ADS", e["url"]
         else:  # theses and other entries without an arXiv or ADS record
