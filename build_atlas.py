@@ -98,6 +98,8 @@ def configure(cfg):
     # (name, probe terms used to match the name to a k-means cluster)
     TOPICS = [(t["name"], t.get("probes", [])) for t in cfg["topics"]]
     N_TOPICS = len(TOPICS)
+    if not 1 <= N_TOPICS <= 10:   # the page has 10 topic colours (--t0 ... --t9) plus grey for "Unassigned"
+        sys.exit(f"config: {N_TOPICS} topics; the page has colours for 1 to 10 (add colours to atlas.css for more)")
     # papers that fit no topic get this extra index (shown in gray as "Unassigned (new papers)")
     UNASSIGNED = len(TOPICS)
     TOPIC_NAMES = [n for n, _ in TOPICS] + ["Unassigned (new papers)"]
