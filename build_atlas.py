@@ -78,50 +78,42 @@ NEW_DAYS = 30   # papers added to the site within this many days are marked "New
 UA = {"User-Agent": "literature-atlas-builder/1.0"}
 SEED = 0
 
-# Set from the project's config.json by configure() before anything else runs.
-NAME = PUBS_URL = SITE_URL = HOMEPAGE = GA_ID = None
-N_TOPICS = UNASSIGNED = None
-TOPICS = TOPIC_NAMES = TOPIC_SHORT = TOPIC_SEED = TAG_AXES = None
-
-
-def configure(cfg):
-    """Project settings from config.json:
+class Project:
+    """A project's settings, from projects/<name>/config.json:
       name, homepage, pubs_url, site_url (public address, used for link previews),
       ga_id (Google Analytics 4 measurement ID; "" disables it),
       topics: [{name, short (used where space is tight), probes (terms that match the name to a k-means
               cluster in --recluster)}], unassigned_short,
       topic_seed: {arXiv ID: index into topics}  (hand-checked topics, kept fixed on later builds),
-      tag_axes: {suite: [...], data: [...], method: [...]}  (allowed tag names)."""
-    global NAME, PUBS_URL, SITE_URL, HOMEPAGE, GA_ID, N_TOPICS, UNASSIGNED
-    global TOPICS, TOPIC_NAMES, TOPIC_SHORT, TOPIC_SEED, TAG_AXES
-    NAME, PUBS_URL, SITE_URL, HOMEPAGE = cfg["name"], cfg["pubs_url"], cfg["site_url"], cfg["homepage"]
-    if not re.fullmatch(r"[\w .+-]+", NAME):   # it goes into page text, file names and the <title>
-        sys.exit(f"config: name {NAME!r} may use only letters, digits, spaces and . + -")
-    for key in ("pubs_url", "site_url", "homepage"):
-        if not re.match(r"https?://", cfg[key]):
-            sys.exit(f"config: {key} must be an http(s) address, not {cfg[key]!r}")
-    GA_ID = cfg.get("ga_id", "")
-    # (name, probe terms used to match the name to a k-means cluster)
-    TOPICS = [(t["name"], t.get("probes", [])) for t in cfg["topics"]]
-    N_TOPICS = len(TOPICS)
-    if not 1 <= N_TOPICS <= 10:   # the page has 10 topic colours (--t0 ... --t9) plus grey for "Unassigned"
-        sys.exit(f"config: {N_TOPICS} topics; the page has colours for 1 to 10 (add colours to atlas.css for more)")
-    # papers that fit no topic get this extra index (shown in gray as "Unassigned (new papers)")
-    UNASSIGNED = len(TOPICS)
-    TOPIC_NAMES = [n for n, _ in TOPICS] + ["Unassigned (new papers)"]
-    TOPIC_SHORT = [t.get("short", t["name"]) for t in cfg["topics"]] + [cfg.get("unassigned_short", "Unassigned")]
-    TOPIC_SEED = {k: int(v) for k, v in cfg.get("topic_seed", {}).items()}
-    TAG_AXES = cfg["tag_axes"]
+      tag_axes: {suite: [...], data: [...], method: [...]}  (allowed tag names).
+    A config the page cannot show (bad name, non-http(s) address, more than 10 topics) stops the build."""
 
+    def __init__(self, cfg):
+        self.name, self.pubs_url, self.site_url, self.homepage = cfg["name"], cfg["pubs_url"], cfg["site_url"], cfg["homepage"]
+        if not re.fullmatch(r"[\w .+-]+", self.name):   # it goes into page text, file names and the <title>
+            sys.exit(f"config: name {self.name!r} may use only letters, digits, spaces and . + -")
+        for key in ("pubs_url", "site_url", "homepage"):
+            if not re.match(r"https?://", cfg[key]):
+                sys.exit(f"config: {key} must be an http(s) address, not {cfg[key]!r}")
+        self.ga_id = cfg.get("ga_id", "")
+        self.topics = [(t["name"], t.get("probes", [])) for t in cfg["topics"]]   # (name, probe terms)
+        self.n_topics = len(self.topics)
+        if not 1 <= self.n_topics <= 10:   # the page has 10 topic colours (--t0 ... --t9) plus grey for "Unassigned"
+            sys.exit(f"config: {self.n_topics} topics; the page has colours for 1 to 10 (add colours to atlas.css for more)")
+        self.unassigned = self.n_topics   # papers that fit no topic (shown in grey as "Unassigned (new papers)")
+        self.topic_names = [n for n, _ in self.topics] + ["Unassigned (new papers)"]
+        self.topic_short = [t.get("short", t["name"]) for t in cfg["topics"]] + [cfg.get("unassigned_short", "Unassigned")]
+        self.topic_seed = {k: int(v) for k, v in cfg.get("topic_seed", {}).items()}
+        self.tag_axes = cfg["tag_axes"]
 
 def log(*a):
     print(*a, flush=True)
 
 
 # ----------------------------------------------------------------------------- fetching
-def fetch_entries():
+def fetch_entries(pubs_url):
     """Every numbered entry on the publications page: title, authors, link (arXiv, ADS or other)."""
-    page = requests.get(PUBS_URL, headers=UA, timeout=60).text
+    page = requests.get(pubs_url, headers=UA, timeout=60).text
     entries = []
     for n, item in enumerate(re.findall(r'<li><div class="line-block">(.*?)</div>\s*</li>', page, re.S)):
         lines = [html_mod.unescape(re.sub(r"<[^>]+>", "", l)).strip()
@@ -424,14 +416,14 @@ def entry_problems(entries, arx):
     return out
 
 
-def safe_url(url):
-    """Links on the page must be http(s): relative links are resolved against the publications page,
+def safe_url(url, base):
+    """Links on the page must be http(s): relative links are resolved against `base` (the publications page),
     anything else (e.g. javascript:) is dropped. Returns (url, problem or None)."""
     url = (url or "").strip()
     if not url or re.match(r"https?://", url, re.I):
         return url, None
     if not re.match(r"[a-z][a-z0-9+.-]*:", url, re.I):   # relative
-        return urllib.parse.urljoin(PUBS_URL, url), None
+        return urllib.parse.urljoin(base, url), None
     return "", f"link {url[:60]!r} is not http(s); dropped"
 
 
@@ -497,7 +489,7 @@ def ads_author(a):
 OVERRIDE_FIELDS = {"id", "topic", "date", "abstract", "url", "link", "authors", "title", "hide", "comment"}
 
 
-def apply_overrides(recs, overrides):
+def apply_overrides(recs, overrides, topic_names):
     """Apply hand corrections. Keys are an arXiv ID, an ADS bibcode or the paper title; values may set
     topic (a topic name), date ("YYYY", "YYYY-MM" or "YYYY-MM-DD"), abstract, url, link (label),
     authors (list), title, hide (true leaves the entry out), comment (ignored) and id: the paper's ID on
@@ -551,11 +543,11 @@ def apply_overrides(recs, overrides):
                 r["date"], r["dq"] = str(ov["date"]), False
                 done.append("date")
         if "topic" in ov:
-            if ov["topic"] in TOPIC_NAMES:
-                topic_of[r["uid"]] = TOPIC_NAMES.index(ov["topic"])
+            if ov["topic"] in topic_names:
+                topic_of[r["uid"]] = topic_names.index(ov["topic"])
                 done.append("topic")
             else:
-                log(f"overrides: unknown topic {ov['topic']!r} for {key!r}; allowed: {TOPIC_NAMES}")
+                log(f"overrides: unknown topic {ov['topic']!r} for {key!r}; allowed: {topic_names}")
         if done:
             log(f"overrides: applied {done} to {r['title'][:60]}")
     keep = [r for n, r in enumerate(recs) if n not in hidden]
@@ -572,7 +564,7 @@ def similar_title(a, b):
     return difflib.SequenceMatcher(None, norm_title(a), norm_title(b)).ratio()
 
 
-def report_orphans(uids, titles, tags_path, store):
+def report_orphans(uids, titles, tags_path, store, topic_seed):
     """Warn about tags, hand-checked topics and map positions whose paper ID matches no paper. This happens
     when the publications page edits the title of a paper without an arXiv ID (its ID is its title) or
     changes its link; the paper then shows up untagged with a new ID. For each such ID, suggest the
@@ -583,7 +575,7 @@ def report_orphans(uids, titles, tags_path, store):
     for uid, t in tags.items():
         if uid not in known:
             old.setdefault(uid, [set(), t.get("title", "")])[0].add("tags")
-    for uid in TOPIC_SEED:
+    for uid in topic_seed:
         if uid not in known:
             old.setdefault(uid, [set(), ""])[0].add("topic_seed")
     for uid in store.get("topics2d", {}):
@@ -595,7 +587,7 @@ def report_orphans(uids, titles, tags_path, store):
     for uid, (where, title) in sorted(old.items()):
         title = title or (uid[6:] if uid.startswith("title:") else "")
         best = max(((similar_title(title, t), u, t) for u, t in zip(uids, titles)
-                    if u not in tags and u not in TOPIC_SEED), default=None) if title else None
+                    if u not in tags and u not in topic_seed), default=None) if title else None
         log(f"      - {uid[:70]}  (in {', '.join(sorted(where))})")
         if best and best[0] >= 0.8:
             log(f"        probably renamed to: {best[2][:70]}\n"
@@ -603,7 +595,7 @@ def report_orphans(uids, titles, tags_path, store):
                 f"{json.dumps(best[1])}: {{\"id\": {json.dumps(uid)}}}")
 
 
-def load_tags(path, uids, titles):
+def load_tags(path, uids, titles, tag_axes):
     """Tags per paper from the tags file; warns about unknown tag names and untagged papers."""
     tags = json.load(open(path)) if os.path.exists(path) else {}
     out, untagged = [], []
@@ -615,10 +607,10 @@ def load_tags(path, uids, titles):
             continue
         rec = {}
         for ax, short in (("suite", "s"), ("data", "d"), ("method", "m")):
-            bad = [x for x in t.get(ax, []) if x not in TAG_AXES[ax]]
+            bad = [x for x in t.get(ax, []) if x not in tag_axes[ax]]
             if bad:
-                log(f"tags file: unknown {ax} tag(s) {bad} for {uid}; allowed: {TAG_AXES[ax]}")
-            rec[short] = [x for x in t.get(ax, []) if x in TAG_AXES[ax]]
+                log(f"tags file: unknown {ax} tag(s) {bad} for {uid}; allowed: {tag_axes[ax]}")
+            rec[short] = [x for x in t.get(ax, []) if x in tag_axes[ax]]
         rec["u"] = t.get("uncertain", [])
         if t.get("note"):
             rec["n"] = t["note"]
@@ -790,36 +782,38 @@ def topic_graph_positions(sim, kind, uids, old, n_links=4):
     return network_positions(uids, s, t, np.full(len(s), 30.0), np.full(len(s), 0.5), np.full(N, 6.0), 90, 0.1, old)
 
 
-def recluster_topics(X, T, tv, emb):
-    """Fresh k-means clustering. Names are matched to clusters by the probe keywords in TOPICS,
-    so check the printed titles and edit TOPICS (and TOPIC_SEED) if the clusters have changed."""
+def recluster_topics(X, T, tv, emb, topics):
+    """Fresh k-means clustering into len(topics) clusters. Names are matched to clusters by the probe keywords
+    in `topics` [(name, probes)], so check the printed titles and edit the config's "topics" (and
+    "topic_seed") if the clusters have changed."""
     log("re-clustering topics from scratch (--recluster): check that the names still fit!")
-    L = KMeans(N_TOPICS, n_init=50, random_state=SEED).fit(X).labels_
+    L = KMeans(len(topics), n_init=50, random_state=SEED).fit(X).labels_
     V = {v: n for n, v in enumerate(tv.get_feature_names_out())}
     Te = T[emb]
     labs = sorted(set(L))
-    score = np.zeros((len(labs), len(TOPICS)))
+    score = np.zeros((len(labs), len(topics)))
     for a, lab in enumerate(labs):
         m = L == lab
         diff = np.asarray(Te[m].mean(0)).ravel() - np.asarray(Te[~m].mean(0)).ravel()
-        for b, (_, probes) in enumerate(TOPICS):
+        for b, (_, probes) in enumerate(topics):
             score[a, b] = sum(diff[V[p]] for p in probes if p in V)
     r_, c_ = linear_sum_assignment(-score)
     lab2topic = {labs[a]: int(b) for a, b in zip(r_, c_)}
     return {n: lab2topic[L[j]] for j, n in enumerate(emb)}
 
 
-def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tags_path, overrides,
-               recluster=False):
-    # ---- one record per entry on the publications page
-    recs = []
-    notes = entry_problems(entries, arx)
-    seen_ids = set()
+PAPER_LAYOUTS = ("topics2d", "topics3d_graph", "citations", "citations2d")   # stored positions keyed by paper ID
+
+
+def make_records(entries, arx, s2, ads_rec, ads_cit):
+    """One record per entry on the publications page (duplicates skipped), from arXiv, else ADS, else the
+    publications page itself (theses), with citation counts from ADS, else Semantic Scholar."""
+    recs, seen_ids = [], set()
     for e, p in zip(entries, s2):
         p = p or {}
         ax, rec = e["arxiv"], ads_rec.get(e["bibcode"] or "")
         uid0 = ax or e["bibcode"] or "title:" + norm_title(e["title"])[:80]
-        if uid0 in seen_ids:   # duplicate entry on the publications page (reported above)
+        if uid0 in seen_ids:   # duplicate entry on the publications page (reported by entry_problems)
             continue
         seen_ids.add(uid0)
         if ax and ax in arx:
@@ -856,12 +850,15 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
                      "s2": p, "dq": False,
                      # journal abstracts from ADS are the publisher's copyright: publish only an excerpt
                      "excerpt": bool(rec) and not (ax and ax in arx)})
+    return recs
 
-    # ---- hand corrections from the overrides file (applied before anything is derived from them)
-    recs, topic_override, kept_ids = apply_overrides(recs, overrides)
-    for r in recs:   # after the overrides, which can fix these
+
+def check_records(recs, notes, pubs_url):
+    """After the overrides (which can fix them): keep only http(s) links and note empty or link-like titles
+    and missing authors. Adds to `notes` (the problems listed in the "needs tags" issue) and logs them."""
+    for r in recs:
         where = f"{r['uid'][:40]} ({r['title'][:60]!r})"
-        r["url"], bad = safe_url(r["url"])
+        r["url"], bad = safe_url(r["url"], pubs_url)
         if bad:
             notes.append(f"{where}: {bad}")
         if not r["title"].strip() or re.match(r"(https?://|www\.)", r["title"].strip(), re.I):
@@ -873,7 +870,9 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
         for n_ in notes:
             log(f"      - {n_}")
 
-    # ---- entries with no date: estimate from neighbours (the list is newest first)
+
+def estimate_missing_dates(recs):
+    """Entries with no date get the mean year of their neighbours in the list (which is newest first)."""
     years = [int(r["date"][:4]) if r["date"] else None for r in recs]
     for n, r in enumerate(recs):
         if years[n] is None:
@@ -883,19 +882,28 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
             r["date"], r["dq"] = str(round(sum(known) / len(known))) if known else "2020", True
             log(f"date estimated from list position: {r['date']}  {r['title'][:70]}")
 
-    N = len(recs)
-    docs = [r["title"] + " " + r["abstract"] for r in recs]
+
+def text_features(recs):
+    """Normalised SPECTER2 embeddings X of the papers that have one (their indices: emb) and TF-IDF word
+    vectors T of every paper's title and abstract (with the fitted vectorizer tv)."""
     emb = [n for n, r in enumerate(recs) if r["s2"].get("embedding")]
     X = np.array([recs[n]["s2"]["embedding"]["vector"] for n in emb])
     X /= np.linalg.norm(X, axis=1, keepdims=True)
     tv = TfidfVectorizer(stop_words="english", ngram_range=(1, 2), min_df=2, max_df=0.5, sublinear_tf=True)
-    T = tv.fit_transform(docs)
-    if recluster or not TOPIC_SEED:
-        topic = recluster_topics(X, T, tv, emb)
+    T = tv.fit_transform([r["title"] + " " + r["abstract"] for r in recs])
+    return X, T, tv, emb
+
+
+def assign_topics(proj, recs, X, T, tv, emb, topic_override, recluster=False):
+    """{paper index: topic index}. Known papers keep their hand-checked topic (proj.topic_seed); new papers
+    join the nearest topic centre, or "Unassigned" if they fit none; papers without an embedding take the
+    most common topic of the 3 papers with the most similar words; overrides come last."""
+    if recluster or not proj.topic_seed:
+        topic = recluster_topics(X, T, tv, emb, proj.topics)
     else:
-        # fixed topics: known papers keep their hand-checked topic; new papers join the nearest topic centre
-        seeded = [(j, TOPIC_SEED[recs[n]["uid"]]) for j, n in enumerate(emb) if recs[n]["uid"] in TOPIC_SEED]
-        C = np.array([X[[j for j, k in seeded if k == t]].mean(0) for t in range(N_TOPICS)])
+        seed = proj.topic_seed
+        seeded = [(j, seed[recs[n]["uid"]]) for j, n in enumerate(emb) if recs[n]["uid"] in seed]
+        C = np.array([X[[j for j, k in seeded if k == t]].mean(0) for t in range(proj.n_topics)])
         C /= np.linalg.norm(C, axis=1, keepdims=True)
         # cutoff: the lowest similarity of any known paper to its own topic centre. A new paper less
         # similar than that to every topic fits none of them and goes to "Unassigned".
@@ -903,30 +911,34 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
         topic = {}
         for j, n in enumerate(emb):
             uid = recs[n]["uid"]
-            if uid in TOPIC_SEED:
-                topic[n] = TOPIC_SEED[uid]
+            if uid in seed:
+                topic[n] = seed[uid]
                 continue
             sims = C @ X[j]
             best = int(np.argmax(sims))
             if sims[best] < cutoff:
-                topic[n] = UNASSIGNED
+                topic[n] = proj.unassigned
                 log(f"new paper fits no topic (similarity {sims[best]:.3f} < cutoff {cutoff:.3f}) -> Unassigned: "
                     f"{recs[n]['title'][:60]}")
             else:
                 topic[n] = best
-                log(f"new paper -> topic '{TOPICS[best][0]}' (similarity {sims[best]:.3f}, cutoff {cutoff:.3f}): "
+                log(f"new paper -> topic '{proj.topics[best][0]}' (similarity {sims[best]:.3f}, cutoff {cutoff:.3f}): "
                     f"{recs[n]['title'][:50]}")
-
-    for n in range(N):  # no embedding: most common topic among the 3 papers with the most similar words
+    for n in range(len(recs)):  # no embedding: most common topic among the 3 papers with the most similar words
         if n not in topic:
             sims = (T[emb] @ T[n].T).toarray().ravel()
             nn = np.argsort(-sims)[:3]
-            topic[n] = TOPIC_SEED.get(recs[n]["uid"], Counter(topic[emb[j]] for j in nn).most_common(1)[0][0])
+            topic[n] = proj.topic_seed.get(recs[n]["uid"], Counter(topic[emb[j]] for j in nn).most_common(1)[0][0])
             log(f"no embedding: topic from word similarity  {recs[n]['title'][:60]}")
     for n, k in topic_override.items():
         topic[n] = k
+    return topic
 
-    # ---- citation links between listed entries (match by Semantic Scholar ID, arXiv ID or DOI)
+
+def citation_links(recs, ads_refs):
+    """For each paper, the listed papers it cites: Semantic Scholar references (matched by Semantic Scholar
+    ID, arXiv ID or DOI) and ADS references (bibcodes, matched against every identifier of every listed
+    paper), combined. Also sets r["refmissing"]. Returns (refs, {"both", "s2", "ads"} link counts)."""
     by_pid, by_ax, by_doi = {}, {}, {}
     for n, r in enumerate(recs):
         ext = r["s2"].get("externalIds") or {}
@@ -936,7 +948,6 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
             by_ax[ext["ArXiv"]] = n
         if ext.get("DOI"):
             by_doi[ext["DOI"].lower()] = n
-    # ADS: references are bibcodes; match them against every identifier of every listed paper
     by_bib = {}
     for n, r in enumerate(recs):
         if r["bib"]:
@@ -973,7 +984,11 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
             "(their 'Cites' list may be empty or incomplete):")
         for title in missing:
             log(f"      - {title[:90]}")
+    return refs, {"both": n_both, "s2": n_s2, "ads": n_ads}
 
+
+def author_index(recs):
+    """The merged author names (sorted) and, for each paper, the indices of its authors in that list."""
     canon = canonical_authors([nm for r in recs for nm in r["authors"]])
     authors = sorted(set(canon.values()))
     aidx = {a: n for n, a in enumerate(authors)}
@@ -984,22 +999,31 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
             if aidx[canon[nm]] not in au:
                 au.append(aidx[canon[nm]])
         au_of.append(au)
+    return authors, au_of
 
-    # ---- layouts (stored positions are kept; only new items are placed)
-    uids = [r["uid"] for r in recs]
+
+def prepare_store(proj, store, recs, kept_ids, tags_path):
+    """Get the stored positions ready: forget IDs replaced by an "id" override, report IDs that match no
+    paper, and put "retired" positions back, so a paper that regains its old ID returns to its place."""
+    uids, titles = [r["uid"] for r in recs], [r["title"] for r in recs]
     # a paper that keeps an earlier ID through an override may have been stored under its new ID by a build
     # made before the override was added: forget that ID, so it is not kept or reported as an orphan
-    for key in ("topics2d", "topics3d_graph", "citations", "citations2d", "first_seen"):
+    for key in PAPER_LAYOUTS + ("first_seen",):
         for u in kept_ids:
             store.get(key, {}).pop(u, None)
             store.get("retired", {}).get(key, {}).pop(u, None)
-    report_orphans(uids, [r["title"] for r in recs], tags_path, store)
+    report_orphans(uids, titles, tags_path, store, proj.topic_seed)
     # positions of papers whose ID no longer matches any paper are kept under "retired", so that an "id"
     # override added later (see apply_overrides) puts the paper back where it was
     for key, old in store.get("retired", {}).items():
         for u, v in old.items():
             store.setdefault(key, {}).setdefault(u, v)
-    tags = load_tags(tags_path, uids, [r["title"] for r in recs])
+
+
+def compute_layouts(recs, X, T, emb, refs, authors, au_of, store):
+    """Every map layout (stored positions are kept; only new papers and authors are placed) and the
+    "most similar papers" lists. Returns a dict of position arrays/dicts plus "similar"."""
+    N, uids = len(recs), [r["uid"] for r in recs]
     pos2 = topic_positions(X, T, emb, uids, [r["title"] for r in recs], store)
     sim, kind = similarity(X, T, emb, N)
     similar = similar_papers(sim, kind)
@@ -1010,45 +1034,66 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
     cit_args = (uids, cs_, ct_, np.full(len(cs_), 40.0), np.full(len(cs_), 0.35), 3 + np.sqrt(citers) * 2.2, 90, 0.18)
     cit = network_positions(*cit_args, store.get("citations", {}))
     cit2 = network_positions(*cit_args, store.get("citations2d", {}), dim=2)
+    # co-author network: one link per pair of authors who share papers, shorter for closer collaborators
     npap = Counter(a for au in au_of for a in au)
     pairs = Counter()
     for au in au_of:
         for x in range(len(au)):
             for y in range(x + 1, len(au)):
                 pairs[(min(au[x], au[y]), max(au[x], au[y]))] += 1
-    co, co2 = {}, {}
-    for mode, keep in (("1", list(range(len(authors)))),):   # all authors
-        loc = {a: i for i, a in enumerate(keep)}
-        pl = [(loc[a], loc[b], c) for (a, b), c in pairs.items() if a in loc and b in loc]
-        s_ = np.array([x[0] for x in pl], int)
-        t_ = np.array([x[1] for x in pl], int)
-        c_ = np.array([x[2] for x in pl], float)
-        co_args = ([authors[a] for a in keep], s_, t_, 60 / np.sqrt(c_), np.ones(len(c_)),   # strength = 1/min(degree) via force3d (d3 default): small teams stay together
-                   2.5 + np.sqrt(np.array([npap[a] for a in keep], float)) * 2, 70, 0.12)
-        pos = network_positions(*co_args, store.get("coauthors" + mode, {}))
-        pos2d = network_positions(*co_args, store.get("coauthors" + mode + "_2d", {}), dim=2)
-        co[mode] = {a: pos[i] for i, a in enumerate(keep)}
-        co2[mode] = {a: pos2d[i] for i, a in enumerate(keep)}
+    pl = list(pairs.items())
+    s_ = np.array([a for (a, _), _ in pl], int)
+    t_ = np.array([b for (_, b), _ in pl], int)
+    c_ = np.array([c for _, c in pl], float)
+    co_args = (authors, s_, t_, 60 / np.sqrt(c_), np.ones(len(c_)),   # strength = 1/min(degree) via force3d (d3 default): small teams stay together
+               2.5 + np.sqrt(np.array([npap[a] for a in range(len(authors))], float)) * 2, 70, 0.12)
+    co = network_positions(*co_args, store.get("coauthors1", {}))
+    co2 = network_positions(*co_args, store.get("coauthors1_2d", {}), dim=2)
+    return {"pos2": pos2, "graph3": graph3, "cit": cit, "cit2": cit2, "co": co, "co2": co2, "similar": similar}
+
+
+def make_store(recs, authors, lay, store, fetched):
+    """The positions file to save: current positions, "retired" positions of IDs that left the site, and
+    the date each paper first appeared ("launch" = already there at the first recorded build)."""
+    N, uids = len(recs), [r["uid"] for r in recs]
     rd = lambda v, nd=2: [round(float(x), nd) for x in v]
     new_store = {
-        "topics2d": {uids[n]: rd(pos2[n], 4) for n in range(N)},
-        "topics3d_graph": {uids[n]: rd(graph3[n]) for n in range(N)},
-        "citations": {uids[n]: rd(cit[n]) for n in range(N)},
-        "coauthors1": {authors[a]: rd(v) for a, v in co["1"].items()},
-        "citations2d": {uids[n]: rd(cit2[n]) for n in range(N)},
-        "coauthors1_2d": {authors[a]: rd(v) for a, v in co2["1"].items()},
+        "topics2d": {uids[n]: rd(lay["pos2"][n], 4) for n in range(N)},
+        "topics3d_graph": {uids[n]: rd(lay["graph3"][n]) for n in range(N)},
+        "citations": {uids[n]: rd(lay["cit"][n]) for n in range(N)},
+        "coauthors1": {authors[a]: rd(lay["co"][a]) for a in range(len(authors))},
+        "citations2d": {uids[n]: rd(lay["cit2"][n]) for n in range(N)},
+        "coauthors1_2d": {authors[a]: rd(lay["co2"][a]) for a in range(len(authors))},
     }
     uidset = set(uids)
-    retired = {key: {u: v for u, v in store.get(key, {}).items() if u not in uidset}
-               for key in ("topics2d", "topics3d_graph", "citations", "citations2d")}
+    retired = {key: {u: v for u, v in store.get(key, {}).items() if u not in uidset} for key in PAPER_LAYOUTS}
     if any(retired.values()):
         new_store["retired"] = {k: v for k, v in retired.items() if v}
-    # when each paper first appeared on the site ("launch" = already there at the first recorded build);
-    # papers that appeared in the last NEW_DAYS days are marked "New"
     old_seen = store.get("first_seen", {})
     new_store["first_seen"] = {**{u: s for u, s in old_seen.items() if u not in uidset},   # kept, like "retired"
                                **{u: old_seen.get(u, fetched if old_seen else "launch") for u in uids}}
-    def is_new(u):
+    return new_store
+
+
+def build_data(proj, entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tags_path, overrides,
+               recluster=False):
+    """The page data and the positions file to save, from the downloads (see the stages above)."""
+    notes = entry_problems(entries, arx)
+    recs = make_records(entries, arx, s2, ads_rec, ads_cit)
+    recs, topic_override, kept_ids = apply_overrides(recs, overrides, proj.topic_names)   # before anything is derived
+    check_records(recs, notes, proj.pubs_url)
+    estimate_missing_dates(recs)
+    X, T, tv, emb = text_features(recs)
+    topic = assign_topics(proj, recs, X, T, tv, emb, topic_override, recluster)
+    refs, refsrc = citation_links(recs, ads_refs)
+    authors, au_of = author_index(recs)
+    prepare_store(proj, store, recs, kept_ids, tags_path)
+    uids = [r["uid"] for r in recs]
+    tags = load_tags(tags_path, uids, [r["title"] for r in recs], proj.tag_axes)
+    lay = compute_layouts(recs, X, T, emb, refs, authors, au_of, store)
+    new_store = make_store(recs, authors, lay, store, fetched)
+
+    def is_new(u):   # added to the site in the last NEW_DAYS days
         s = new_store["first_seen"][u]
         return s != "launch" and (date.fromisoformat(fetched) - date.fromisoformat(s)).days <= NEW_DAYS
     n_new = sum(is_new(u) for u in uids)
@@ -1057,40 +1102,36 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
 
     papers = []
     for n, r in enumerate(recs):
-        au = []
-        for nm in r["authors"]:
-            k = aidx[canon[nm]]
-            if k not in au:
-                au.append(k)
         papers.append({
             "id": r["uid"], "t": r["title"], "ab": first_sentence(r["abstract"]) if r.get("excerpt") else r["abstract"],
             "abx": int(bool(r.get("excerpt"))), "nw": int(is_new(r["uid"])), "d": r["date"], "dq": int(r["dq"]),
-            "y": int(r["date"][:4]), "au": au, "c": r["c"], "cs": r["cs"], "bib": r["bib"], "v": r["venue"],
+            "y": int(r["date"][:4]), "au": au_of[n], "c": r["c"], "cs": r["cs"], "bib": r["bib"], "v": r["venue"],
             "lk": r["link"], "url": r["url"], "doi": r["doi"], "tg": tags[n],
-            "x": round(float(pos2[n][0]), 4), "yy": round(float(pos2[n][1]), 4),
-            "p3": [round(float(v) / 420, 4) for v in graph3[n]], "sim": similar[n], "c3": new_store["citations"][uids[n]], "c2": new_store["citations2d"][uids[n]],
+            "x": round(float(lay["pos2"][n][0]), 4), "yy": round(float(lay["pos2"][n][1]), 4),
+            "p3": [round(float(v) / 420, 4) for v in lay["graph3"][n]], "sim": lay["similar"][n],
+            "c3": new_store["citations"][uids[n]], "c2": new_store["citations2d"][uids[n]],
             "k": topic[n], "r": refs[n], "rm": int(r["refmissing"]),
         })
 
     log(f"\n{len(papers)} papers, {len(authors)} authors, {sum(len(p['r']) for p in papers)} citation links")
-    for k, name in enumerate(TOPIC_NAMES):
+    for k, name in enumerate(proj.topic_names):
         mem = sorted((p for p in papers if p["k"] == k), key=lambda p: -p["c"])
-        if k == UNASSIGNED and not mem:
+        if k == proj.unassigned and not mem:
             continue
         log(f"\n[{k}] {name}  ({len(mem)} papers)")
         for p in mem[:4]:
             log(f"      - {p['t'][:90]}")
-    data = {"topics": TOPIC_NAMES, "topicsShort": TOPIC_SHORT, "authors": authors, "papers": papers,
+    data = {"topics": proj.topic_names, "topicsShort": proj.topic_short, "authors": authors, "papers": papers,
             "co": {"1": [new_store["coauthors1"].get(a) for a in authors]},   # all authors
             "co2d": {"1": [new_store["coauthors1_2d"].get(a) for a in authors]},
-            "refsrc": {"both": n_both, "s2": n_s2, "ads": n_ads}, "tagaxes": TAG_AXES,
+            "refsrc": refsrc, "tagaxes": proj.tag_axes,
             "fetched": fetched, "nads": sum(1 for p in papers if p["cs"] == 0),
-            "proj": {"name": NAME, "pubs": PUBS_URL, "repo": REPO_URL, "home": HOMEPAGE}, "notes": notes}
+            "proj": {"name": proj.name, "pubs": proj.pubs_url, "repo": REPO_URL, "home": proj.homepage}, "notes": notes}
     return data, new_store
 
 
 # ----------------------------------------------------------------------------- link-preview image
-def make_preview(data, template, path):
+def make_preview(data, template, path, proj):
     """1200x630 image shown when the site link is shared: the 2D topic map plus title and counts.
     Colors are read from the page template (light theme) so they always match the site."""
     import matplotlib
@@ -1114,14 +1155,14 @@ def make_preview(data, template, path):
     pad = 0.06 * (xy.max(0) - xy.min(0))
     ax.set_xlim(xy[:, 0].min() - pad[0], xy[:, 0].max() + pad[0]); ax.set_ylim(xy[:, 1].min() - pad[1], xy[:, 1].max() + pad[1])
     ax.set_aspect("equal", adjustable="box")   # keep the map inside its own area, never behind the text
-    fig.text(0.05, 0.74, NAME, fontsize=46, fontweight="bold", color=ink, family="DejaVu Sans")
+    fig.text(0.05, 0.74, proj.name, fontsize=46, fontweight="bold", color=ink, family="DejaVu Sans")
     fig.text(0.05, 0.645, "Literature Atlas", fontsize=46, fontweight="bold", color=ink, family="DejaVu Sans")
-    fig.text(0.05, 0.50, f"Every paper that uses the {NAME}\nsimulations, mapped by topic,\ncitations and collaborations.",
+    fig.text(0.05, 0.50, f"Every paper that uses the {proj.name}\nsimulations, mapped by topic,\ncitations and collaborations.",
              fontsize=19, color=ink2, linespacing=1.45, va="top", family="DejaVu Sans")
     n_links = sum(len(p["r"]) for p in papers)
     fig.text(0.05, 0.20, f"{len(papers)} papers · {len(data['authors'])} authors · {n_links} citation links",
              fontsize=16, color=ink, family="DejaVu Sans")
-    fig.text(0.05, 0.13, SITE_URL.replace("https://", "").rstrip("/"), fontsize=14, color=col.get(6, ink2), family="DejaVu Sans")
+    fig.text(0.05, 0.13, proj.site_url.replace("https://", "").rstrip("/"), fontsize=14, color=col.get(6, ink2), family="DejaVu Sans")
     fig.savefig(path, dpi=100, facecolor=bg, metadata={"Software": None})   # no version stamp: same data, same bytes
     plt.close(fig)
 
@@ -1134,7 +1175,7 @@ def main():
     ap.add_argument("--cache", help="folder for downloaded data (default: atlas_cache/<project>)")
     ap.add_argument("--offline", action="store_true", help="rebuild from the cached downloads, no network")
     ap.add_argument("--recluster", action="store_true",
-                    help="redo the k-means topic clustering instead of using the fixed TOPIC_SEED assignments")
+                    help="redo the k-means topic clustering instead of using the fixed topic_seed assignments")
     ap.add_argument("--template", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "atlas.html"),
                     help="page template; its styles and code are read from atlas.css and atlas.js next to it")
     ap.add_argument("--overrides", help="file with hand corrections per paper (default: projects/<project>/overrides.json)")
@@ -1149,7 +1190,7 @@ def main():
     pdir = os.path.join("projects", args.project)
     if not os.path.exists(os.path.join(pdir, "config.json")):
         sys.exit(f"no project {args.project!r}: {pdir}/config.json not found")
-    configure(json.load(open(os.path.join(pdir, "config.json"), encoding="utf-8")))
+    proj = Project(json.load(open(os.path.join(pdir, "config.json"), encoding="utf-8")))
     args.out = args.out or os.path.join(args.project, "index.html")
     args.cache = args.cache or os.path.join("atlas_cache", args.project)
     args.overrides = args.overrides or os.path.join(pdir, "overrides.json")
@@ -1159,7 +1200,7 @@ def main():
     os.makedirs(args.cache, exist_ok=True)
     os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
 
-    entries = load_or_fetch(args.cache, "entries.json", fetch_entries, args.offline)
+    entries = load_or_fetch(args.cache, "entries.json", lambda: fetch_entries(proj.pubs_url), args.offline)
     ax_ids = [e["arxiv"] for e in entries if e["arxiv"]]
     bibs = [e["bibcode"] for e in entries if e["bibcode"]]
     arx = load_or_fetch(args.cache, "arxiv.json", lambda: fetch_arxiv(ax_ids), args.offline)
@@ -1189,7 +1230,7 @@ def main():
         if args.relayout:   # recompute layouts, but keep the record of when papers first appeared
             store = {"first_seen": store.get("first_seen", {})}
     overrides = json.load(open(args.overrides)) if os.path.exists(args.overrides) else {}
-    data, new_store = build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, args.tags, overrides,
+    data, new_store = build_data(proj, entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, args.tags, overrides,
                                  recluster=args.recluster)
     problems = compare_with_previous(data, prev)
     if problems:
@@ -1214,30 +1255,30 @@ def main():
     base = os.path.splitext(args.template)[0]
     read = lambda path: open(path, encoding="utf-8").read()
     template = read(args.template).replace("__CSS__", read(base + ".css")).replace("__JS__", read(base + ".js"))
-    template = template.replace("__NAME__", html_mod.escape(NAME)).replace("__HOME__", html_mod.escape(HOMEPAGE))
+    template = template.replace("__NAME__", html_mod.escape(proj.name)).replace("__HOME__", html_mod.escape(proj.homepage))
     html = template.replace("__DATA__", blob)
     # complete document: <head> with description, link-preview and analytics tags
     head, body = html.split("<header>", 1)
     n = len(data["papers"])
-    desc = (f"Interactive map of the {n} papers that use the {NAME} simulations: "
+    desc = (f"Interactive map of the {n} papers that use the {proj.name} simulations: "
             "topics, citation network and co-author network.")
     html = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
             f'<meta name="description" content="{desc}">\n'
-            f'<meta property="og:title" content="{NAME} Literature Atlas">\n'
+            f'<meta property="og:title" content="{proj.name} Literature Atlas">\n'
             f'<meta property="og:description" content="{desc}">\n'
             '<meta property="og:type" content="website">\n'
-            f'<meta property="og:url" content="{SITE_URL}">\n'
-            f'<meta property="og:image" content="{SITE_URL}preview.png">\n'
+            f'<meta property="og:url" content="{proj.site_url}">\n'
+            f'<meta property="og:image" content="{proj.site_url}preview.png">\n'
             '<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n'
             '<meta name="twitter:card" content="summary_large_image">\n'
-            + (f'<!-- Google tag (gtag.js) -->\n<script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>\n'
+            + (f'<!-- Google tag (gtag.js) -->\n<script async src="https://www.googletagmanager.com/gtag/js?id={proj.ga_id}"></script>\n'
                f"<script>window.dataLayer = window.dataLayer || []; function gtag(){{dataLayer.push(arguments);}} "
-               f"gtag('js', new Date()); gtag('config', '{GA_ID}');</script>\n" if GA_ID else "")
+               f"gtag('js', new Date()); gtag('config', '{proj.ga_id}');</script>\n" if proj.ga_id else "")
             + head.strip() + '\n<style>body{margin:0}</style>\n</head>\n<body>\n<header>' + body + '\n</body>\n</html>\n')
     with open(args.positions, "w") as f:
         json.dump(new_store, f, separators=(",", ":"), sort_keys=True)
-    make_preview(data, template, os.path.join(os.path.dirname(os.path.abspath(args.out)), "preview.png"))
+    make_preview(data, template, os.path.join(os.path.dirname(os.path.abspath(args.out)), "preview.png"), proj)
     old = open(args.out, encoding="utf-8").read() if os.path.exists(args.out) else None
     if old == html:
         log(f"\nno changes: {args.out} left as it was (data as of {data['fetched']}).")

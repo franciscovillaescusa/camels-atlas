@@ -53,26 +53,26 @@ def test_ads_author(B):
 
 
 # ----------------------------------------------------------------------------- overrides
-def test_overrides_by_id_and_by_title(B):
+def test_overrides_by_id_and_by_title(B, proj):
     recs = [record("2101.00001", "First paper"), record("title:thesisone", "Thesis one", link="PhD thesis")]
     keep, topic_of, kept = B.apply_overrides(recs, {
         "_help": ["ignored"],
-        "2101.00001": {"title": "First paper (corrected)", "date": "2023-05", "topic": B.TOPIC_NAMES[3]},
+        "2101.00001": {"title": "First paper (corrected)", "date": "2023-05", "topic": proj.topic_names[3]},
         "Thesis one": {"authors": ["Ana Lopez", "Bo Li"], "comment": "from the PDF"},
-    })
+    }, proj.topic_names)
     assert [r["title"] for r in keep] == ["First paper (corrected)", "Thesis one"]
     assert keep[0]["date"] == "2023-05" and keep[0]["dq"] is False
     assert topic_of == {0: 3} and kept == {}
     assert keep[1]["authors"] == ["Ana Lopez", "Bo Li"]
 
 
-def test_overrides_hide_and_bad_values(B, capsys):
+def test_overrides_hide_and_bad_values(B, proj, capsys):
     recs = [record("2101.00001", "First"), record("2101.00002", "Second")]
     keep, topic_of, _ = B.apply_overrides(recs, {
         "2101.00002": {"hide": True},
         "2101.00001": {"date": "May 2023", "topic": "No such topic", "colour": "red"},
         "9999.99999": {"title": "matches nothing"},
-    })
+    }, proj.topic_names)
     assert [r["uid"] for r in keep] == ["2101.00001"] and topic_of == {}
     assert keep[0]["date"] == "2024-01-02"   # bad date ignored
     log = capsys.readouterr().out
@@ -80,24 +80,24 @@ def test_overrides_hide_and_bad_values(B, capsys):
         assert warning in log
 
 
-def test_override_abstract_is_published_in_full(B):
-    keep, _, _ = B.apply_overrides([record("bib1", "Journal paper", excerpt=True)], {"bib1": {"abstract": "Mine."}})
+def test_override_abstract_is_published_in_full(B, proj):
+    keep, _, _ = B.apply_overrides([record("bib1", "Journal paper", excerpt=True)], {"bib1": {"abstract": "Mine."}}, proj.topic_names)
     assert keep[0]["abstract"] == "Mine." and keep[0]["excerpt"] is False
 
 
-def test_id_override_keeps_the_old_id(B):
+def test_id_override_keeps_the_old_id(B, proj):
     recs = [record("title:precisioncosmologyusingcosmicvoids", "Precision cosmology using cosmic voids")]
     keep, _, kept = B.apply_overrides(recs, {
         "title:precisioncosmologyusingcosmicvoids": {"id": "title:precisioncosmologyusingvoids"},
         "title:precisioncosmologyusingvoids": {"date": "2024"},   # other fields can use the kept ID
-    })
+    }, proj.topic_names)
     assert keep[0]["uid"] == "title:precisioncosmologyusingvoids" and keep[0]["date"] == "2024"
     assert kept == {"title:precisioncosmologyusingcosmicvoids": "title:precisioncosmologyusingvoids"}
 
 
-def test_id_override_cannot_take_another_papers_id(B, capsys):
+def test_id_override_cannot_take_another_papers_id(B, proj, capsys):
     recs = [record("2101.00001", "First"), record("2101.00002", "Second")]
-    keep, _, kept = B.apply_overrides(recs, {"2101.00002": {"id": "2101.00001"}})
+    keep, _, kept = B.apply_overrides(recs, {"2101.00002": {"id": "2101.00001"}}, proj.topic_names)
     assert [r["uid"] for r in keep] == ["2101.00001", "2101.00002"] and kept == {}
     assert "already the ID of another paper" in capsys.readouterr().out
 
@@ -132,8 +132,8 @@ def test_entry_problems(B):
     ("data:text/html,hi", "", True),
     ("mailto:someone@example.org", "", True),
 ])
-def test_safe_url(B, url, expect, problem):
-    out, bad = B.safe_url(url)
+def test_safe_url(B, proj, url, expect, problem):
+    out, bad = B.safe_url(url, proj.pubs_url)
     assert out == expect and bool(bad) == problem
 
 
@@ -204,10 +204,10 @@ def test_both_project_configs_load(B):
     from conftest import project_config
     for name in ("camels", "quijote"):
         cfg = project_config(name)
-        B.configure(cfg)
-        assert B.NAME == cfg["name"] and len(B.TOPIC_NAMES) == len(cfg["topics"]) + 1
-        assert all(0 <= k < len(cfg["topics"]) for k in B.TOPIC_SEED.values())
-        assert len(B.TOPIC_SHORT) == len(B.TOPIC_NAMES)
+        p = B.Project(cfg)
+        assert p.name == cfg["name"] and len(p.topic_names) == len(cfg["topics"]) + 1 == p.unassigned + 1
+        assert all(0 <= k < len(cfg["topics"]) for k in p.topic_seed.values())
+        assert len(p.topic_short) == len(p.topic_names)
 
 
 @pytest.mark.parametrize("change, message", [
@@ -216,10 +216,10 @@ def test_both_project_configs_load(B):
     (lambda c: c.update(homepage="javascript:alert(1)"), "homepage must be an http"),
     (lambda c: c.update(pubs_url="ftp://example.org"), "pubs_url must be an http"),
 ])
-def test_configure_refuses_bad_configs(B, cfg, change, message):
+def test_project_refuses_bad_configs(B, cfg, change, message):
     change(cfg)
     with pytest.raises(SystemExit, match=message):
-        B.configure(cfg)
+        B.Project(cfg)
 
 
 # ----------------------------------------------------------------------------- Semantic Scholar title matches

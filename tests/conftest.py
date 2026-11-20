@@ -19,9 +19,14 @@ def project_config(name):
 
 @pytest.fixture
 def B():
-    """build_atlas, configured for CAMELS (the module keeps the project settings in globals)."""
-    build_atlas.configure(project_config("camels"))
-    yield build_atlas
+    """The build_atlas module."""
+    return build_atlas
+
+
+@pytest.fixture
+def proj():
+    """The CAMELS project settings."""
+    return build_atlas.Project(project_config("camels"))
 
 
 @pytest.fixture
