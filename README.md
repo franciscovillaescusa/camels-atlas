@@ -107,7 +107,9 @@ so local and automated builds give the same result.
 
 Before writing anything, the script checks that it found at least 90% as many papers as the current
 site, that arXiv returned at least 95% of the requested records and that at least 90% of the
-entries have embeddings. If a check fails it stops without changing the page or the cache, so a broken
+arXiv papers have embeddings (theses rarely have one). After building, it also checks that the citation
+links, the links found by ADS and the papers with ADS citation counts did not drop by more than 10% from the
+current site, since an API that fails part-way makes the build fall back silently. If a check fails it stops without changing the page or the cache, so a broken
 fetch is never published; use `--force` when a drop is real.
 
 For ADS citation counts, put your [ADS API token](https://ui.adsabs.harvard.edu/user/settings/token)

@@ -37,7 +37,7 @@ recomputes every layout from scratch.
 
 Safety: before writing anything, the script checks that it found at least 90% as many papers as the
 previous build in --out, that arXiv returned >= 95% of the requested records and that >= 90% of
-entries have embeddings; after building, that the citation links, the links found by ADS and the
+the arXiv papers have embeddings; after building, that the citation links, the links found by ADS and the
 papers with ADS citation counts did not drop by more than 10% from the current page (an API that fails
 part-way makes the build fall back silently). If a check fails it stops without touching the page or
 the cache (--force overrides). ADS requests are retried on rate limits, server errors and timeouts.
@@ -335,9 +335,13 @@ def sanity_check(entries, arx, s2, prev_n):
     got_ax = sum(1 for a in ax if a in arx)
     if ax and got_ax < 0.95 * len(ax):
         problems.append(f"arXiv returned only {got_ax} of {len(ax)} requested records")
-    n_emb = sum(1 for p in s2 if p and p.get("embedding"))
-    if n and n_emb < 0.9 * n:
-        problems.append(f"Semantic Scholar embeddings for only {n_emb} of {n} entries (below 90%)")
+    # embeddings are counted over the arXiv papers only: theses and other entries rarely have one, so with
+    # many of them a healthy fetch could fall below the limit (Quijote: 4 of 30 theses have one)
+    pool = [p for e, p in zip(entries, s2) if e["arxiv"]] or list(s2)
+    n_emb = sum(1 for p in pool if p and p.get("embedding"))
+    if pool and n_emb < 0.9 * len(pool):
+        problems.append(f"Semantic Scholar embeddings for only {n_emb} of {len(pool)} "
+                        f"{'arXiv papers' if ax else 'entries'} (below 90%)")
     return problems
 
 
