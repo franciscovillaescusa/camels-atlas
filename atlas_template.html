@@ -68,7 +68,8 @@ dialog#about::backdrop { background: rgba(10,12,16,.45); }
 .toolbar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
 .field { display: flex; align-items: center; gap: 6px; color: var(--ink-2); font-size: 13px; }
 .search { flex: 1 1 220px; max-width: 320px; position: relative; }
-.search input { width: 100%; padding: 7px 10px 7px 32px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.qcount { position: absolute; right: 30px; top: 50%; transform: translateY(-50%); font-size: 11.5px; color: var(--muted); pointer-events: none; font-variant-numeric: tabular-nums; }
+.search input { width: 100%; padding: 7px 92px 7px 32px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
 .search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--muted); }
 select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-variant-numeric: tabular-nums; }
 .toolbar select { max-width: 175px; }
@@ -238,7 +239,7 @@ footer { font-size: 12px; color: var(--muted); }
 
 <div class="toolbar">
   <label class="search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3.5 3.5"/></svg>
-    <input id="q" type="search" placeholder="Search titles, authors or arXiv IDs" aria-label="Search papers"></label>
+    <input id="q" type="search" placeholder="Search papers, authors, abstracts…  ( / )" aria-label="Search papers, authors, abstracts and tags"><span class="qcount" id="qcount" aria-live="polite"></span></label>
   <span class="field"><label for="y0">Years</label> <select id="y0"></select> <span aria-hidden="true">–</span> <select id="y1" aria-label="To year"></select></span>
   <span class="field"><label for="f-suite">Suite</label> <select id="f-suite"></select></span>
   <span class="field"><label for="f-data">Data</label> <select id="f-data"></select></span>
@@ -295,7 +296,36 @@ AU.forEach(a => {
   const c = new Array(TOP.length).fill(0); a.papers.forEach(j => c[P[j].k]++);
   a.tc = c; a.topic = c.indexOf(Math.max(...c)); a.lc = a.name.toLowerCase();
 });
-P.forEach(p => { p.hay = (p.t + ' ' + p.id + ' ' + p.au.map(a => AU[a].name).join(' ')).toLowerCase(); });
+// search index: accent- and case-insensitive; titles/authors/IDs rank above abstracts/tags/journal
+const norm = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9.]+/g, ' ').trim();
+P.forEach(p => {
+  p.hay = ' ' + norm(p.t + ' ' + p.id + ' ' + p.au.map(a => AU[a].name).join(' ')) + ' ';
+  p.hayLo = ' ' + norm((p.ab || '') + ' ' + (p.tg ? [...p.tg.s, ...p.tg.d, ...p.tg.m].join(' ') : '') + ' ' + (p.v || '')) + ' ';
+  p.words = [...new Set((p.hay + p.hayLo).split(' ').filter(w => w.length >= 3))];
+});
+AU.forEach(a => { a.norm = norm(a.name); });
+function lev(a, b, max) {   // edit distance, giving up once it exceeds max
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i]; let best = i;
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      if (cur[j] < best) best = cur[j];
+    }
+    if (best > max) return max + 1;
+    prev = cur;
+  }
+  return prev[b.length];
+}
+function tokScore(p, tk) {   // 3: title/author/ID, 2: abstract/tags/journal, 1: near-miss (typo), 0: no match
+  if (p.hay.includes(tk)) return 3;
+  if (p.hayLo.includes(tk)) return 2;
+  if (tk.length < 4) return 0;
+  const max = tk.length >= 7 ? 2 : 1;
+  for (const w of p.words) if (Math.abs(w.length - tk.length) <= max && lev(tk, w, max) <= max) return 1;
+  return 0;
+}
 const EM = new Map();
 P.forEach(p => { for (let x = 0; x < p.au.length; x++) for (let y = x + 1; y < p.au.length; y++) {
   const a = Math.min(p.au[x], p.au[y]), b = Math.max(p.au[x], p.au[y]), key = a * 10000 + b;
@@ -315,12 +345,20 @@ const readColors = () => { C = { surface: css('--surface'), ink: css('--ink'), i
 // ---------- filters ----------
 let pOn = [], aOn = [], nShown = 0;
 function applyFilters() {
-  const q = S.q.trim().toLowerCase();
+  const qn = norm(S.q), toks = qn.split(' ').filter(Boolean);
   const tagOk = p => ['s', 'd', 'm'].every(ax => !S.tag[ax] || (p.tg && p.tg[ax].includes(S.tag[ax])));
-  pOn = P.map(p => p.y >= S.y0 && p.y <= S.y1 && S.on.has(p.k) && (!q || p.hay.includes(q)) && tagOk(p) && (!S.newOnly || p.nw));
-  const nameHit = q ? AU.filter(a => a.lc.includes(q)) : [];
-  aOn = AU.map(a => nameHit.length ? a.lc.includes(q) : a.papers.some(j => pOn[j]));
+  S.score = {};
+  const qOk = p => {   // every search word must match somewhere
+    if (!toks.length) return true;
+    let s = 0;
+    for (const tk of toks) { const v = tokScore(p, tk); if (!v) return false; s += v; }
+    S.score[p.i] = s; return true;
+  };
+  pOn = P.map(p => p.y >= S.y0 && p.y <= S.y1 && S.on.has(p.k) && tagOk(p) && (!S.newOnly || p.nw) && qOk(p));
+  const nameHit = qn ? AU.filter(a => a.norm.includes(qn)) : [];
+  aOn = AU.map(a => nameHit.length ? a.norm.includes(qn) : a.papers.some(j => pOn[j]));
   nShown = pOn.filter(Boolean).length;
+  const qc = $('qcount'); if (qc) qc.textContent = toks.length ? `${nShown} match${nShown === 1 ? '' : 'es'}` : '';
 }
 
 // ---------- layouts (world coords) ----------
@@ -797,7 +835,8 @@ const COLS = [
 ];
 S.sort = { k: 'c', dir: -1 };
 function renderTable() {
-  const col = COLS.find(c => c.k === S.sort.k);
+  const rel = S.sort.k === 'rel';
+  const col = rel ? { v: p => S.score[p.i] || 0 } : COLS.find(c => c.k === S.sort.k);
   const rows = P.filter(p => pOn[p.i]).sort((a, b) => {
     const x = col.v(a), y = col.v(b);
     return (typeof x === 'number' ? x - y : String(x).localeCompare(String(y))) * S.sort.dir || b.c - a.c;
@@ -806,7 +845,7 @@ function renderTable() {
   const body = rows.map(p => `<tr tabindex="0" data-p="${p.i}" aria-selected="${!!(S.sel && S.sel.kind === 'p' && S.sel.i === p.i)}">${COLS.map(c => {
     const val = c.show ? c.show(p) : c.v(p);
     return `<td class="${c.cls}">${c.html ? val : esc(val)}</td>`; }).join('')}</tr>`).join('');
-  $('tablewrap').innerHTML = `<table class="ptable"><caption>${rows.length} of ${P.length} papers. Click a header to sort. “In CAMELS” = citations from other CAMELS papers; * year estimated.</caption><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+  $('tablewrap').innerHTML = `<table class="ptable"><caption>${rows.length} of ${P.length} papers${rel ? ', best search matches first' : ''}. Click a header to sort. “In CAMELS” = citations from other CAMELS papers; * year estimated.</caption><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
 }
 function markTableSelection() {
   document.querySelectorAll('#tablewrap tbody tr').forEach(tr => tr.setAttribute('aria-selected', !!(S.sel && S.sel.kind === 'p' && S.sel.i === +tr.dataset.p)));
@@ -852,7 +891,17 @@ legend.addEventListener('click', e => { const b = e.target.closest('.chip'); if 
   renderLegend(); refresh(); });
 [$('y0'), $('y1')].forEach((sel, n) => { sel.innerHTML = years.map(y => `<option ${y === (n ? S.y1 : S.y0) ? 'selected' : ''}>${y}</option>`).join('');
   sel.addEventListener('change', () => { S.y0 = +$('y0').value; S.y1 = +$('y1').value; if (S.y0 > S.y1) { [S.y0, S.y1] = [S.y1, S.y0]; $('y0').value = S.y0; $('y1').value = S.y1; } refresh(); }); });
-let qt; $('q').addEventListener('input', e => { clearTimeout(qt); qt = setTimeout(() => { S.q = e.target.value; refresh(); }, 120); });
+let qt; $('q').addEventListener('input', e => { clearTimeout(qt); qt = setTimeout(() => {
+  const had = !!S.q.trim(); S.q = e.target.value; const has = !!S.q.trim();
+  if (has && !had && S.sort.k === 'c') S.sort = { k: 'rel', dir: -1 };          // searching: best matches first
+  if (!has && S.sort.k === 'rel') S.sort = { k: 'c', dir: -1 };
+  refresh(); }, 120); });
+$('q').addEventListener('keydown', e => { if (e.key === 'Escape' && e.target.value) { e.target.value = ''; e.target.dispatchEvent(new Event('input')); } });
+document.addEventListener('keydown', e => {   // "/" jumps to the search box
+  if (e.key === '/' && !e.ctrlKey && !e.metaKey && !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName || '')) && !e.target.isContentEditable) {
+    e.preventDefault(); $('q').focus(); $('q').select();
+  }
+});
 const noteText = v => (v === 'topics' ? (S.dim === 2 ? 'Layout: 2D t-SNE of SPECTER2 abstract embeddings · axes have no units'
     : 'Layout: each paper pulled toward its 4 most similar papers (SPECTER2) · axes have no units')
   : v === 'citations' ? citeNote().replace(' · drag to rotate', '') : `${AU.length} authors · ${EM.size} co-author pairs`)

@@ -17,7 +17,8 @@ The site has five views. A button switches between them:
 
 Colors show 10 topics, found by k-means clustering of the paper embeddings and named by hand.
 Each paper's panel lists its 5 most similar papers by embedding similarity, and selecting a paper on
-the topic map highlights them. Search, the year range and the topic buttons filter every view. A selected paper or author
+the topic map highlights them. Search (press `/`) covers titles, authors, IDs, abstracts and tags, ignores accents, tolerates small typos
+and ranks title/author matches first. Search, the year range and the topic buttons filter every view. A selected paper or author
 stays highlighted when you switch views. The maps open in 2D (drag to pan, scroll or pinch to zoom); a
 2D/3D button next to the zoom controls switches them to rotatable 3D layouts (drag to rotate).
 
