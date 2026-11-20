@@ -26,6 +26,7 @@ from datetime import date
 import numpy as np
 
 RESULTS = []
+WARNINGS = []
 
 
 def check(name, ok, detail=""):
@@ -205,7 +206,9 @@ def run():
     check("all tags are from the allowed vocabulary", not bad_tag, f"{bad_tag[:3]}")
     check("tags on the site match atlas_tags.json",
           all(p["tg"]["m"] == [t for t in TAGS[p["id"]]["method"] if t in allowed["method"]] for p in P if p["tg"] and p["id"] in TAGS))
-    check("every paper is tagged", all(p["tg"] for p in P), f"{sum(not p['tg'] for p in P)} untagged")
+    untagged = [p["t"][:50] for p in P if not p["tg"]]
+    if untagged:   # new papers wait for tagging (see CLAUDE.md); that must not block publishing
+        WARNINGS.append(f"{len(untagged)} paper(s) not tagged yet: {untagged[:3]}")
 
     # ------------------------------------------------------------------ 7. similar papers (recomputed from embeddings)
     emb = {}
@@ -257,7 +260,7 @@ def run():
         page = requests.get("https://camels.readthedocs.io/en/latest/publications.html", timeout=60).text
         n_live = len(re.findall(r'<li><div class="line-block">', page))
         check("site covers the live publications page", N >= n_live - len(hidden) - 2,
-              f"site {N}, live page {n_live} (a few new entries are fine until next Monday)")
+              f"site {N}, live page {n_live} (a few new entries are fine until the next update)")
         tok = os.environ.get("ADS_TOKEN") or (open(os.path.expanduser("~/.ads/dev_key")).read().strip()
                                                if os.path.exists(os.path.expanduser("~/.ads/dev_key")) else "")
         if tok:
@@ -276,6 +279,8 @@ def report():
     width = max(len(n) for n, _, _ in RESULTS)
     for name, ok, detail in RESULTS:
         print(f"{'ok  ' if ok else 'FAIL'}  {name.ljust(width)}  {detail}")
+    for w in WARNINGS:
+        print(f"warn  {w}")
     failed = [n for n, ok, _ in RESULTS if not ok]
     if failed:
         sys.exit(f"\n{len(failed)} of {len(RESULTS)} checks FAILED")

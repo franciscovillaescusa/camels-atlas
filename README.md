@@ -79,8 +79,10 @@ Set `GA_ID = ""` to disable it.
 | `atlas_tags.json` | suite / data / method tags per paper (hand-editable) |
 | `atlas_overrides.json` | hand corrections per paper |
 | `atlas_positions.json` | stored layout positions (generated; commit it) |
-| `validate_atlas.py` | data validation against the sources (run by the weekly job) |
-| `check_atlas.py` | headless-browser check of the built page (run by the weekly job) |
+| `validate_atlas.py` | data validation against the sources (run by the update job) |
+| `check_atlas.py` | headless-browser check of the built page (run by the update job) |
+| `tagging.py` | lists papers that need tags, for tagging with Claude (see `CLAUDE.md`) |
+| `CLAUDE.md` | step-by-step instructions Claude follows to tag new papers |
 | `preview.png` | link-preview image shown when the site is shared (generated; commit it) |
 
 ## Rebuilding
@@ -110,11 +112,11 @@ in `~/.ads/dev_key` or the `ADS_TOKEN` environment variable.
 ### Validating the data
 
 `validate_atlas.py` checks the data in `index.html` against the downloaded sources and against itself
-(51 checks with `--online`). It recomputes key results independently: every entry on the publications page is
+(about 50 checks). It recomputes key results independently: every entry on the publications page is
 present, titles, abstracts, dates and ADS citation counts match their sources, the citation links reproduce
 exactly from the raw reference lists, self-citations, co-author pairs and "most similar papers" are recomputed,
 hand-checked topics and overrides are kept, tags use the allowed vocabulary, and every stored layout is
-complete. `--online` also compares with the live publications page and live ADS counts. The weekly job runs it
+complete. `--online` also compares with the live publications page and live ADS counts. The update job runs it
 before publishing.
 
 ### Checking the page
@@ -122,13 +124,18 @@ before publishing.
 `check_atlas.py` opens the built `index.html` in a headless browser, goes through all five views, the
 2D/3D switch, filters, selection and search, and checks that what the page shows is right: the filtered
 table, BibTeX/CSV downloads, trend totals, the self-citation switch and shared links. It fails on any
-JavaScript error. The weekly job runs it
+JavaScript error. The update job runs it
 before committing, so a broken page is never published. Locally: `pip install playwright`, then
 `python3 check_atlas.py --chrome` (uses your installed Chrome).
 
-### Automatic weekly updates
+### Automatic updates (1st and 15th of each month)
 
-`.github/workflows/update-atlas.yml` reruns the script every Monday and commits the new `index.html`.
+`.github/workflows/update-atlas.yml` reruns the script on the 1st and 15th of each month, validates the result
+and commits the new `index.html`. New papers appear right away with their topic, citations and links; their
+suite/data/method tags are added by hand with Claude. When papers need tags, the job opens (or updates) a
+GitHub issue **"New papers need tags"**, which notifies you by email. Then open Claude Code in your local
+`camels-atlas` folder and say *"pull, then tag the new papers"*: it follows `CLAUDE.md`, rebuilds, runs the
+tests, pushes and closes the issue.
 You can also start it by hand from the **Actions** tab ("Update atlas" → "Run workflow").
 To use ADS citation counts there, add the token as a repository secret named `ADS_TOKEN`
 (Settings → Secrets and variables → Actions → New repository secret).

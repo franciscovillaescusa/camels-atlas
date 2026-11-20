@@ -1,15 +1,17 @@
 name: Update atlas
 
-# Rebuilds index.html every Monday (and on demand) so new CAMELS papers and
-# updated citation counts appear on the site. GitHub Pages serves index.html
-# from the main branch.
+# Rebuilds index.html on the 1st and 15th of each month (and on demand) so new
+# CAMELS papers and updated citation counts appear on the site. GitHub Pages
+# serves index.html from the main branch. If new papers still need tags, it
+# opens (or updates) a "New papers need tags" issue; see CLAUDE.md.
 on:
   schedule:
-    - cron: "0 6 * * 1"   # Mondays 06:00 UTC
+    - cron: "0 6 1,15 * *"   # 1st and 15th of each month, 06:00 UTC
   workflow_dispatch:
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: update-atlas
@@ -55,3 +57,19 @@ jobs:
           git add index.html atlas_positions.json preview.png
           git commit -m "Weekly atlas update ($(date -u +%Y-%m-%d))"
           git push
+
+      - name: Open or update the "New papers need tags" issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          n=$(python tagging.py count)
+          if [ "$n" = "0" ]; then echo "All papers are tagged."; exit 0; fi
+          python tagging.py issue > issue.md
+          title="New papers need tags"
+          num=$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number')
+          if [ -n "$num" ]; then
+            gh issue edit "$num" --body-file issue.md
+            gh issue comment "$num" --body "Updated: $n paper(s) now need tags. @franciscovillaescusa"
+          else
+            gh issue create --title "$title" --body-file issue.md
+          fi
