@@ -48,8 +48,8 @@ jobs:
               echo "$p: ok"
             else
               echo "::error::$p failed; its site is left unchanged"
-              git checkout -- "$p" "projects/$p/positions.json" 2>/dev/null || true
-              git clean -fdq -- "$p" "projects/$p/positions.json" || true
+              git checkout -- "$p" "projects/$p/positions.json" "projects/$p/s2_matches.json" 2>/dev/null || true
+              git clean -fdq -- "$p" "projects/$p/positions.json" "projects/$p/s2_matches.json" || true
               failed="$failed $p"
             fi
             echo "::endgroup::"
@@ -58,7 +58,7 @@ jobs:
 
       - name: Commit if changed
         run: |
-          git add -A -- $(ls projects) projects/*/positions.json
+          git add -A -- $(ls projects) projects/*/positions.json projects/*/s2_matches.json
           if git diff --cached --quiet; then
             echo "No changes."
             exit 0

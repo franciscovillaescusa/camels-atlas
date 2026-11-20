@@ -84,6 +84,7 @@ Set `"ga_id": ""` to disable it (Quijote has it off).
 | `projects/<name>/tags.json` | suite / data / method tags per paper (hand-editable) |
 | `projects/<name>/overrides.json` | hand corrections per paper |
 | `projects/<name>/positions.json` | stored layout positions and first-seen dates (generated; commit it) |
+| `projects/<name>/s2_matches.json` | Semantic Scholar title searches for entries without arXiv ID or DOI, kept between runs (generated; commit it) |
 | `<name>/index.html`, `<name>/preview.png` | the project's site and its link-preview image (generated; do not edit by hand) |
 | `index.html` | landing page linking to every atlas (hand-written) |
 | `validate_atlas.py` | data validation against the sources (run by the update job) |
@@ -111,6 +112,13 @@ arXiv papers have embeddings (theses rarely have one). After building, it also c
 links, the links found by ADS and the papers with ADS citation counts did not drop by more than 10% from the
 current site, since an API that fails part-way makes the build fall back silently. If a check fails it stops without changing the page or the cache, so a broken
 fetch is never published; use `--force` when a drop is real.
+
+Entries without an arXiv ID or DOI (mostly theses) are found in Semantic Scholar by a title search, which is
+rate-limited (about 12 s each without an API key: 6 of the 7.5 minutes of a Quijote build). The results are
+kept in `projects/<name>/s2_matches.json`: a found paper is not searched again, and a title Semantic Scholar
+did not know is searched again after 30 to 59 days (spread by title), since theses do appear there later.
+A free [Semantic Scholar API key](https://www.semanticscholar.org/product/api#api-key) in `$S2_API_KEY` (a
+repository secret for the update job) makes all its requests faster.
 
 For ADS citation counts, put your [ADS API token](https://ui.adsabs.harvard.edu/user/settings/token)
 in `~/.ads/dev_key` or the `ADS_TOKEN` environment variable.

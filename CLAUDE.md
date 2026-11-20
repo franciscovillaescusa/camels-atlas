@@ -35,8 +35,8 @@ or run step 3 for every project.
 6. Rebuild and test:
    `python3 build_atlas.py --project <name> --offline && python3 validate_atlas.py --project <name> && python3 check_atlas.py --project <name> --chrome`
    (`check_atlas.py` needs `pip install playwright`).
-7. Show the user the tags you assigned, then commit (`projects/<name>/`, `<name>/index.html`,
-   `<name>/preview.png`) and push.
+7. Show the user the tags you assigned, then commit (`projects/<name>/` — tags, overrides, positions,
+   s2_matches — plus `<name>/index.html` and `<name>/preview.png`) and push.
 8. Close the open issue: `gh issue close <number> -c "Tagged in <commit>"`.
 
 ## Setting up a new project

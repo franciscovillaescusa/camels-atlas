@@ -220,3 +220,55 @@ def test_configure_refuses_bad_configs(B, cfg, change, message):
     change(cfg)
     with pytest.raises(SystemExit, match=message):
         B.configure(cfg)
+
+
+# ----------------------------------------------------------------------------- Semantic Scholar title matches
+class S2Response:
+    def __init__(self, code, data=None):
+        self.status_code, self._data = code, data
+
+    def json(self):
+        return self._data
+
+    def raise_for_status(self):
+        pass
+
+
+def test_s2_title_matches_are_kept_between_runs(B, monkeypatch):
+    from datetime import date, timedelta
+    today = date.today()
+    old = (today - timedelta(days=60)).isoformat()            # older than any recheck_days (30-59)
+    entries = [entry(1, "Paper on arXiv", "2101.00001"),
+               entry(2, "Thesis found before"), entry(3, "Thesis missed recently"),
+               entry(4, "Thesis missed long ago"), entry(5, "Brand new thesis"), entry(6, "Thesis while rate limited")]
+    nt = B.norm_title
+    matches = {nt("Thesis found before"): {"id": "S2-found", "checked": old},
+               nt("Thesis missed recently"): {"id": None, "checked": today.isoformat()},
+               nt("Thesis missed long ago"): {"id": None, "checked": old}}
+    searched = []
+
+    def s2_get(url, method="GET", **kw):
+        if url.endswith("/search/match"):
+            q = kw["params"]["query"]
+            searched.append(q)
+            if q == "Thesis while rate limited":
+                return S2Response(429)
+            if q == "Thesis missed long ago":
+                return S2Response(200, {"data": [{"paperId": "S2-late", "title": q}]})   # now known to Semantic Scholar
+            return S2Response(404, {"error": "no match"})
+        return S2Response(200, [{"paperId": k} for k in kw["json"]["ids"]])              # the batch request
+    monkeypatch.setattr(B, "s2_get", s2_get)
+    monkeypatch.setattr(B.time, "sleep", lambda s: None)
+    recs = B.fetch_semantic_scholar(entries, {}, matches)
+    # only the stale miss, the new title and the rate-limited one are searched
+    assert searched == ["Thesis missed long ago", "Brand new thesis", "Thesis while rate limited"]
+    assert [r["paperId"] if r else None for r in recs] == ["ARXIV:2101.00001", "S2-found", None, "S2-late", None, None]
+    assert matches[nt("Thesis missed long ago")] == {"id": "S2-late", "checked": today.isoformat()}
+    assert matches[nt("Brand new thesis")] == {"id": None, "checked": today.isoformat()}
+    assert nt("Thesis while rate limited") not in matches          # a failed search is tried again next time
+    assert matches[nt("Thesis found before")]["checked"] == old    # known IDs are not searched again
+
+
+def test_recheck_days_spread(B):
+    days = {B.recheck_days(f"title{i}") for i in range(200)}
+    assert min(days) >= 30 and max(days) <= 59 and len(days) > 20

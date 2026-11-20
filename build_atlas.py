@@ -53,6 +53,7 @@ project with an empty "topic_seed" (a new project) is clustered from scratch aut
 """
 import argparse
 import difflib
+import hashlib
 import html as html_mod
 import json
 import os
@@ -172,7 +173,9 @@ def s2_get(url, method="GET", **kw):
         r = requests.request(method, url, headers=hdr, timeout=120, **kw)
         if r.status_code in (200, 404):
             return r
-        time.sleep(5 * (attempt + 1))
+        if attempt < 7:
+            log(f"Semantic Scholar HTTP {r.status_code}, retrying in {5 * (attempt + 1)} s...")
+            time.sleep(5 * (attempt + 1))
     return r
 
 
@@ -180,9 +183,20 @@ def norm_title(t):
     return re.sub(r"[^a-z0-9]", "", unicodedata.normalize("NFKD", t).lower())
 
 
-def fetch_semantic_scholar(entries, ads_rec):
-    """One Semantic Scholar record per entry: by arXiv ID, else DOI, else an exact title match."""
-    keys = []
+def recheck_days(title_key):
+    """A title Semantic Scholar did not know is searched again after 30-59 days (spread by title, so the
+    misses are not all searched in the same run): theses do appear there later."""
+    return 30 + int(hashlib.md5(title_key.encode()).hexdigest(), 16) % 30
+
+
+def fetch_semantic_scholar(entries, ads_rec, matches=None):
+    """One Semantic Scholar record per entry: by arXiv ID, else DOI, else an exact title match.
+    Title searches are slow (rate-limited: ~12 s each without an API key), so their results are kept in
+    `matches` ({normalised title: {"id": paperId or None, "checked": date}}, updated in place and saved as
+    projects/<name>/s2_matches.json): a found ID is reused, a miss is searched again after recheck_days.
+    A search that fails (e.g. still rate-limited) is not recorded, so it is tried again next time."""
+    matches = {} if matches is None else matches
+    today, keys, n_new, n_kept = date.today(), [], 0, 0
     for e in entries:
         doi = ((ads_rec.get(e["bibcode"]) or {}).get("doi") or [None])[0] if e["bibcode"] else None
         if e["arxiv"]:
@@ -190,11 +204,23 @@ def fetch_semantic_scholar(entries, ads_rec):
         elif doi:
             keys.append(f"DOI:{doi}")
         else:
+            t = norm_title(e["title"]); m = matches.get(t)
+            if m and (m["id"] or (today - date.fromisoformat(m["checked"])).days < recheck_days(t)):
+                keys.append(m["id"]); n_kept += 1
+                continue
             r = s2_get("https://api.semanticscholar.org/graph/v1/paper/search/match",
                        params={"query": e["title"], "fields": "title"})
-            hit = r.json()["data"][0] if r.status_code == 200 and r.json().get("data") else None
-            keys.append(hit["paperId"] if hit and norm_title(hit["title"]) == norm_title(e["title"]) else None)
+            if r.status_code in (200, 404):
+                hit = r.json()["data"][0] if r.status_code == 200 and r.json().get("data") else None
+                pid = hit["paperId"] if hit and norm_title(hit["title"]) == t else None
+                matches[t] = {"id": pid, "checked": today.isoformat()}
+            else:
+                pid = None
+                log(f"Semantic Scholar title search failed (HTTP {r.status_code}); will retry next time: {e['title'][:60]}")
+            keys.append(pid); n_new += 1
             time.sleep(1.5)
+    if n_new or n_kept:
+        log(f"Semantic Scholar title matches: {n_new} searched, {n_kept} known from s2_matches.json")
     fields = "title,year,venue,citationCount,externalIds,references.externalIds,embedding.specter_v2"
     want = [k for k in keys if k]
     got = {}
@@ -1114,6 +1140,7 @@ def main():
     ap.add_argument("--overrides", help="file with hand corrections per paper (default: projects/<project>/overrides.json)")
     ap.add_argument("--tags", help="file with the suite/data/method tags of each paper (default: projects/<project>/tags.json)")
     ap.add_argument("--positions", help="file with the stored layout positions (default: projects/<project>/positions.json)")
+    ap.add_argument("--s2-matches", help="Semantic Scholar title matches kept between runs (default: projects/<project>/s2_matches.json)")
     ap.add_argument("--relayout", action="store_true",
                     help="ignore the stored positions and compute all layouts from scratch")
     ap.add_argument("--force", action="store_true",
@@ -1128,6 +1155,7 @@ def main():
     args.overrides = args.overrides or os.path.join(pdir, "overrides.json")
     args.tags = args.tags or os.path.join(pdir, "tags.json")
     args.positions = args.positions or os.path.join(pdir, "positions.json")
+    args.s2_matches = args.s2_matches or os.path.join(pdir, "s2_matches.json")
     os.makedirs(args.cache, exist_ok=True)
     os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
 
@@ -1136,7 +1164,8 @@ def main():
     bibs = [e["bibcode"] for e in entries if e["bibcode"]]
     arx = load_or_fetch(args.cache, "arxiv.json", lambda: fetch_arxiv(ax_ids), args.offline)
     ads_rec = load_or_fetch(args.cache, "ads_records.json", lambda: fetch_ads_records(bibs), args.offline)
-    s2 = load_or_fetch(args.cache, "s2.json", lambda: fetch_semantic_scholar(entries, ads_rec), args.offline)
+    s2_matches = json.load(open(args.s2_matches)) if os.path.exists(args.s2_matches) else {}
+    s2 = load_or_fetch(args.cache, "s2.json", lambda: fetch_semantic_scholar(entries, ads_rec, s2_matches), args.offline)
     ads_cit = load_or_fetch(args.cache, "ads.json", lambda: fetch_ads_citations(ax_ids), args.offline)
     all_bibs = sorted({v["bibcode"] for v in ads_cit.values()} | set(ads_rec))
     refs_path = os.path.join(args.cache, "ads_refs.json")
@@ -1172,6 +1201,10 @@ def main():
     for path, d in PENDING_CACHE.items():
         with open(path, "w") as f:
             json.dump(d, f)
+    if not args.offline:   # the Semantic Scholar title matches, kept in the repository (see fetch_semantic_scholar)
+        with open(args.s2_matches, "w") as f:
+            json.dump(s2_matches, f, indent=0, sort_keys=True)
+            f.write("\n")
     # same papers, citations and positions as the current page: keep its date, so nothing changes
     strip = lambda d: json.dumps({k: v for k, v in d.items() if k != "fetched"}, sort_keys=True)
     if prev and strip(prev) == strip(data):
