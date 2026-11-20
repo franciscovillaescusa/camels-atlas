@@ -894,8 +894,8 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
         for p in mem[:4]:
             log(f"      - {p['t'][:90]}")
     data = {"topics": TOPIC_NAMES, "topicsShort": TOPIC_SHORT, "authors": authors, "papers": papers,
-            "co": {m: [new_store["coauthors" + m].get(a) for a in authors] for m in ("1", "2")},
-            "co2d": {m: [new_store["coauthors" + m + "_2d"].get(a) for a in authors] for m in ("1", "2")},
+            "co": {"1": [new_store["coauthors1"].get(a) for a in authors]},   # all authors
+            "co2d": {"1": [new_store["coauthors1_2d"].get(a) for a in authors]},
             "refsrc": {"both": n_both, "s2": n_s2, "ads": n_ads}, "tagaxes": TAG_AXES,
             "fetched": fetched, "nads": sum(1 for p in papers if p["cs"] == 0)}
     return data, new_store
