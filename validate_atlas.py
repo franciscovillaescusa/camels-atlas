@@ -185,6 +185,20 @@ def run():
     check("co-author pairs recomputed", len(pairs) > len(AU), f"{len(pairs)} pairs")
     co = D["co"]["1"]
     check("every author has a co-author-map position", all(isinstance(v, list) and len(v) == 3 for v in co))
+    # small isolated teams must be drawn together (their links near the intended length)
+    cnt = Counter((min(a, b), max(a, b)) for p in P for a in p["au"] for b in p["au"] if a < b)
+    par = list(range(len(AU)))
+    def root(x):
+        while par[x] != x:
+            par[x] = par[par[x]]; x = par[x]
+        return x
+    for a_, b_ in cnt:
+        par[root(a_)] = root(b_)
+    size = Counter(root(i) for i in range(len(AU)))
+    for key in ("co", "co2d"):
+        X = np.array(D[key]["1"], float)
+        st = [np.linalg.norm(X[a_] - X[b_]) / (60 / math.sqrt(c)) for (a_, b_), c in cnt.items() if size[root(a_)] <= 5]
+        check(f"small co-author teams drawn together ({key})", max(st) <= 2.0, f"longest link {max(st):.1f}x its intended length")
 
     # ------------------------------------------------------------------ 6. topics, overrides, tags
     check("every paper has a valid topic", all(0 <= p["k"] < len(TOP) for p in P))
