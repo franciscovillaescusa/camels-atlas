@@ -390,7 +390,7 @@ let W = 0, H = 0, raf = 0;
 // ---------- zoom & pan (own small implementation: screen = (x, y) + k * world) ----------
 const T = { k: 1, x: 0, y: 0, applyX(v) { return this.x + this.k * v; }, applyY(v) { return this.y + this.k * v; } };
 const ZMIN = 0.05, ZMAX = 40;
-let zAnim = 0, zTarget = null, userMoved = false;   // userMoved: stop auto-fitting once the user zooms or pans   // zTarget: where a running zoom animation will end
+let zAnim = 0, zTarget = null, userMoved = false, fitK = 1;   // userMoved: stop auto-fitting once the user zooms or pans   // zTarget: where a running zoom animation will end
 function setView2(k, x, y) { T.k = k; T.x = x; T.y = y; hideTip(); draw(); }
 function animateTo(k, x, y, ms) {
   cancelAnimationFrame(zAnim);
@@ -435,15 +435,16 @@ function resize() {
 }
 function fit(animate, all) {   // all: frame every dot (fit button); otherwise the central 98%
   if (S.view === 'table') return;
+  const done = k => { fitK = k; return k; };
   const lay = layout(), { nodes } = lay; if (!nodes.length || !W) return;
   const reduce0 = matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (lay.is3d) {
-    animateTo(Math.min(W - 40, H - 40) / (2 * lay.R * (all ? 1.6 : 1.15)), W / 2, H / 2, animate && !reduce0 ? 450 : 0); return;
+    animateTo(done(Math.min(W - 40, H - 40) / (2 * lay.R * (all ? 1.6 : 1.15))), W / 2, H / 2, animate && !reduce0 ? 450 : 0); return;
   }
   const q = (a, f) => { const s = a.slice().sort((u, v) => u - v); return s[Math.min(s.length - 1, Math.max(0, Math.round(f * (s.length - 1))))]; };
   const xs = nodes.map(n => n.x), ys = nodes.map(n => n.y), lo = all ? 0 : 0.01, hi = all ? 1 : 0.99;
   const x0 = q(xs, lo), x1 = q(xs, hi), y0 = q(ys, lo), y1 = q(ys, hi);
-  const k = Math.min((W - 180) / (x1 - x0 || 1), (H - 90) / (y1 - y0 || 1));   // margins leave room for labels
+  const k = done(Math.min((W - 180) / (x1 - x0 || 1), (H - 90) / (y1 - y0 || 1)));   // margins leave room for labels
   animateTo(k, W / 2 - k * (x0 + x1) / 2, H / 2 - k * (y0 + y1) / 2, animate && !reduce0 ? 450 : 0);
 }
 const draw = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; render(); }); };
@@ -551,9 +552,12 @@ function render() {
   const fB = css('--f-body');
   if (S.view === 'topics' && !F) labels.forEach(l => { if (S.on.has(l.k)) label(l.name, T.applyX(l.x), T.applyY(l.y) - 24, '600 13px ' + fB, 'center', [0, -18, 18, -36, 36, -54, 54, -72, 72]); });
   if (S.view === 'coauthors') {
-    const cand = nodes.filter(n => aOn[n.id] && (F ? F.authors.has(n.id) : AU[n.id].papers.length >= Math.max(4, 22 / T.k)))
+    // at rest: the most prolific authors (10 at the starting zoom, more as you zoom in); overlapping labels are skipped
+    const nLab = Math.min(80, Math.round(10 * Math.max(1, T.k / fitK) ** 2));
+    let cand = nodes.filter(n => aOn[n.id] && (!F || F.authors.has(n.id)))
       .sort((a, b) => (F && b.id === F.f.i) - (F && a.id === F.f.i) || AU[b.id].papers.length - AU[a.id].papers.length);
-    cand.forEach(n => label(AU[n.id].name, sx(n) + rad(n) + 4, sy(n), (F && F.f.kind === 'a' && F.f.i === n.id ? '600 ' : '500 ') + '11.5px ' + fB, 'left', [0], F && n.id === F.f.i));
+    if (!F) cand = cand.slice(0, nLab);
+    cand.forEach(n => label(AU[n.id].name, sx(n) + rad(n) + 4, sy(n), (F && F.f.kind === 'a' && F.f.i === n.id ? '600 ' : '500 ') + '11.5px ' + fB, 'left', [0, -12, 12], F && n.id === F.f.i));
   }
   if (S.view === 'citations' && F && F.f.kind === 'p') {
     const cand = nodes.filter(n => n.id === F.f.i || (T.k > 1.6 && F.papers.has(n.id))).sort((a, b) => (b.id === F.f.i) - (a.id === F.f.i));
