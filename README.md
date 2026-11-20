@@ -73,7 +73,9 @@ Set `GA_ID = ""` to disable it.
 |---|---|
 | `index.html` | the site (generated; do not edit by hand) |
 | `build_camels_atlas.py` | fetches the data and builds `index.html` |
-| `atlas_template.html` | the page's HTML, CSS and JavaScript; the build inserts the data at `__DATA__` |
+| `atlas.html` | page structure; the build inserts `atlas.css`, `atlas.js` and the data into it |
+| `atlas.css` | page styles |
+| `atlas.js` | page behaviour (views, filters, maps, table, trends) |
 | `atlas_tags.json` | suite / data / method tags per paper (hand-editable) |
 | `atlas_overrides.json` | hand corrections per paper |
 | `atlas_positions.json` | stored layout positions (generated; commit it) |

@@ -19,9 +19,9 @@ Pipeline
   publications page; if no date is known, the year is estimated from the entry's position
   in the list (which is newest first) and marked as estimated on the page.
   5. Analysis            k-means topics (10, hand-named), 3D t-SNE, author-name merging
-  6. Output              one self-contained HTML file built from atlas_template.html (the page's
-                         HTML, CSS and JavaScript; __DATA__ is replaced by the data). Only Google
-                         Fonts is loaded from outside.
+  6. Output              one self-contained index.html built from atlas.html (structure), atlas.css
+                         (styles) and atlas.js (behaviour), with the data inserted at __DATA__.
+                         Only Google Fonts and Google Analytics are loaded from outside.
 
 Usage
   python3 build_camels_atlas.py                 # fetch everything fresh, write index.html
@@ -953,8 +953,8 @@ def main():
     ap.add_argument("--offline", action="store_true", help="rebuild from the cached downloads, no network")
     ap.add_argument("--recluster", action="store_true",
                     help="redo the k-means topic clustering instead of using the fixed TOPIC_SEED assignments")
-    ap.add_argument("--template", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "atlas_template.html"),
-                    help="page template (HTML + CSS + JS); default: atlas_template.html next to this script")
+    ap.add_argument("--template", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "atlas.html"),
+                    help="page template; its styles and code are read from atlas.css and atlas.js next to it")
     ap.add_argument("--overrides", default="atlas_overrides.json",
                     help="file with hand corrections per paper (default: atlas_overrides.json)")
     ap.add_argument("--tags", default="atlas_tags.json",
@@ -1007,8 +1007,10 @@ def main():
     if prev and strip(prev) == strip(data):
         data["fetched"] = prev["fetched"]
     blob = json.dumps(data, separators=(",", ":"), ensure_ascii=False).replace("</", "<\\/")
-    with open(args.template, encoding="utf-8") as f:
-        template = f.read()
+    # page source: atlas.html with __CSS__ / __JS__ replaced by atlas.css / atlas.js (one self-contained file)
+    base = os.path.splitext(args.template)[0]
+    read = lambda path: open(path, encoding="utf-8").read()
+    template = read(args.template).replace("__CSS__", read(base + ".css")).replace("__JS__", read(base + ".js"))
     html = template.replace("__DATA__", blob)
     # complete document: <head> with description, link-preview and analytics tags
     head, body = html.split("<header>", 1)
