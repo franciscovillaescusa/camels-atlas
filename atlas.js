@@ -168,9 +168,13 @@ function applyFilters() {
     for (const tk of toks) { const v = tokScore(p, tk); if (!v) return false; s += v; }
     S.score[p.i] = s; return true;
   };
-  pOn = P.map(p => p.y >= S.y0 && p.y <= S.y1 && S.on.has(p.k) && tagOk(p) && (!S.newOnly || p.nw) && qOk(p) && (PLAY.upto === null || p.rank <= PLAY.upto));
+  // every filter except the search text (years, topics, tags, "New", the play animation)
+  const base = P.map(p => p.y >= S.y0 && p.y <= S.y1 && S.on.has(p.k) && tagOk(p) && (!S.newOnly || p.nw) && (PLAY.upto === null || p.rank <= PLAY.upto));
+  pOn = P.map((p, i) => base[i] && qOk(p));
+  // a search that matches author names shows those authors, but only if one of their papers passes the
+  // other filters; otherwise an author is shown when one of their shown papers is
   const nameHit = qn ? AU.filter(a => a.norm.includes(qn)) : [];
-  aOn = AU.map(a => nameHit.length ? a.norm.includes(qn) : a.papers.some(j => pOn[j]));
+  aOn = AU.map(a => nameHit.length ? a.norm.includes(qn) && a.papers.some(j => base[j]) : a.papers.some(j => pOn[j]));
   nShown = pOn.filter(Boolean).length;
   const qc = $('qcount'); if (qc) qc.textContent = toks.length ? `${nShown} match${nShown === 1 ? '' : 'es'}` : '';
 }
