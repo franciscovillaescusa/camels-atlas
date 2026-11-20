@@ -1370,8 +1370,15 @@ cv.addEventListener('keydown', e => {
   const m = { ArrowLeft: [-0.12, 0], ArrowRight: [0.12, 0], ArrowUp: [0, -0.12], ArrowDown: [0, 0.12] }[e.key]; if (!m) return;
   e.preventDefault(); CAM.yaw += m[0]; CAM.pitch = Math.max(-1.45, Math.min(1.45, CAM.pitch + m[1])); draw();
 });
+// auto-rotation pauses after 20 s without interaction and while the canvas is off-screen (saves battery);
+// any click, drag, scroll, key press or pointer movement over the map restarts it
+const IDLE_MS = 20000;
+let lastUse = performance.now(), onScreen = true;
+['pointerdown', 'wheel', 'keydown'].forEach(ev => document.addEventListener(ev, () => { lastUse = performance.now(); }, { passive: true }));
+cv.addEventListener('pointermove', () => { lastUse = performance.now(); }, { passive: true });
+if ('IntersectionObserver' in window) new IntersectionObserver(es => { onScreen = es[0].isIntersecting; }).observe(stage);
 (function spin() {
-  if (CAM.spin && !rot && !S.hover && !document.hidden && S.view !== 'table') { CAM.yaw += 0.0025; render(); }
+  if (CAM.spin && !rot && !S.hover && !document.hidden && S.view !== 'table' && onScreen && performance.now() - lastUse < IDLE_MS) { CAM.yaw += 0.0025; render(); }
   requestAnimationFrame(spin);
 })();
 cv.addEventListener('click', e => { if (dragged) { dragged = false; return; } const r = cv.getBoundingClientRect(); select(pick(e.clientX - r.left, e.clientY - r.top)); });
