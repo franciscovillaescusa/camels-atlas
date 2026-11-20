@@ -1,0 +1,750 @@
+<title>CAMELS Literature Atlas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one working screen — header + toolbar on top, canvas map left, detail panel right (stacks below on phones). */
+:root {
+  --bg: #f4f6f9; --surface: #ffffff; --ink: #12151c; --ink-2: #4c5361; --muted: #7d8492;
+  --line: #e1e5eb; --edge: rgba(18,21,28,0.13); --edge-hi: #12151c; --accent: #2a78d6; --wash: rgba(42,120,214,0.08);
+  --t0: #2a78d6; --t1: #eb6834; --t2: #1baf7a; --t3: #eda100; --t4: #e87ba4; --t5: #008300; --t6: #6250d6; --t7: #e34948; --t8: #8c6d1f; --t9: #00a5b5; --t10: #8b9099;
+  --f-display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --f-body: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e1116; --surface: #161a21; --ink: #eef0f4; --ink-2: #b6bcc8; --muted: #858c99;
+  --line: #2a303b; --edge: rgba(238,240,244,0.12); --edge-hi: #eef0f4; --accent: #3987e5; --wash: rgba(57,135,229,0.14);
+  --t0: #3987e5; --t1: #d95926; --t2: #199e70; --t3: #c98500; --t4: #d55181; --t5: #008300; --t6: #9085e9; --t7: #e66767; --t8: #9a7b26; --t9: #0f9fae; --t10: #7b808a; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0e1116; --surface: #161a21; --ink: #eef0f4; --ink-2: #b6bcc8; --muted: #858c99;
+  --line: #2a303b; --edge: rgba(238,240,244,0.12); --edge-hi: #eef0f4; --accent: #3987e5; --wash: rgba(57,135,229,0.14);
+  --t0: #3987e5; --t1: #d95926; --t2: #199e70; --t3: #c98500; --t4: #d55181; --t5: #008300; --t6: #9085e9; --t7: #e66767; --t8: #9a7b26; --t9: #0f9fae; --t10: #7b808a; color-scheme: dark; }
+
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 14px 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; }
+*, *::before, *::after { box-sizing: border-box; }
+button, input, select { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
+.brand { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: 22px; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+.stats { color: var(--ink-2); font-size: 13px; font-variant-numeric: tabular-nums; }
+.stats b { color: var(--ink); font-weight: 600; }
+
+.modes { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 3px; gap: 2px; }
+.modes button { border: 0; background: transparent; padding: 7px 14px; border-radius: 7px; cursor: pointer; font-weight: 500; color: var(--ink-2);
+  display: inline-flex; align-items: center; gap: 8px; }
+.modes button svg { width: 16px; height: 16px; flex: none; }
+.modes button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.modes button:not([aria-pressed="true"]):hover { background: var(--wash); color: var(--ink); }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+.field { display: flex; align-items: center; gap: 6px; color: var(--ink-2); font-size: 13px; }
+.search { flex: 1 1 260px; max-width: 380px; position: relative; }
+.search input { width: 100%; padding: 7px 10px 7px 32px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--muted); }
+select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-variant-numeric: tabular-nums; }
+.toolbar select { max-width: 190px; }
+.tablewrap { position: absolute; inset: 0; overflow: auto; }
+.ptable { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ptable caption { text-align: left; padding: 10px 12px; color: var(--muted); font-size: 12px; }
+.ptable th { position: sticky; top: 0; background: var(--surface); text-align: left; font-weight: 600; font-size: 12px;
+  color: var(--ink-2); border-bottom: 1px solid var(--line); padding: 0; z-index: 1; white-space: nowrap; }
+.ptable th button { all: unset; display: block; padding: 9px 10px; cursor: pointer; }
+.ptable th button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.ptable th[aria-sort="ascending"] button::after { content: " ▲"; font-size: 9px; }
+.ptable th[aria-sort="descending"] button::after { content: " ▼"; font-size: 9px; }
+.ptable td { padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.ptable td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ptable td.tt { min-width: 260px; color: var(--ink); }
+.ptable td.sm { color: var(--ink-2); font-size: 12px; min-width: 110px; }
+.ptable tbody tr { cursor: pointer; }
+.ptable tbody tr:hover { background: var(--wash); }
+.ptable tbody tr[aria-selected="true"] { background: var(--wash); box-shadow: inset 3px 0 0 var(--accent); }
+.ptable tbody tr:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.ptable i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+.tagrow { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 8px; align-items: baseline; margin-bottom: 4px; }
+.tagax { font-size: 12px; color: var(--muted); }
+.tag { border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; font-size: 12px; color: var(--ink); background: var(--wash); }
+.tag.unsure { background: transparent; border-style: dashed; color: var(--ink-2); }
+.tagnote { font-size: 12px; margin-top: 4px; }
+.chk { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-2); cursor: pointer; }
+.ghost { border: 1px solid var(--line); background: var(--surface); padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--ink-2); }
+.ghost:hover { color: var(--ink); border-color: var(--muted); }
+
+.legend { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 7px; padding: 4px 10px 4px 8px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--surface); cursor: pointer; font-size: 12.5px; color: var(--ink); }
+.chip i { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.chip[aria-pressed="false"] { color: var(--muted); }
+.chip[aria-pressed="false"] i { background: transparent !important; box-shadow: inset 0 0 0 1.5px var(--muted); }
+.chip .n { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 12px; }
+.stage { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; min-height: 420px; }
+canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+canvas.hovering { cursor: pointer; }
+.stage-note { position: absolute; left: 12px; bottom: 10px; font-size: 12px; color: var(--muted); pointer-events: none;
+  background: color-mix(in srgb, var(--surface) 85%, transparent); padding: 2px 6px; border-radius: 6px; }
+.zoom { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.zoom button { width: 30px; height: 30px; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; cursor: pointer; font-size: 16px; line-height: 1; color: var(--ink-2); }
+.tip { position: absolute; pointer-events: none; max-width: 300px; background: var(--ink); color: var(--surface); padding: 7px 10px; border-radius: 8px;
+  font-size: 12.5px; line-height: 1.35; box-shadow: 0 4px 16px rgba(0,0,0,.18); }
+.tip small { display: block; opacity: .75; margin-top: 3px; font-variant-numeric: tabular-nums; }
+
+aside { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: auto; min-width: 0; padding: 18px 18px 22px;
+  display: flex; flex-direction: column; gap: 14px; }
+aside h2 { font-family: var(--f-display); font-weight: 600; font-size: 18px; line-height: 1.3; margin: 0; text-wrap: balance; }
+aside h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 6px; font-weight: 600; }
+aside p { margin: 0; color: var(--ink-2); }
+.eyebrow { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-2); }
+.eyebrow i { width: 10px; height: 10px; border-radius: 50%; }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.meta a, .mono { font-family: var(--f-mono); font-size: 12.5px; }
+a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
+.abstract { font-size: 13px; line-height: 1.55; color: var(--ink-2); }
+.names { display: flex; flex-wrap: wrap; gap: 4px; }
+.names button { border: 1px solid var(--line); background: transparent; border-radius: 6px; padding: 2px 7px; font-size: 12.5px; cursor: pointer; color: var(--ink); }
+.names button:hover { background: var(--wash); border-color: var(--accent); }
+.list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.list button { width: 100%; text-align: left; border: 0; background: transparent; padding: 7px 6px; border-radius: 6px; cursor: pointer;
+  display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 9px; align-items: baseline; }
+.list button:hover { background: var(--wash); }
+.list i { width: 8px; height: 8px; border-radius: 50%; transform: translateY(-1px); }
+.list .tt { font-size: 13px; color: var(--ink); line-height: 1.35; }
+.list .num { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.back { align-self: flex-start; }
+.how { display: grid; gap: 6px; font-size: 13px; color: var(--ink-2); }
+.how div { display: grid; grid-template-columns: 74px 1fr; gap: 8px; }
+.how b { color: var(--ink); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+.bars { display: flex; height: 8px; border-radius: 4px; overflow: hidden; gap: 2px; }
+footer { font-size: 12px; color: var(--muted); }
+
+@media (max-width: 880px) {
+  body { height: auto; }
+  main { grid-template-columns: minmax(0, 1fr); }
+  .stage { height: 62vh; min-height: 380px; }
+  aside { overflow: visible; }
+  .modes button span { display: none; }
+  .modes button { padding: 8px 12px; }
+  .legend { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+  .chip { flex: none; }
+  .tapcard:not([hidden]) { display: flex; }
+}
+@media (max-width: 600px) {
+  .field label[for^="f-"] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .toolbar .field:has(select[id^="f-"]) { flex: 1 1 30%; min-width: 0; }
+  .toolbar select[id^="f-"] { width: 100%; max-width: none; }
+  .search { flex-basis: 100%; max-width: none; }
+}
+@media (pointer: coarse) {
+  .zoom button { width: 40px; height: 40px; }
+  .chip, .ghost, .names button { min-height: 34px; }
+}
+.tapcard { display: none; position: absolute; left: 10px; right: 10px; bottom: 10px; gap: 10px; align-items: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; box-shadow: 0 4px 16px rgba(0,0,0,.12); }
+.tapcard .tt { flex: 1; min-width: 0; font-size: 13px; line-height: 1.35; color: var(--ink); overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.tapcard button { flex: none; }
+@media (min-width: 881px) { .modes button span.short { display: none; } }
+</style>
+
+<header>
+  <div class="brand">
+    <h1>CAMELS Literature Atlas</h1>
+    <div class="stats" id="stats"></div>
+  </div>
+  <div class="modes" role="group" aria-label="View">
+    <button id="m-topics" data-view="topics" aria-pressed="true">
+      <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="4" cy="5" r="2"/><circle cx="10" cy="3.5" r="1.5"/><circle cx="12" cy="10" r="2.5"/><circle cx="5" cy="11.5" r="1.5"/></svg>
+      <span>Topic map</span></button>
+    <button id="m-citations" data-view="citations" aria-pressed="false">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="3.5" cy="12" r="2"/><circle cx="12.5" cy="12" r="2"/><circle cx="8" cy="3.5" r="2"/><path d="M4.6 10.3 7 5.3M11.4 10.3 9 5.3M5.5 12h5"/></svg>
+      <span>Citations</span></button>
+    <button id="m-coauthors" data-view="coauthors" aria-pressed="false">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="5.5" cy="5" r="2.3"/><circle cx="11.5" cy="6" r="1.8"/><path d="M1.5 14c.5-2.7 2-4 4-4s3.5 1.3 4 4M10 10.3c.5-.2 1-.3 1.5-.3 1.6 0 2.7 1.2 3 3.5"/></svg>
+      <span>Co-authors</span></button>
+    <button id="m-table" data-view="table" aria-pressed="false">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="2.5" width="12" height="11" rx="1.5"/><path d="M2 6h12M2 9.5h12M6.5 6v7.5"/></svg>
+      <span>Table</span></button>
+  </div>
+</header>
+
+<div class="toolbar">
+  <label class="search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3.5 3.5"/></svg>
+    <input id="q" type="search" placeholder="Search titles, authors or arXiv IDs" aria-label="Search papers"></label>
+  <span class="field"><label for="y0">Years</label> <select id="y0"></select> <span aria-hidden="true">–</span> <select id="y1" aria-label="To year"></select></span>
+  <span class="field"><label for="f-suite">Suite</label> <select id="f-suite"></select></span>
+  <span class="field"><label for="f-data">Data</label> <select id="f-data"></select></span>
+  <span class="field"><label for="f-method">Method</label> <select id="f-method"></select></span>
+  <label class="chk" id="selfwrap" hidden><input type="checkbox" id="selfc" checked> Count self-citations</label>
+  <label class="chk" id="minwrap" hidden><input type="checkbox" id="min2" checked> Only authors with 2+ papers</label>
+  <button class="ghost" id="reset">Clear filters</button>
+</div>
+<div class="legend" id="legend" aria-label="Topics"></div>
+
+<main>
+  <div class="stage" id="stage">
+    <canvas id="cv" aria-label="Interactive map of CAMELS publications" role="img"></canvas>
+    <div class="zoom"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button><button id="zfit" aria-label="Fit to view">⤢</button><button id="zdim" aria-label="Switch to 2D view">2D</button><button id="zspin" aria-label="Pause rotation" aria-pressed="true" hidden>⏸</button></div>
+    <div class="stage-note" id="note"></div>
+    <div class="tip" id="tip" hidden></div>
+    <div class="tablewrap" id="tablewrap" hidden></div>
+    <div class="tapcard" id="tapcard" hidden><span class="tt" id="tapcard-t"></span><button class="ghost" id="tapcard-go">Details ↓</button><button class="ghost" id="tapcard-x" aria-label="Close">×</button></div>
+  </div>
+  <aside id="panel" aria-live="polite"></aside>
+</main>
+<footer id="foot"></footer>
+
+<script type="application/json" id="atlas-data">__DATA__</script>
+<script>
+(() => {
+const D = JSON.parse(document.getElementById('atlas-data').textContent);
+const P = D.papers, TOP = D.topics;
+const tex = s => s.replace(/\$([^$]*)\$/g, (m, x) => x
+  .replace(/\\text\{([^}]*)\}/g, '$1').replace(/\\rm\s*/g, '').replace(/\\Omega/g, 'Ω').replace(/\\sigma/g, 'σ')
+  .replace(/\\alpha/g, 'α').replace(/\\phi/g, 'φ').replace(/\\mu/g, 'μ').replace(/\\sim/g, '~').replace(/\\times/g, '×')
+  .replace(/[{}\\]/g, '').replace(/\^/g, '').replace(/_/g, '')).replace(/\s+/g, ' ').trim();
+P.forEach((p, i) => { p.i = i; p.t = tex(p.t); p.citers = []; });
+P.forEach(p => p.r.forEach(j => P[j].citers.push(p.i)));
+// self-citation: the citing and cited paper share at least one author
+const shares = (i, j) => P[i].au.some(a => P[j].au.includes(a));
+P.forEach(p => { p.citersInd = p.citers.filter(i => !shares(i, p.i)); });
+const citeCount = p => S.selfc ? p.citers.length : p.citersInd.length;
+const citeNote = () => S.selfc ? `${P.reduce((s, p) => s + p.r.length, 0)} citation links between CAMELS papers · drag to rotate`
+  : `${P.reduce((s, p) => s + p.citersInd.length, 0)} of ${P.reduce((s, p) => s + p.r.length, 0)} citation links shown (papers without shared authors) · drag to rotate`;
+const AU = D.authors.map((name, i) => ({ i, name, papers: [] }));
+P.forEach(p => p.au.forEach(a => AU[a].papers.push(p.i)));
+AU.forEach(a => {
+  const c = new Array(TOP.length).fill(0); a.papers.forEach(j => c[P[j].k]++);
+  a.tc = c; a.topic = c.indexOf(Math.max(...c)); a.lc = a.name.toLowerCase();
+});
+P.forEach(p => { p.hay = (p.t + ' ' + p.id + ' ' + p.au.map(a => AU[a].name).join(' ')).toLowerCase(); });
+const EM = new Map();
+P.forEach(p => { for (let x = 0; x < p.au.length; x++) for (let y = x + 1; y < p.au.length; y++) {
+  const a = Math.min(p.au[x], p.au[y]), b = Math.max(p.au[x], p.au[y]), key = a * 10000 + b;
+  if (!EM.has(key)) EM.set(key, { s: a, t: b, papers: [] }); EM.get(key).papers.push(p.i);
+} });
+const CE = []; P.forEach(p => p.r.forEach(j => CE.push({ s: p.i, t: j, self: shares(p.i, j) })));
+const years = [...new Set(P.map(p => p.y))].sort();
+
+// ---------- state ----------
+const S = { view: 'topics', sel: null, hover: null, q: '', y0: years[0], y1: years[years.length - 1], on: new Set(TOP.map((_, k) => k)), min2: true, selfc: true, dim: 3, tag: { s: '', d: '', m: '' }, nTop: { topics: 25, citations: 25, coauthors: 25 } };
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+let C = {};
+const readColors = () => { C = { surface: css('--surface'), ink: css('--ink'), ink2: css('--ink-2'), muted: css('--muted'), edge: css('--edge'), edgeHi: css('--edge-hi'), accent: css('--accent'), t: TOP.map((_, k) => css('--t' + k)) }; };
+
+// ---------- filters ----------
+let pOn = [], aOn = [], nShown = 0;
+function applyFilters() {
+  const q = S.q.trim().toLowerCase();
+  const tagOk = p => ['s', 'd', 'm'].every(ax => !S.tag[ax] || (p.tg && p.tg[ax].includes(S.tag[ax])));
+  pOn = P.map(p => p.y >= S.y0 && p.y <= S.y1 && S.on.has(p.k) && (!q || p.hay.includes(q)) && tagOk(p));
+  const nameHit = q ? AU.filter(a => a.lc.includes(q)) : [];
+  aOn = AU.map(a => nameHit.length ? a.lc.includes(q) : a.papers.some(j => pOn[j]));
+  nShown = pOn.filter(Boolean).length;
+}
+
+// ---------- layouts (world coords) ----------
+const L = {};
+// centre on the mean and return a framing radius from the bulk (90th percentile), so far islands don't shrink the view
+function centre3d(nodes) {
+  const N = nodes.length, c = ['x3', 'y3', 'z3'].map(k => nodes.reduce((s, n) => s + n[k], 0) / N);
+  nodes.forEach(n => { n.x3 -= c[0]; n.y3 -= c[1]; n.z3 -= c[2]; });
+  const ds = nodes.map(n => Math.hypot(n.x3, n.y3, n.z3)).sort((a, b) => a - b);
+  return Math.max(1, ds[Math.floor(0.9 * (N - 1))]);
+}
+const med = a => { const s = a.slice().sort((u, v) => u - v); return s[s.length >> 1]; };
+function topicLayout() {
+  if (S.dim === 2) {
+    const nodes = P.map(p => ({ id: p.i, kind: 'p', x: p.x * 420, y: -p.yy * 420, r: Math.min(16, 3 + Math.sqrt(p.c) * 0.9) }));
+    const labels = TOP.map((name, k) => { const pts = nodes.filter(n => P[n.id].k === k);
+      return { k, name, x: med(pts.map(n => n.x)), y: med(pts.map(n => n.y)) }; }).filter(l => l.x !== undefined);
+    return { nodes, links: [], labels, is3d: false };
+  }
+  const nodes = P.map(p => ({ id: p.i, kind: 'p', x3: p.p3[0] * 420, y3: -p.p3[1] * 420, z3: p.p3[2] * 420, r: Math.min(16, 3 + Math.sqrt(p.c) * 0.9) }));
+  const R = centre3d(nodes);
+  const labels = TOP.map((name, k) => {
+    const pts = nodes.filter(n => P[n.id].k === k);
+    return { k, name, x3: med(pts.map(n => n.x3)), y3: med(pts.map(n => n.y3)), z3: med(pts.map(n => n.z3)) };
+  }).filter(l => l.x3 !== undefined);
+  return { nodes, links: [], labels, R, is3d: true };
+}
+// Network positions are computed by the Python build script and shipped with the data.
+function citationLayout() {
+  const d2 = S.dim === 2;
+  const nodes = P.map(p => ({ id: p.i, kind: 'p', r: 3 + Math.sqrt(citeCount(p)) * 2.2,
+    ...(d2 ? { x: p.c2[0], y: p.c2[1] } : { x3: p.c3[0], y3: p.c3[1], z3: p.c3[2] }) }));
+  const links = CE.map(e => ({ source: nodes[e.s], target: nodes[e.t], s: e.s, t: e.t, w: 0.45, self: e.self }));
+  return d2 ? { nodes, links, labels: [], is3d: false } : { nodes, links, labels: [], R: centre3d(nodes), is3d: true };
+}
+function coauthorLayout(min2) {
+  const d2 = S.dim === 2, pos = (d2 ? D.co2d : D.co)[min2 ? '2' : '1'], keep = AU.filter(a => pos[a.i]);
+  const nodes = keep.map(a => ({ id: a.i, kind: 'a', r: 2.5 + Math.sqrt(a.papers.length) * 2,
+    ...(d2 ? { x: pos[a.i][0], y: pos[a.i][1] } : { x3: pos[a.i][0], y3: pos[a.i][1], z3: pos[a.i][2] }) }));
+  const byId = new Map(nodes.map(n => [n.id, n]));
+  const links = [...EM.values()].filter(e => byId.has(e.s) && byId.has(e.t)).map(e => ({
+    source: byId.get(e.s), target: byId.get(e.t), s: e.s, t: e.t, papers: e.papers,
+    w: e.papers.reduce((s, j) => s + 1 / (P[j].au.length - 1), 0) }));  // Newman collaboration strength
+  return d2 ? { nodes, links, labels: [], is3d: false } : { nodes, links, labels: [], R: centre3d(nodes), is3d: true };
+}
+// camera for the 3D view
+const CAM = { yaw: 0.6, pitch: -0.25, spin: !matchMedia('(prefers-reduced-motion: reduce)').matches, pv: [0, 0, 0], snap: true };
+// Rotation centre: the selected node; for a selection of the other kind, the mean of its related nodes
+// (an author's papers in the paper views, a paper's authors in the co-author view); else the graph centre.
+function pivotTarget(lay) {
+  if (!S.sel || !lay.nodes.length) return [0, 0, 0];
+  const isP = lay.nodes[0].kind === 'p', ids = new Set();
+  if (S.sel.kind === (isP ? 'p' : 'a')) ids.add(S.sel.i);
+  else if (S.sel.kind === 'a') AU[S.sel.i].papers.forEach(j => ids.add(j));
+  else P[S.sel.i].au.forEach(a => ids.add(a));
+  const ns = lay.nodes.filter(n => ids.has(n.id));
+  if (!ns.length) return [0, 0, 0];
+  return ['x3', 'y3', 'z3'].map(k => ns.reduce((s, n) => s + n[k], 0) / ns.length);
+}
+function project(lay) {
+  // glide the rotation centre toward its target (instantly on view switch or with reduced motion)
+  const tg = pivotTarget(lay), pv = CAM.pv, inst = CAM.snap || matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let moving = false;
+  for (let i = 0; i < 3; i++) { const d = tg[i] - pv[i]; if (inst || Math.abs(d) < 0.05) pv[i] = tg[i]; else { pv[i] += d * 0.15; moving = true; } }
+  CAM.snap = false; if (moving) draw();
+  const cy = Math.cos(CAM.yaw), sy_ = Math.sin(CAM.yaw), cp = Math.cos(CAM.pitch), sp = Math.sin(CAM.pitch), Dc = lay.R * 3;
+  for (const n of lay.nodes.concat(lay.labels)) {
+    const X = n.x3 - pv[0], Y = n.y3 - pv[1], Z = n.z3 - pv[2];
+    const x1 = X * cy + Z * sy_, z1 = -X * sy_ + Z * cy;
+    const y2 = Y * cp - z1 * sp, z2 = Y * sp + z1 * cp, f = Dc / Math.max(Dc + z2, Dc * 0.3);
+    n.x = x1 * f; n.y = y2 * f; n.s = Math.min(f, 2); n.dz = z2; n.fog = Math.max(0.35, Math.min(1, 0.45 + 0.55 * (1 - (z2 + lay.R) / (2 * lay.R))));
+  }
+}
+const layout = () => {
+  const key = (S.view === 'coauthors' ? 'co' + (S.min2 ? 2 : 1) : S.view) + '-' + S.dim + 'd';
+  if (!L[key]) L[key] = S.view === 'topics' ? topicLayout() : S.view === 'citations' ? citationLayout() : coauthorLayout(S.min2);
+  return L[key];
+};
+
+// ---------- canvas ----------
+const cv = $('cv'), ctx = cv.getContext('2d'), stage = $('stage');
+let W = 0, H = 0, raf = 0;
+// ---------- zoom & pan (own small implementation: screen = (x, y) + k * world) ----------
+const T = { k: 1, x: 0, y: 0, applyX(v) { return this.x + this.k * v; }, applyY(v) { return this.y + this.k * v; } };
+const ZMIN = 0.05, ZMAX = 40;
+let zAnim = 0, zTarget = null, userMoved = false;   // userMoved: stop auto-fitting once the user zooms or pans   // zTarget: where a running zoom animation will end
+function setView2(k, x, y) { T.k = k; T.x = x; T.y = y; hideTip(); draw(); }
+function animateTo(k, x, y, ms) {
+  cancelAnimationFrame(zAnim);
+  zTarget = null;
+  if (!ms || matchMedia('(prefers-reduced-motion: reduce)').matches) return setView2(k, x, y);
+  zTarget = { k, x, y };
+  const k0 = T.k, x0 = T.x, y0 = T.y, t0 = performance.now();
+  const step = now => {
+    const u = Math.min(1, (now - t0) / ms), e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+    setView2(k0 + (k - k0) * e, x0 + (x - x0) * e, y0 + (y - y0) * e);
+    if (u < 1) zAnim = requestAnimationFrame(step); else zTarget = null;
+  };
+  zAnim = requestAnimationFrame(step);
+}
+function zoomAt(f, px, py, ms) {   // zoom by factor f keeping screen point (px, py) fixed
+  const b = zTarget || T;            // build on an unfinished animation's end point, so quick clicks add up
+  const k = Math.max(ZMIN, Math.min(ZMAX, b.k * f)), r = k / b.k;
+  animateTo(k, px - (px - b.x) * r, py - (py - b.y) * r, ms);
+}
+cv.addEventListener('wheel', e => {
+  e.preventDefault(); userMoved = true;
+  const r = cv.getBoundingClientRect();
+  zoomAt(Math.pow(2, -e.deltaY * (e.deltaMode ? 0.05 : 0.002)), e.clientX - r.left, e.clientY - r.top);
+}, { passive: false });
+const pointers = new Map();   // two-finger pinch zoom
+let pinch = null;
+cv.addEventListener('pointerdown', e => { pointers.set(e.pointerId, [e.clientX, e.clientY]); if (pointers.size === 2) pinch = null; });
+cv.addEventListener('pointermove', e => {
+  if (!pointers.has(e.pointerId)) return;
+  pointers.set(e.pointerId, [e.clientX, e.clientY]);
+  if (pointers.size !== 2) return;
+  const [a, b] = [...pointers.values()], r = cv.getBoundingClientRect();
+  const d = Math.hypot(a[0] - b[0], a[1] - b[1]), mx = (a[0] + b[0]) / 2 - r.left, my = (a[1] + b[1]) / 2 - r.top;
+  if (pinch) { userMoved = true; zoomAt(d / pinch.d, mx, my); }
+  pinch = { d };
+});
+const dropPointer = e => { pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null; };
+cv.addEventListener('pointerup', dropPointer); cv.addEventListener('pointercancel', dropPointer);
+function resize() {
+  const r = stage.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  W = r.width; H = r.height; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); draw();
+}
+function fit(animate) {
+  if (S.view === 'table') return;
+  const lay = layout(), { nodes } = lay; if (!nodes.length || !W) return;
+  const reduce0 = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (lay.is3d) {
+    animateTo(Math.min(W - 40, H - 40) / (2 * lay.R * 1.15), W / 2, H / 2, animate && !reduce0 ? 450 : 0); return;
+  }
+  const xs = nodes.map(n => n.x), ys = nodes.map(n => n.y);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const k = Math.min((W - 60) / (x1 - x0 || 1), (H - 60) / (y1 - y0 || 1));
+  animateTo(k, W / 2 - k * (x0 + x1) / 2, H / 2 - k * (y0 + y1) / 2, animate && !reduce0 ? 450 : 0);
+}
+const draw = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; render(); }); };
+
+// which nodes/edges are emphasised by the current selection or hover
+function focusSets() {
+  const f = S.hover || S.sel; if (!f) return null;
+  const papers = new Set(), authors = new Set();
+  if (f.kind === 'p') { papers.add(f.i); P[f.i].au.forEach(a => authors.add(a));
+    if (S.view === 'citations') { P[f.i].r.forEach(j => papers.add(j)); P[f.i].citers.forEach(j => papers.add(j)); } }
+  else { authors.add(f.i); AU[f.i].papers.forEach(j => papers.add(j));
+    if (S.view === 'coauthors') AU[f.i].papers.forEach(j => P[j].au.forEach(a => authors.add(a))); }
+  return { f, papers, authors };
+}
+function render() {
+  if (S.view === 'table') return;
+  readColors();
+  const lay = layout(), { nodes, links, labels } = lay;
+  if (lay.is3d) project(lay);
+  const rad = n => n.r * (n.s || 1);
+  ctx.clearRect(0, 0, W, H); ctx.fillStyle = C.surface; ctx.fillRect(0, 0, W, H);
+  const F = focusSets(), isP = S.view !== 'coauthors';
+  const on = n => isP ? pOn[n.id] : aOn[n.id];
+  const hot = n => !F || (isP ? F.papers.has(n.id) : F.authors.has(n.id));
+  const sx = n => T.applyX(n.x), sy = n => T.applyY(n.y);
+  // edges
+  if (links.length) {
+    // thin hairlines; opacity/width follow collaboration strength and depth, drawn in 10 buckets
+    const NB = 10, paths = Array.from({ length: NB }, () => new Path2D());
+    for (const l of links) { const a = l.source, b = l.target; if (!on(a) || !on(b) || (l.papers && !l.papers.some(j => pOn[j])) || (l.self && !S.selfc)) continue;
+      const v = (0.05 + 0.55 * Math.min(1, l.w)) * ((a.fog ?? 1) + (b.fog ?? 1)) / 2, q = Math.min(NB - 1, Math.floor(v / 0.06));
+      paths[q].moveTo(sx(a), sy(a)); paths[q].lineTo(sx(b), sy(b)); }
+    ctx.strokeStyle = C.edgeHi;
+    paths.forEach((p, q) => { ctx.globalAlpha = (q + 0.5) * 0.06 * (F ? 0.35 : 1); ctx.lineWidth = 0.4 + q * 0.12; ctx.stroke(p); });
+    ctx.globalAlpha = 1;
+  } else if (links.length) {
+    ctx.lineWidth = 1; ctx.strokeStyle = C.edge; ctx.globalAlpha = F ? 0.45 : 1; ctx.beginPath();
+    for (const l of links) { const a = l.source, b = l.target; if (!on(a) || !on(b)) continue;
+      if (!isP && !l.papers.some(j => pOn[j])) continue;
+      ctx.moveTo(sx(a), sy(a)); ctx.lineTo(sx(b), sy(b)); }
+    ctx.stroke(); ctx.globalAlpha = 1;
+  }
+  if (links.length) {
+    if (F) {
+      ctx.strokeStyle = C.edgeHi; ctx.fillStyle = C.edgeHi;
+      for (const l of links) { const a = l.source, b = l.target;
+        const lit = isP ? (F.f.kind === 'p' ? (l.s === F.f.i || l.t === F.f.i) : (F.papers.has(l.s) && F.papers.has(l.t)))
+                        : (F.f.kind === 'a' ? (l.s === F.f.i || l.t === F.f.i) : (F.authors.has(l.s) && F.authors.has(l.t)));
+        if (!lit || (l.self && !S.selfc)) continue;
+        const x1 = sx(a), y1 = sy(a), x2 = sx(b), y2 = sy(b);
+        ctx.lineWidth = isP ? 1.4 : Math.min(4, 0.8 + 0.6 * l.papers.length);
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+        if (isP) { // arrowhead at the cited paper
+          const ang = Math.atan2(y2 - y1, x2 - x1), rr = rad(b) + 2, ax = x2 - Math.cos(ang) * rr, ay = y2 - Math.sin(ang) * rr;
+          ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ax - 7 * Math.cos(ang - 0.4), ay - 7 * Math.sin(ang - 0.4));
+          ctx.lineTo(ax - 7 * Math.cos(ang + 0.4), ay - 7 * Math.sin(ang + 0.4)); ctx.closePath(); ctx.fill(); }
+      }
+    }
+  }
+  // nodes: dimmed first, then emphasised on top
+  const order = nodes.slice().sort(lay.is3d
+    ? (a, b) => (F ? (on(a) && hot(a)) - (on(b) && hot(b)) : 0) || b.dz - a.dz
+    : (a, b) => (on(a) && hot(a)) - (on(b) && hot(b)) || b.r - a.r);
+  for (const n of order) {
+    const x = sx(n), y = sy(n); if (x < -30 || y < -30 || x > W + 30 || y > H + 30) continue;
+    const k = isP ? P[n.id].k : AU[n.id].topic, lit = on(n) && hot(n);
+    ctx.globalAlpha = (!on(n) ? 0.08 : lit ? 1 : 0.22) * (lay.is3d && lit && !F ? n.fog : 1);
+    ctx.beginPath(); ctx.arc(x, y, rad(n), 0, 6.2832); ctx.fillStyle = C.t[k]; ctx.fill();
+    ctx.lineWidth = 1.5; ctx.strokeStyle = C.surface; ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  // selection rings
+  const ring = (n, w) => { ctx.beginPath(); ctx.arc(sx(n), sy(n), rad(n) + 3, 0, 6.2832); ctx.lineWidth = w; ctx.strokeStyle = C.ink; ctx.stroke(); };
+  const byId = new Map(nodes.map(n => [n.id, n]));
+  if (S.sel && (S.sel.kind === 'p') === isP && byId.has(S.sel.i)) ring(byId.get(S.sel.i), 2);
+  if (S.hover && (S.hover.kind === 'p') === isP && byId.has(S.hover.i)) ring(byId.get(S.hover.i), 1.25);
+  // labels
+  ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  const boxes = [];
+  const hits = b => boxes.some(o => b.x0 < o.x1 && b.x1 > o.x0 && b.y0 < o.y1 && b.y1 > o.y0);
+  // place a label unless it collides with one already placed; `tries` lists vertical nudges to attempt
+  const label = (txt, x, y, font, align, tries, force) => {
+    ctx.font = font; ctx.textAlign = align || 'center';
+    const w = ctx.measureText(txt).width, h = 15;
+    for (const dy of tries || [0]) {
+      const x0 = align === 'left' ? x : x - w / 2, b = { x0: x0 - 3, x1: x0 + w + 3, y0: y + dy - h / 2, y1: y + dy + h / 2 };
+      if (!force && hits(b)) continue;
+      boxes.push(b); ctx.lineWidth = 4; ctx.strokeStyle = C.surface; ctx.strokeText(txt, x, y + dy); ctx.fillStyle = C.ink; ctx.fillText(txt, x, y + dy); return;
+    }
+  };
+  const fB = css('--f-body');
+  if (S.view === 'topics' && !F) labels.forEach(l => { if (S.on.has(l.k)) label(l.name, T.applyX(l.x), T.applyY(l.y) - 24, '600 13px ' + fB, 'center', [0, -18, 18, -36, 36, -54, 54, -72, 72]); });
+  if (S.view === 'coauthors') {
+    const cand = nodes.filter(n => aOn[n.id] && (F ? F.authors.has(n.id) : AU[n.id].papers.length >= Math.max(4, 22 / T.k)))
+      .sort((a, b) => (F && b.id === F.f.i) - (F && a.id === F.f.i) || AU[b.id].papers.length - AU[a.id].papers.length);
+    cand.forEach(n => label(AU[n.id].name, sx(n) + rad(n) + 4, sy(n), (F && F.f.kind === 'a' && F.f.i === n.id ? '600 ' : '500 ') + '11.5px ' + fB, 'left', [0], F && n.id === F.f.i));
+  }
+  if (S.view === 'citations' && F && F.f.kind === 'p') {
+    const cand = nodes.filter(n => n.id === F.f.i || (T.k > 1.6 && F.papers.has(n.id))).sort((a, b) => (b.id === F.f.i) - (a.id === F.f.i));
+    cand.forEach(n => { const t = P[n.id].t; label(t.length > 48 ? t.slice(0, 46) + '…' : t, sx(n) + rad(n) + 5, sy(n), '500 11.5px ' + fB, 'left', [0], n.id === F.f.i); });
+  }
+}
+
+// ---------- hit testing, tooltip ----------
+function pick(mx, my) {
+  const { nodes } = layout(), isP = S.view !== 'coauthors'; let best = null, bd = 1e9;
+  for (const n of nodes) { if (!(isP ? pOn[n.id] : aOn[n.id])) continue;
+    const d = Math.hypot(T.applyX(n.x) - mx, T.applyY(n.y) - my); if (d < n.r * (n.s || 1) + 5 && d < bd) { bd = d; best = n; } }
+  return best ? { kind: isP ? 'p' : 'a', i: best.id } : null;
+}
+const tip = $('tip');
+function hideTip() { tip.hidden = true; }
+function showTip(h, mx, my) {
+  if (h.kind === 'p') { const p = P[h.i], a = p.au.map(x => AU[x].name);
+    tip.innerHTML = `${esc(p.t)}<small>${esc(TOP[p.k])}</small><small>${p.y} · ${esc(a[0] || '')}${a.length > 1 ? ' et al.' : ''} · ${p.cs === 2 ? 'citations unknown' : p.c + ' citations'}${S.view === 'citations' ? ` · cited by ${p.citers.length} CAMELS papers, ${p.citersInd.length} without shared authors` : ''}</small>`; }
+  else { const a = AU[h.i]; tip.innerHTML = `${esc(a.name)}<small>${a.papers.length} CAMELS paper${a.papers.length > 1 ? 's' : ''}</small>`; }
+  tip.hidden = false; const tw = tip.offsetWidth, th = tip.offsetHeight;
+  tip.style.left = Math.min(W - tw - 8, mx + 14) + 'px'; tip.style.top = (my + th + 20 > H ? my - th - 12 : my + 14) + 'px';
+}
+cv.addEventListener('pointermove', e => {
+  if (e.buttons) return; const r = cv.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top, h = pick(mx, my);
+  const same = (h && S.hover && h.kind === S.hover.kind && h.i === S.hover.i) || (!h && !S.hover);
+  S.hover = h; cv.classList.toggle('hovering', !!h); if (h) showTip(h, mx, my); else hideTip(); if (!same) draw();
+});
+cv.addEventListener('pointerleave', () => { S.hover = null; hideTip(); draw(); });
+// 3D view: drag rotates (wheel/pinch zoom above), arrow keys rotate, gentle auto-spin
+let rot = null, dragged = false;
+cv.addEventListener('pointerdown', e => {
+  dragged = false; if (e.button) return;
+  rot = { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY }; cv.setPointerCapture(e.pointerId);
+});
+cv.addEventListener('pointermove', e => {
+  if (!rot || !e.buttons) return;
+  if (pointers.size > 1) { rot.x = e.clientX; rot.y = e.clientY; dragged = true; return; }
+  if (S.dim === 2) { cancelAnimationFrame(zAnim); zTarget = null; userMoved = true; T.x += e.clientX - rot.x; T.y += e.clientY - rot.y; }
+  else { CAM.yaw += (e.clientX - rot.x) * 0.008; CAM.pitch = Math.max(-1.45, Math.min(1.45, CAM.pitch + (e.clientY - rot.y) * 0.008)); }
+  rot.x = e.clientX; rot.y = e.clientY; if (Math.hypot(e.clientX - rot.x0, e.clientY - rot.y0) > 4) dragged = true;
+  hideTip(); draw();
+});
+const endRot = () => { rot = null; };
+cv.addEventListener('pointerup', endRot); cv.addEventListener('pointercancel', endRot);
+cv.addEventListener('keydown', e => {
+  const m = { ArrowLeft: [-0.12, 0], ArrowRight: [0.12, 0], ArrowUp: [0, -0.12], ArrowDown: [0, 0.12] }[e.key]; if (!m) return;
+  e.preventDefault();
+  if (S.dim === 2) { T.x -= m[0] * 300; T.y -= m[1] * 300; } else { CAM.yaw += m[0]; CAM.pitch = Math.max(-1.45, Math.min(1.45, CAM.pitch + m[1])); }
+  draw();
+});
+// auto-rotation pauses after 20 s without interaction and while the canvas is off-screen (saves battery);
+// any click, drag, scroll, key press or pointer movement over the map restarts it
+const IDLE_MS = 20000;
+let lastUse = performance.now(), onScreen = true;
+['pointerdown', 'wheel', 'keydown'].forEach(ev => document.addEventListener(ev, () => { lastUse = performance.now(); }, { passive: true }));
+cv.addEventListener('pointermove', () => { lastUse = performance.now(); }, { passive: true });
+if ('IntersectionObserver' in window) new IntersectionObserver(es => { onScreen = es[0].isIntersecting; }).observe(stage);
+(function spin() {
+  if (CAM.spin && !rot && !S.hover && !document.hidden && S.view !== 'table' && S.dim === 3 && onScreen && performance.now() - lastUse < IDLE_MS) { CAM.yaw += 0.0025; render(); }
+  requestAnimationFrame(spin);
+})();
+cv.addEventListener('click', e => { if (dragged) { dragged = false; return; } const r = cv.getBoundingClientRect(); select(pick(e.clientX - r.left, e.clientY - r.top)); });
+
+// ---------- panel ----------
+const panel = $('panel');
+const dot = k => `<i style="background:var(--t${k})"></i>`;
+const pItem = (j, sh) => `<li><button data-p="${j}">${dot(P[j].k)}<span class="tt">${esc(P[j].t)}</span><span class="num">${P[j].y}${sh ? ' · shared author' : ''}</span></button></li>`;
+const VIEWINFO = {
+  topics: ['Each dot is a paper, laid out in 3D. Papers with similar abstracts sit close together. Nearer papers look larger and brighter.', (D.nads ? 'Total citations (NASA ADS)' : 'Total citations (Semantic Scholar)'), 'Topic cluster'],
+  citations: ['Each dot is a paper, laid out in 3D. A line means one CAMELS paper cites another. Select a paper to see arrows pointing to the work it cites. Nearer papers look larger and brighter.', 'Citations from other CAMELS papers', 'Topic cluster'],
+  table: ['Every paper as a row of a table. Click a column header to sort; click a row (or select it with Tab and press Enter) to see its details. The search box and filters apply here too.', 'Not used', 'Topic shown by the colored dot'],
+  coauthors: ['Each dot is an author, laid out in 3D. A line joins people who wrote a CAMELS paper together. Darker lines mean a closer collaboration: each shared paper counts more when it has fewer authors, so links from 40-author papers stay faint. Nearer authors look larger and brighter.', 'Number of CAMELS papers', 'Author’s most frequent topic'],
+};
+const USE_TXT = 'Drag to rotate (or use the arrow keys), scroll or pinch to zoom. Rotation pauses while you hover. Click a dot for details; your selection stays highlighted when you switch views.';
+const USE2 = 'Drag to pan (or use the arrow keys), scroll or pinch to zoom. Click a dot for details; your selection stays highlighted when you switch views.';
+const USE = { topics: USE_TXT, citations: USE_TXT, coauthors: USE_TXT };
+function overview() {
+  let [what, size, color] = VIEWINFO[S.view];
+  if (S.dim === 2) what = what.replace(', laid out in 3D', '').replace(/ Nearer (papers|authors) look larger and brighter\./, '');
+  if (S.view === 'citations' && !S.selfc) size += ', not counting papers that share an author (self-citations hidden)';
+  let list = '';
+  if (S.view === 'table') {
+    panel.innerHTML = `<div><h3>How to read this view</h3><p>${what}</p></div><p>${nShown} of ${P.length} papers shown.</p>`;
+    return;
+  }
+  if (S.view === 'coauthors') {
+    const all = AU.filter(a => aOn[a.i]).sort((a, b) => b.papers.length - a.papers.length || a.name.localeCompare(b.name));
+    const top = all.slice(0, S.nTop[S.view]), left = all.length - top.length;
+    list = `<div><h3>Most frequent authors <span style="text-transform:none;letter-spacing:0;font-weight:400">· ${top.length} of ${all.length}</span></h3><ul class="list">${top.map((a, r) => `<li><button data-a="${a.i}">${dot(a.topic)}<span class="tt">${r + 1}. ${esc(a.name)}</span><span class="num">${a.papers.length} paper${a.papers.length > 1 ? 's' : ''}</span></button></li>`).join('')}</ul>
+      ${left > 0 ? `<div style="display:flex;gap:8px;margin-top:8px"><button class="ghost" data-more="25">Show ${Math.min(25, left)} more</button><button class="ghost" data-more="all">Show all ${all.length}</button></div>` : ''}</div>`;
+  } else {
+    const key = S.view === 'citations' ? citeCount : p => p.c;
+    const all = P.filter(p => pOn[p.i]).sort((a, b) => key(b) - key(a) || b.d.localeCompare(a.d));
+    const top = all.slice(0, S.nTop[S.view]), left = all.length - top.length;
+    list = `<div><h3>${S.view === 'citations' ? (S.selfc ? 'Most cited within CAMELS' : 'Most cited within CAMELS, no self-citations') : (D.nads ? 'Most cited overall (ADS)' : 'Most cited overall')} <span style="text-transform:none;letter-spacing:0;font-weight:400">· ${top.length} of ${all.length}</span></h3><ul class="list">${top.map((p, r) =>
+      `<li><button data-p="${p.i}">${dot(p.k)}<span class="tt">${r + 1}. ${esc(p.t)}</span><span class="num">${key(p)}</span></button></li>`).join('')}</ul>
+      ${left > 0 ? `<div style="display:flex;gap:8px;margin-top:8px"><button class="ghost" data-more="25">Show ${Math.min(25, left)} more</button><button class="ghost" data-more="all">Show all ${all.length}</button></div>` : ''}</div>`;
+  }
+  panel.innerHTML = `<div><h3>How to read this view</h3><p>${what}</p></div>
+    <div class="how"><div><b>Size</b><span>${size}</span></div><div><b>Color</b><span>${color}</span></div>
+    <div><b>Use</b><span>${S.dim === 2 && S.view !== 'table' ? USE2 : USE[S.view]}</span></div></div>${list}`;
+}
+function tagBlock(p) {
+  if (!p.tg) return '<div><h3>Tags</h3><p>Not tagged yet.</p></div>';
+  const row = (label, ax) => p.tg[ax].length ? `<div class="tagrow"><span class="tagax">${label}</span><span class="names">${p.tg[ax].map(t =>
+    `<span class="tag${p.tg.u.includes(t) ? ' unsure' : ''}"${p.tg.u.includes(t) ? ' title="Uncertain: not clearly stated in the abstract"' : ''}>${esc(t)}${p.tg.u.includes(t) ? ' ?' : ''}</span>`).join('')}</span></div>` : '';
+  return `<div><h3>Tags</h3>${row('Suite', 's')}${row('Data', 'd')}${row('Method', 'm')}${p.tg.n ? `<p class="tagnote">${esc(p.tg.n)}</p>` : ''}</div>`;
+}
+function paperPanel(i) {
+  const p = P[i];
+  const venue = p.v && p.v !== p.lk ? `<span>${esc(p.v)}</span>` : '';
+  panel.innerHTML = `<button class="ghost back" data-back>← Overview</button>
+    <div class="eyebrow">${dot(p.k)}${esc(TOP[p.k])}</div>
+    <h2>${esc(p.t)}</h2>
+    <div class="meta">${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.lk)}</a>` : `<span>${esc(p.lk)}</span>`}<span>${p.dq ? p.y + ' (estimated from list position)' : p.d}</span>${venue}${p.bib ? `<a href="https://ui.adsabs.harvard.edu/abs/${encodeURIComponent(p.bib)}/abstract" target="_blank" rel="noopener">${p.c} citations (ADS)</a>` : `<span>${p.cs === 2 ? 'Citations unknown' : p.c + ' citations (Semantic Scholar)'}</span>`}</div>
+    ${tagBlock(p)}
+    <div><h3>${p.au.length} author${p.au.length > 1 ? 's' : ''}</h3><div class="names">${p.au.map(a => `<button data-a="${a}">${esc(AU[a].name)}</button>`).join('')}</div></div>
+    <div><h3>Abstract</h3>${p.ab && p.abx ? `<p class="abstract">${esc(p.ab)} … <a href="https://ui.adsabs.harvard.edu/abs/${encodeURIComponent(p.bib)}/abstract" target="_blank" rel="noopener">Read the full abstract on ADS</a></p>` : p.ab ? `<p class="abstract">${esc(p.ab)}</p>` : '<p>No abstract available. Use the link above to read the full text.</p>'}</div>
+    <div><h3>Cites ${p.r.length} CAMELS paper${p.r.length === 1 ? '' : 's'}</h3>${p.r.length ? `<ul class="list">${p.r.slice().sort((a, b) => P[b].d.localeCompare(P[a].d)).map(j => pItem(j, shares(j, p.i))).join('')}</ul>` : '<p>None found.</p>'}</div>
+    <div><h3>Cited by ${p.citers.length} CAMELS paper${p.citers.length === 1 ? '' : 's'}${p.citers.length ? `, ${p.citersInd.length} without shared authors` : ''}</h3>${p.citers.length ? `<ul class="list">${p.citers.slice().sort((a, b) => P[b].d.localeCompare(P[a].d)).map(j => pItem(j, shares(j, p.i))).join('')}</ul>` : '<p>None yet.</p>'}</div>`;
+}
+function authorPanel(i) {
+  const a = AU[i], co = new Map();
+  a.papers.forEach(j => P[j].au.forEach(b => { if (b !== i) co.set(b, (co.get(b) || 0) + 1); }));
+  const top = [...co].sort((x, y) => y[1] - x[1] || AU[x[0]].name.localeCompare(AU[y[0]].name)).slice(0, 12);
+  const bars = a.tc.map((c, k) => c ? `<i title="${esc(TOP[k])}: ${c}" style="flex:${c};background:var(--t${k})"></i>` : '').join('');
+  const tl = a.tc.map((c, k) => c ? `<span>${dot(k)} ${esc(TOP[k])} <span class="num">${c}</span></span>` : '').filter(Boolean);
+  panel.innerHTML = `<button class="ghost back" data-back>← Overview</button>
+    <div class="eyebrow">Author</div><h2>${esc(a.name)}</h2>
+    <div class="meta"><span>${a.papers.length} CAMELS paper${a.papers.length > 1 ? 's' : ''}</span><span>${co.size} co-authors</span></div>
+    <div><h3>Topics</h3><div class="bars">${bars}</div><div class="how" style="margin-top:8px">${tl.map(t => `<div style="grid-template-columns:1fr;gap:0" class="eyebrow">${t}</div>`).join('')}</div></div>
+    ${top.length ? `<div><h3>Frequent co-authors</h3><div class="names">${top.map(([b, n]) => `<button data-a="${b}">${esc(AU[b].name)} · ${n}</button>`).join('')}</div></div>` : ''}
+    <div><h3>Papers</h3><ul class="list">${a.papers.slice().sort((x, y) => P[y].d.localeCompare(P[x].d)).map(pItem).join('')}</ul></div>`;
+}
+function renderPanel() { if (!S.sel) overview(); else if (S.sel.kind === 'p') paperPanel(S.sel.i); else authorPanel(S.sel.i); panel.scrollTop = 0; }
+panel.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.more) { const y = panel.scrollTop; S.nTop[S.view] = b.dataset.more === 'all' ? 1e9 : S.nTop[S.view] + 25; overview(); panel.scrollTop = y; }
+  else if (b.dataset.back !== undefined) select(null);
+  else if (b.dataset.p) select({ kind: 'p', i: +b.dataset.p });
+  else if (b.dataset.a) select({ kind: 'a', i: +b.dataset.a });
+});
+function select(s) { S.sel = s; renderPanel(); draw(); if (S.view === 'table') markTableSelection(); tapCard(); }
+// narrow screens: the details panel is below the map, so show a small card on the map after a tap
+const narrow = () => matchMedia('(max-width: 880px)').matches;
+function tapCard() {
+  const c = $('tapcard');
+  if (!S.sel || !narrow() || S.view === 'table') { c.hidden = true; return; }
+  $('tapcard-t').textContent = S.sel.kind === 'p' ? P[S.sel.i].t : AU[S.sel.i].name + ' · ' + AU[S.sel.i].papers.length + ' papers';
+  c.hidden = false;
+}
+$('tapcard-go').addEventListener('click', () => { panel.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); });
+$('tapcard-x').addEventListener('click', () => { $('tapcard').hidden = true; });
+
+// ---------- table view (accessible alternative to the canvas views)
+const COLS = [
+  { k: 't', label: 'Title', v: p => p.t, cls: 'tt' },
+  { k: 'a', label: 'First author', v: p => p.au.length ? AU[p.au[0]].name : '', cls: 'sm' },
+  { k: 'y', label: 'Year', v: p => p.d, show: p => p.dq ? p.y + '*' : p.y, cls: 'num' },
+  { k: 'k', label: 'Topic', v: p => TOP[p.k], show: p => `<i style="background:var(--t${p.k})"></i>${esc(TOP[p.k])}`, cls: 'sm', html: true },
+  { k: 'm', label: 'Methods', v: p => p.tg ? p.tg.m.join(', ') : '', cls: 'sm' },
+  { k: 'c', label: 'Citations', v: p => p.cs === 2 ? -1 : p.c, show: p => p.cs === 2 ? '–' : p.c, cls: 'num', num: true },
+  { k: 'ci', label: 'Cited in CAMELS', v: p => citeCount(p), cls: 'num', num: true },
+];
+S.sort = { k: 'c', dir: -1 };
+function renderTable() {
+  const col = COLS.find(c => c.k === S.sort.k);
+  const rows = P.filter(p => pOn[p.i]).sort((a, b) => {
+    const x = col.v(a), y = col.v(b);
+    return (typeof x === 'number' ? x - y : String(x).localeCompare(String(y))) * S.sort.dir || b.c - a.c;
+  });
+  const head = COLS.map(c => `<th scope="col" aria-sort="${c.k === S.sort.k ? (S.sort.dir > 0 ? 'ascending' : 'descending') : 'none'}"><button data-sort="${c.k}">${c.label}</button></th>`).join('');
+  const body = rows.map(p => `<tr tabindex="0" data-p="${p.i}" aria-selected="${!!(S.sel && S.sel.kind === 'p' && S.sel.i === p.i)}">${COLS.map(c => {
+    const val = c.show ? c.show(p) : c.v(p);
+    return `<td class="${c.cls}">${c.html ? val : esc(val)}</td>`; }).join('')}</tr>`).join('');
+  $('tablewrap').innerHTML = `<table class="ptable"><caption>${rows.length} of ${P.length} papers. Click a header to sort. * year estimated.</caption><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+}
+function markTableSelection() {
+  document.querySelectorAll('#tablewrap tbody tr').forEach(tr => tr.setAttribute('aria-selected', !!(S.sel && S.sel.kind === 'p' && S.sel.i === +tr.dataset.p)));
+}
+$('tablewrap').addEventListener('click', e => {
+  const b = e.target.closest('button[data-sort]');
+  if (b) { const k = b.dataset.sort; S.sort = { k, dir: S.sort.k === k ? -S.sort.dir : (COLS.find(c => c.k === k).num ? -1 : 1) }; renderTable();
+    const nb = document.querySelector(`#tablewrap button[data-sort="${k}"]`); if (nb) nb.focus(); return; }
+  const tr = e.target.closest('tr[data-p]'); if (tr) select({ kind: 'p', i: +tr.dataset.p });
+});
+$('tablewrap').addEventListener('keydown', e => {
+  const tr = e.target.closest('tr[data-p]'); if (!tr) return;
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select({ kind: 'p', i: +tr.dataset.p }); }
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const n = e.key === 'ArrowDown' ? tr.nextElementSibling : tr.previousElementSibling; if (n) n.focus(); }
+});
+
+// ---------- controls ----------
+function setView(v, animate) {
+  S.view = v; CAM.snap = true; ['topics', 'citations', 'coauthors', 'table'].forEach(x => $('m-' + x).setAttribute('aria-pressed', x === v));
+  $('minwrap').hidden = v !== 'coauthors'; $('selfwrap').hidden = v !== 'citations'; $('zspin').hidden = S.dim === 2; spinBtn();
+  const tbl = v === 'table';
+  cv.hidden = tbl; $('note').hidden = tbl; document.querySelector('.zoom').hidden = tbl; $('tablewrap').hidden = !tbl;
+  if (tbl) renderTable();
+  cv.tabIndex = 0;
+  $('note').textContent = noteText(v);
+  try { if (location.hash !== '#' + v) history.replaceState(null, '', '#' + v); } catch (e) {}
+  S.hover = null; hideTip(); userMoved = false; fit(animate); if (!S.sel) overview(); draw(); updateStats(); tapCard();
+}
+document.querySelectorAll('.modes button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view, true)));
+window.addEventListener('hashchange', () => { const v = location.hash.slice(1); if (VIEWINFO[v] && v !== S.view) setView(v, true); });
+const legend = $('legend');
+function renderLegend() {
+  legend.innerHTML = TOP.map((t, k) => !P.some(p => p.k === k) ? '' : `<button class="chip" data-k="${k}" aria-pressed="${S.on.has(k)}"><i style="background:var(--t${k})"></i>${esc(t)} <span class="n">${P.filter(p => p.k === k).length}</span></button>`).join('');
+}
+legend.addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; const k = +b.dataset.k;
+  if (e.altKey || e.metaKey) { S.on = new Set([k]); } else if (S.on.has(k)) S.on.delete(k); else S.on.add(k);
+  renderLegend(); refresh(); });
+[$('y0'), $('y1')].forEach((sel, n) => { sel.innerHTML = years.map(y => `<option ${y === (n ? S.y1 : S.y0) ? 'selected' : ''}>${y}</option>`).join('');
+  sel.addEventListener('change', () => { S.y0 = +$('y0').value; S.y1 = +$('y1').value; if (S.y0 > S.y1) { [S.y0, S.y1] = [S.y1, S.y0]; $('y0').value = S.y0; $('y1').value = S.y1; } refresh(); }); });
+let qt; $('q').addEventListener('input', e => { clearTimeout(qt); qt = setTimeout(() => { S.q = e.target.value; refresh(); }, 120); });
+const noteText = v => (v === 'topics' ? `Layout: ${S.dim}D t-SNE of SPECTER2 abstract embeddings · axes have no units`
+  : v === 'citations' ? citeNote().replace(' · drag to rotate', '') : `${AU.length} authors · ${EM.size} co-author pairs`)
+  + (S.dim === 3 ? ' · drag to rotate' : ' · drag to pan');
+$('zdim').addEventListener('click', () => {
+  S.dim = S.dim === 3 ? 2 : 3;
+  const b = $('zdim'); b.textContent = S.dim === 3 ? '2D' : '3D'; b.setAttribute('aria-label', `Switch to ${S.dim === 3 ? '2D' : '3D'} view`);
+  $('zspin').hidden = S.dim === 2; CAM.snap = true;
+  $('note').textContent = noteText(S.view); S.hover = null; hideTip(); userMoved = false; fit(false); if (!S.sel) overview(); draw();
+});
+$('min2').addEventListener('change', e => { S.min2 = e.target.checked; fit(false); draw(); });
+$('selfc').addEventListener('change', e => {
+  S.selfc = e.target.checked;
+  Object.keys(L).filter(k => k.startsWith('citations')).forEach(k => L[k].nodes.forEach(n => { n.r = 3 + Math.sqrt(citeCount(P[n.id])) * 2.2; }));
+  $('note').textContent = noteText('citations'); refresh(); if (S.sel) renderPanel();
+});
+$('reset').addEventListener('click', () => { S.q = ''; $('q').value = ''; S.y0 = years[0]; S.y1 = years[years.length - 1]; $('y0').value = S.y0; $('y1').value = S.y1;
+  S.on = new Set(TOP.map((_, k) => k)); S.tag = { s: '', d: '', m: '' }; ['suite', 'data', 'method'].forEach(a => { $('f-' + a).value = ''; });
+  renderLegend(); refresh(); });
+// tag filters: one dropdown per axis, with paper counts
+[['suite', 's'], ['data', 'd'], ['method', 'm']].forEach(([axis, ax]) => {
+  const sel = $('f-' + axis), names = { suite: 'All suites', data: 'All data', method: 'All methods' };
+  const n = t => P.filter(p => p.tg && p.tg[ax].includes(t)).length;
+  sel.innerHTML = `<option value="">${names[axis]}</option>` + (D.tagaxes ? D.tagaxes[axis] : []).filter(n)
+    .map(t => `<option value="${esc(t)}">${esc(t)} (${n(t)})</option>`).join('');
+  sel.addEventListener('change', () => { S.tag[ax] = sel.value; refresh(); });
+});
+$('zin').addEventListener('click', () => { userMoved = true; zoomAt(1.5, W / 2, H / 2, 200); });
+$('zout').addEventListener('click', () => { userMoved = true; zoomAt(1 / 1.5, W / 2, H / 2, 200); });
+$('zfit').addEventListener('click', () => { userMoved = false; fit(true); });
+const spinBtn = () => { const b = $('zspin'); b.textContent = CAM.spin ? '⏸' : '⟳'; b.setAttribute('aria-label', CAM.spin ? 'Pause rotation' : 'Start rotation'); b.setAttribute('aria-pressed', CAM.spin); };
+$('zspin').addEventListener('click', () => { CAM.spin = !CAM.spin; spinBtn(); });
+function updateStats() {
+  const filtered = nShown < P.length;
+  $('stats').innerHTML = `<b>${filtered ? nShown + ' of ' : ''}${P.length}</b> papers · <b>${AU.length}</b> authors · <b>${CE.length}</b> citation links · ${years[0]}–${years[years.length - 1]}`;
+}
+function refresh() { applyFilters(); updateStats(); if (!S.sel) overview(); if (S.view === 'table') renderTable(); draw(); }
+$('foot').innerHTML = `Papers listed on the <a href="https://camels.readthedocs.io/en/latest/publications.html" target="_blank" rel="noopener">CAMELS publications page</a> (all ${P.length} entries). Abstracts and authors from arXiv, or from ADS and the publications page for entries without an arXiv ID; ${D.nads ? 'citation counts from NASA ADS (Semantic Scholar where ADS has no record)' : 'citation counts from Semantic Scholar'}; SPECTER2 embeddings from Semantic Scholar; citation links between papers from ${D.refsrc && D.refsrc.ads ? `Semantic Scholar and ADS combined (${D.refsrc.both} in both, ${D.refsrc.s2} only in Semantic Scholar, ${D.refsrc.ads} only in ADS)` : 'Semantic Scholar'}; data as of ${D.fetched}. Topics are k-means clusters of the embeddings, named by hand. Suite, data and method tags were assigned with AI assistance from each abstract and have not all been checked by hand; dashed tags marked "?" are uncertain.`;
+
+// ---------- boot ----------
+renderLegend(); applyFilters(); renderPanel();
+new ResizeObserver(() => { resize(); if (!userMoved) fit(false); }).observe(stage);
+const mq = matchMedia('(prefers-color-scheme: dark)'); mq.addEventListener && mq.addEventListener('change', draw);
+new MutationObserver(draw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+const h = location.hash.slice(1); setView(VIEWINFO[h] ? h : 'topics', false);
+document.fonts && document.fonts.ready.then(draw);
+})();
+</script>

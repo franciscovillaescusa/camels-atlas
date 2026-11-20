@@ -27,6 +27,17 @@ the zoom controls switches the three map views to flat layouts, where dragging p
 - Citation links between CAMELS papers: Semantic Scholar and NASA ADS reference lists combined (a link counts if either source has it)
 - Total citation counts: [NASA ADS](https://ui.adsabs.harvard.edu) (Semantic Scholar counts if no ADS token is available)
 
+## Files
+
+| File | What it is |
+|---|---|
+| `index.html` | the site (generated; do not edit by hand) |
+| `build_camels_atlas.py` | fetches the data and builds `index.html` |
+| `atlas_template.html` | the page's HTML, CSS and JavaScript; the build inserts the data at `__DATA__` |
+| `atlas_tags.json` | suite / data / method tags per paper (hand-editable) |
+| `atlas_overrides.json` | hand corrections per paper |
+| `atlas_positions.json` | stored layout positions (generated; commit it) |
+
 ## Rebuilding
 
 Everything is produced by one script:
