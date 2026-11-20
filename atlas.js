@@ -322,6 +322,53 @@ function focusSets() {
   return { f, papers, authors };
 }
 const FLAT = { table: 1, trends: 1 };   // views without the map canvas
+// ---------- atlas islands: per-topic density regions, drawn at half resolution and cached ----------
+// The image covers the view plus a margin, so panning only shifts it; zoom or filter changes redraw it.
+const ISL = { key: '', img: null, tx: 0, ty: 0, m: 0 };
+const smooth = (e0, e1, v) => { const x = Math.min(1, Math.max(0, (v - e0) / (e1 - e0))); return x * x * (3 - 2 * x); };
+function drawIslands(nodes, on, sx, sy, dim) {
+  const sc = 2, m = 240;                                   // half resolution; margin (screen px) around the view
+  const w = Math.ceil((W + 2 * m) / sc), h = Math.ceil((H + 2 * m) / sc);
+  const sig = Math.max(9, Math.min(40, 17 * Math.sqrt(T.k / Math.max(fitK, 1e-6))));   // kernel size follows zoom
+  const key = [w, h, T.k.toFixed(4), pOn.join(''), C.t.join(), sig.toFixed(1)].join('|');
+  const panned = Math.abs(T.x - ISL.tx) > m * 0.8 || Math.abs(T.y - ISL.ty) > m * 0.8;
+  if (ISL.key !== key || panned) {
+    ISL.key = key; ISL.tx = T.x; ISL.ty = T.y; ISL.m = m;
+    const off = document.createElement('canvas'); off.width = w; off.height = h;
+    const oc = off.getContext('2d');
+    const out = oc.createImageData(w, h), od = out.data;
+    const tmp = document.createElement('canvas'); tmp.width = w; tmp.height = h;
+    const tc = tmp.getContext('2d', { willReadFrequently: true });
+    const R = sig * 2.6 / sc;
+    for (let k = 0; k < TOP.length; k++) {
+      if (/^Unassigned/.test(TOP[k])) continue;
+      const mem = nodes.filter(n => on(n) && P[n.id].k === k);
+      if (!mem.length) continue;
+      tc.clearRect(0, 0, w, h); tc.globalCompositeOperation = 'lighter';
+      for (const n of mem) {
+        const x = (sx(n) + m) / sc, y = (sy(n) + m) / sc; if (x < -R || y < -R || x > w + R || y > h + R) continue;
+        const g = tc.createRadialGradient(x, y, 0, x, y, R);
+        g.addColorStop(0, 'rgba(0,0,0,0.42)'); g.addColorStop(0.45, 'rgba(0,0,0,0.25)'); g.addColorStop(0.75, 'rgba(0,0,0,0.07)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+        tc.fillStyle = g; tc.beginPath(); tc.arc(x, y, R, 0, 6.2832); tc.fill();
+      }
+      const a = tc.getImageData(0, 0, w, h).data;
+      const hex = C.t[k], rgb = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
+      const T1 = 40, T2 = 120;   // density levels (0-255): island edge and denser core
+      for (let p = 3; p < a.length; p += 4) {
+        const v = a[p]; if (v < T1 - 10) continue;
+        // soft fill (land, then a denser core) plus soft contour lines at both levels
+        const fill = 34 * smooth(T1 - 6, T1 + 6, v) + 28 * smooth(T2 - 10, T2 + 10, v);
+        const line = 150 * Math.max(0, 1 - Math.abs(v - T1) / 7) + 70 * Math.max(0, 1 - Math.abs(v - T2) / 9);
+        const al = Math.min(255, fill + line);
+        if (al > od[p]) { od[p - 3] = rgb[0]; od[p - 2] = rgb[1]; od[p - 1] = rgb[2]; od[p] = al; }
+      }
+    }
+    oc.putImageData(out, 0, 0);
+    ISL.img = off;
+  }
+  ctx.save(); ctx.globalAlpha = dim ? 0.45 : 1; ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(ISL.img, T.x - ISL.tx - ISL.m, T.y - ISL.ty - ISL.m, w * sc, h * sc); ctx.restore();
+}
 function render() {
   if (FLAT[S.view]) return;
   readColors();
@@ -367,8 +414,11 @@ function render() {
       }
     }
   }
-  // topic map: faint colored glow behind each paper so topic areas show at a glance
-  if (lay.glow) {
+  // 2D topic map colored by topic: draw each topic as an island (filled density region with a contour)
+  const islands = lay.glow && !lay.is3d && S.colorBy === 'topic';
+  if (islands) drawIslands(nodes, on, sx, sy, !!F);
+  // otherwise: faint colored glow behind each paper so topic areas show at a glance
+  if (lay.glow && !islands) {
     const gr = Math.max(18, Math.min(60, 26 * Math.sqrt(T.k)));
     for (const n of nodes) {
       if (!on(n)) continue;
@@ -418,7 +468,13 @@ function render() {
     }
   };
   const fB = css('--f-body');
-  if (S.view === 'topics' && !F) labels.forEach(l => { if (S.on.has(l.k)) label(l.name, T.applyX(l.x), T.applyY(l.y) - 24, '600 13px ' + fB, 'center', [0, -18, 18, -36, 36, -54, 54, -72, 72]); });
+  if (S.view === 'topics' && !F) {
+    const regionStyle = !lay.is3d && S.colorBy === 'topic';   // atlas islands: names styled like map regions
+    if (regionStyle) ctx.letterSpacing = '0.06em';
+    labels.forEach(l => { if (S.on.has(l.k)) label(regionStyle ? l.name.toUpperCase() : l.name, T.applyX(l.x), T.applyY(l.y) - 24,
+      (regionStyle ? '700 11px ' : '600 13px ') + fB, 'center', [0, -16, 16, -32, 32, -48, 48, -64, 64]); });
+    ctx.letterSpacing = '0px';
+  }
   if (S.view === 'coauthors') {
     // at rest: the most prolific authors (10 at the starting zoom, more as you zoom in); overlapping labels are skipped
     const nLab = Math.min(80, Math.round(10 * Math.max(1, T.k / fitK) ** 2));

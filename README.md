@@ -9,7 +9,7 @@ The site has five views. A button switches between them:
 
 | View | Each dot is | Lines | Dot size |
 |---|---|---|---|
-| **Topic map** | a paper, placed by abstract similarity (2D: t-SNE of SPECTER2 embeddings; 3D: each paper pulled toward its 4 most similar papers) | none | total citations |
+| **Topic map** | a paper, placed by abstract similarity, with each topic drawn as a shaded 'island' (2D: t-SNE of SPECTER2 embeddings; 3D: each paper pulled toward its 4 most similar papers) | none | total citations |
 | **Citations** | a paper | one CAMELS paper cites another | citations from other CAMELS papers (a toggle hides self-citations, i.e. links between papers sharing an author: 68% of all links) |
 | **Co-authors** | an author | the two authors share a paper; darker lines mean closer collaboration | number of CAMELS papers |
 | **Table** | a paper (one row) | — | sortable columns: title, first author, year, topic, methods, citations, citations within CAMELS; keyboard accessible |
