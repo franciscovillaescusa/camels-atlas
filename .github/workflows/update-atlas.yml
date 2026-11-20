@@ -35,6 +35,9 @@ jobs:
           S2_API_KEY: ${{ secrets.S2_API_KEY }}   # optional; avoids Semantic Scholar rate limits
         run: python build_camels_atlas.py --out index.html
 
+      - name: Validate the data against the downloaded sources
+        run: python validate_atlas.py
+
       - name: Check the built page in a headless browser
         run: |
           pip install playwright==1.48.0

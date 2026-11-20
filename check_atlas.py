@@ -12,7 +12,9 @@ Requires: pip install playwright   (then, unless using --chrome: python -m playw
 """
 import argparse
 import pathlib
+import re
 import sys
+from collections import Counter
 
 from playwright.sync_api import sync_playwright
 
@@ -84,6 +86,60 @@ def main():
         page.fill("#q", "diffusion")
         page.wait_for_timeout(400)
         check("search finds papers", "match" in page.inner_text("#qcount"), page.inner_text("#qcount"))
+        # ---- correctness of what the page shows, compared with the embedded data
+        data = page.evaluate("JSON.parse(document.getElementById('atlas-data').textContent.replace(/<\\\\\\//g, '</'))")
+        papers = data["papers"]
+        page.fill("#q", ""); page.click("#reset"); page.wait_for_timeout(200)
+
+        # search: an exact title is found and ranked first
+        page.click("#m-table"); page.fill("#q", "Cosmology with one galaxy"); page.wait_for_timeout(400)
+        first = page.locator("#tablewrap tbody tr td").first.inner_text()
+        check("search ranks the exact title first", first.startswith("Cosmology with one galaxy"), first[:50])
+        page.fill("#q", ""); page.wait_for_timeout(300)
+
+        # downloads: capture the files the page would save
+        page.evaluate("""() => { window.__dl = []; URL.createObjectURL = b => { window.__dl.push(b); return 'blob:x'; };
+                              HTMLAnchorElement.prototype.click = function () {}; }""")
+        if not page.is_visible("#fpanel"):
+            page.click("#fbtn")              # the tag filters live in the Filters panel
+        page.select_option("#f-method", "Graph neural networks"); page.keyboard.press("Escape"); page.wait_for_timeout(300)
+        shown = page.locator("#tablewrap tbody tr").count()
+        expect = sum(1 for p in papers if p["tg"] and "Graph neural networks" in p["tg"]["m"])
+        check("method filter shows exactly the tagged papers", shown == expect, f"{shown} shown, {expect} tagged")
+        for fmt in ("bib", "csv"):
+            page.click("#dlbtn"); page.click(f"[data-dl={fmt}]"); page.wait_for_timeout(200)
+        bib, csv = page.evaluate("Promise.all(window.__dl.map(b => b.text()))")
+        keys = re.findall(r"^@\w+\{([^,]+),", bib, re.M)
+        check("BibTeX has one entry per paper shown", len(keys) == shown, f"{len(keys)} entries")
+        check("BibTeX keys are unique", len(set(keys)) == len(keys))
+        check("BibTeX braces are balanced", bib.count("{") == bib.count("}"))
+        import csv as csvmod, io
+        rows = list(csvmod.reader(io.StringIO(csv.lstrip("﻿"))))
+        check("CSV has a header plus one row per paper shown", len(rows) == shown + 1 and len({len(r) for r in rows}) == 1,
+              f"{len(rows) - 1} rows")
+        page.click("#reset"); page.wait_for_timeout(200)
+
+        # trends: bar totals per year equal the number of papers that year
+        page.click("#m-trends"); page.wait_for_timeout(300)
+        tot = [int(x) for x in page.locator("#trendswrap text.ttot").all_text_contents()]   # SVG text: use textContent
+        by_year = sorted(Counter(p["y"] for p in papers).items())
+        check("trend totals match papers per year", tot == [n for _, n in by_year], f"{tot}")
+
+        # self-citation switch: the number of links drawn drops to the independent count
+        page.click("#m-citations"); page.wait_for_timeout(300)
+        n_all = sum(len(p["r"]) for p in papers)
+        n_ind = sum(1 for i, p in enumerate(papers) for j in p["r"] if not set(p["au"]) & set(papers[j]["au"]))
+        page.click("#dispbtn"); page.click("#selfc"); page.keyboard.press("Escape"); page.wait_for_timeout(300)
+        note = page.inner_text("#note")
+        check("self-citation switch hides shared-author links", f"{n_ind} of {n_all}" in note, note)
+        page.click("#dispbtn"); page.click("#selfc"); page.keyboard.press("Escape")
+
+        # shareable link: opening it restores view, selection and filter
+        link = "#coauthors&author=Shy%20Genel&method=CNN"
+        page.goto(url + link); page.wait_for_timeout(700)
+        check("shared link restores view", page.get_attribute("#m-coauthors", "aria-pressed") == "true")
+        check("shared link restores author", "Shy Genel" in page.inner_text("#panel h2"))
+        check("shared link restores filter", page.input_value("#f-method") == "CNN")
         browser.close()
 
     width = max(len(n) for n, _, _ in checks)
