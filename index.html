@@ -1104,7 +1104,7 @@ function updateStats() {
 }
 function refresh() { applyFilters(); updateStats(); renderActive(); if (!S.sel) overview(); if (S.view === 'table') renderTable(); if (S.view === 'trends') renderTrends(); draw(); writeHash(false); }
 const nSelf = CE.filter(e => e.self).length;
-$('foot').innerHTML = `Data as of ${D.fetched} · ${P.length} papers · <button class="linkbtn" id="aboutbtn" type="button">About &amp; data sources</button> · <a href="${missingUrl()}" target="_blank" rel="noopener">Suggest a missing paper</a> · <a href="https://github.com/franciscovillaescusa/camels-atlas" target="_blank" rel="noopener">Source on GitHub</a>`;
+$('foot').innerHTML = `Data as of ${D.fetched} · <button class="linkbtn" id="aboutbtn" type="button">About &amp; data sources</button> · <a href="${missingUrl()}" target="_blank" rel="noopener">Suggest a missing paper</a> · <a href="https://github.com/franciscovillaescusa/camels-atlas" target="_blank" rel="noopener">Source on GitHub</a>`;
 $('about-body').innerHTML = `
   <h3>What this is</h3>
   <p>Every entry on the <a href="https://camels.readthedocs.io/en/latest/publications.html" target="_blank" rel="noopener">CAMELS publications page</a> (${P.length} papers and theses), shown as a topic map, a citation network, a co-author network and a table. The site is rebuilt automatically every week.</p>
