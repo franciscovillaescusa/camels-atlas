@@ -373,6 +373,13 @@ def canonical_authors(names):
     return canon
 
 
+def first_sentence(text):
+    """First sentence of an abstract (markup removed), used where only an excerpt may be published."""
+    text = " ".join(re.sub(r"<[^>]+>", " ", html_mod.unescape(text or "")).split())
+    m = re.search(r"^(.{40,}?[.?!])\s+[A-Z(]", text)
+    return m.group(1) if m else text[:300]
+
+
 def ads_author(a):
     """'Last, First M.' -> 'First M. Last'"""
     last, _, first = a.partition(",")
@@ -410,6 +417,8 @@ def apply_overrides(recs, overrides):
         for f in ("abstract", "url", "link", "authors", "title"):
             if f in ov:
                 r[f] = ov[f]
+                if f == "abstract":
+                    r["excerpt"] = False  # your own text is published in full
                 done.append(f)
         if "date" in ov:
             if not re.fullmatch(r"\d{4}(-\d{2}){0,2}", str(ov["date"])):
@@ -631,7 +640,9 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
         recs.append({"uid": ax or e["bibcode"] or "title:" + norm_title(e["title"])[:80], "title": title, "abstract": abstract,
                      "date": date_, "authors": authors or ["Unknown"], "link": link, "url": url,
                      "c": c, "cs": cs, "bib": bib, "venue": p.get("venue") or (rec or {}).get("pub") or "",
-                     "s2": p, "dq": False})
+                     "s2": p, "dq": False,
+                     # journal abstracts from ADS are the publisher's copyright: publish only an excerpt
+                     "excerpt": bool(rec) and not (ax and ax in arx)})
 
     # ---- hand corrections from the overrides file (applied before anything is derived from them)
     recs, topic_override = apply_overrides(recs, overrides)
@@ -780,7 +791,8 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
             if k not in au:
                 au.append(k)
         papers.append({
-            "id": r["uid"], "t": r["title"], "ab": r["abstract"], "d": r["date"], "dq": int(r["dq"]),
+            "id": r["uid"], "t": r["title"], "ab": first_sentence(r["abstract"]) if r.get("excerpt") else r["abstract"],
+            "abx": int(bool(r.get("excerpt"))), "d": r["date"], "dq": int(r["dq"]),
             "y": int(r["date"][:4]), "au": au, "c": r["c"], "cs": r["cs"], "bib": r["bib"], "v": r["venue"],
             "lk": r["link"], "url": r["url"], "tg": tags[n],
             "x": round(float(pos2[n][0]), 4), "yy": round(float(pos2[n][1]), 4),
@@ -1387,7 +1399,7 @@ function paperPanel(i) {
     <div class="meta">${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.lk)}</a>` : `<span>${esc(p.lk)}</span>`}<span>${p.dq ? p.y + ' (estimated from list position)' : p.d}</span>${venue}${p.bib ? `<a href="https://ui.adsabs.harvard.edu/abs/${encodeURIComponent(p.bib)}/abstract" target="_blank" rel="noopener">${p.c} citations (ADS)</a>` : `<span>${p.cs === 2 ? 'Citations unknown' : p.c + ' citations (Semantic Scholar)'}</span>`}</div>
     ${tagBlock(p)}
     <div><h3>${p.au.length} author${p.au.length > 1 ? 's' : ''}</h3><div class="names">${p.au.map(a => `<button data-a="${a}">${esc(AU[a].name)}</button>`).join('')}</div></div>
-    <div><h3>Abstract</h3>${p.ab ? `<p class="abstract">${esc(p.ab)}</p>` : '<p>No abstract available. Use the link above to read the full text.</p>'}</div>
+    <div><h3>Abstract</h3>${p.ab && p.abx ? `<p class="abstract">${esc(p.ab)} … <a href="https://ui.adsabs.harvard.edu/abs/${encodeURIComponent(p.bib)}/abstract" target="_blank" rel="noopener">Read the full abstract on ADS</a></p>` : p.ab ? `<p class="abstract">${esc(p.ab)}</p>` : '<p>No abstract available. Use the link above to read the full text.</p>'}</div>
     <div><h3>Cites ${p.r.length} CAMELS paper${p.r.length === 1 ? '' : 's'}</h3>${p.r.length ? `<ul class="list">${p.r.slice().sort((a, b) => P[b].d.localeCompare(P[a].d)).map(j => pItem(j, shares(j, p.i))).join('')}</ul>` : '<p>None found.</p>'}</div>
     <div><h3>Cited by ${p.citers.length} CAMELS paper${p.citers.length === 1 ? '' : 's'}${p.citers.length ? `, ${p.citersInd.length} without shared authors` : ''}</h3>${p.citers.length ? `<ul class="list">${p.citers.slice().sort((a, b) => P[b].d.localeCompare(P[a].d)).map(j => pItem(j, shares(j, p.i))).join('')}</ul>` : '<p>None yet.</p>'}</div>`;
 }
