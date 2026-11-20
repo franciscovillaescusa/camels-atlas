@@ -187,6 +187,16 @@ canvas.hovering { cursor: pointer; }
 .zoom button { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; background: transparent; cursor: pointer; color: var(--ink-2); }
 .zoom button svg { width: 16px; height: 16px; }
 .zoom button:hover { color: var(--ink); background: var(--wash); }
+.dispwrap { position: relative; }
+.dispbtn { display: inline-flex !important; align-items: center; gap: 4px; width: auto !important; height: 30px !important; padding: 0 10px !important; font-size: 12.5px; font-weight: 500; color: var(--ink) !important;
+  background: var(--surface) !important; border: 1px solid var(--line) !important; border-radius: 9px; box-shadow: 0 1px 2px rgba(0,0,0,.05); white-space: nowrap; }
+.dispbtn span { color: var(--muted); font-weight: 400; }
+.dispmenu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 6; min-width: 230px; display: grid; gap: 10px; padding: 12px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.14); }
+.drow { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12.5px; color: var(--ink-2); }
+.drow select { font-size: 12.5px; padding: 3px 6px; border-radius: 6px; }
+.chkrow { justify-content: flex-start; gap: 7px; cursor: pointer; }
+.drow .ghost { width: auto; height: auto; padding: 3px 10px; font-size: 12px; }
 .zgroup, .dimtoggle, #zspin { background: var(--surface); border: 1px solid var(--line); border-radius: 9px; box-shadow: 0 1px 2px rgba(0,0,0,.05); overflow: hidden; }
 .zgroup { display: flex; flex-direction: column; }
 .zgroup button + button { border-top: 1px solid var(--line); }
@@ -302,12 +312,18 @@ footer { font-size: 12px; color: var(--muted); }
 
 <main>
   <div class="stage" id="stage">
-    <div class="mapopts"><label class="chk" id="cbwrap">Color by <select id="colorby" aria-label="Color dots by"><option value="topic">Topic</option><option value="year">Year</option><option value="method">Method</option><option value="suite">Suite</option></select></label><div class="cbkey" id="cbkey" hidden></div><label class="chk" id="selfwrap" hidden><input type="checkbox" id="selfc" checked> Count self-citations</label></div>
+    <div class="mapopts"><div class="cbkey" id="cbkey" hidden></div></div>
     <canvas id="cv" aria-label="Interactive map of CAMELS publications" role="img"></canvas>
     <div class="zoom">
-      <div class="dimtoggle" role="group" aria-label="Layout"><button id="d2" type="button" aria-pressed="true" title="Flat layout (drag to pan)">2D</button><button id="d3" type="button" aria-pressed="false" title="Rotatable 3D layout (drag to rotate)">3D</button></div>
+      <div class="dispwrap"><button class="dispbtn" id="dispbtn" type="button" aria-haspopup="true" aria-expanded="false" title="Layout and colors">Display <span id="dispsum"></span> ▾</button>
+        <div class="dispmenu" id="dispmenu" hidden>
+          <div class="drow"><span>Layout</span><div class="dimtoggle" role="group" aria-label="Layout"><button id="d2" type="button" aria-pressed="true" title="Flat layout (drag to pan)">2D</button><button id="d3" type="button" aria-pressed="false" title="Rotatable 3D layout (drag to rotate)">3D</button></div></div>
+          <label class="drow" id="cbwrap"><span>Color by</span><select id="colorby" aria-label="Color dots by"><option value="topic">Topic</option><option value="year">Year</option><option value="method">Method</option><option value="suite">Suite</option></select></label>
+          <label class="drow chkrow" id="selfwrap" hidden><input type="checkbox" id="selfc" checked> Count self-citations</label>
+          <div class="drow" id="spinrow" hidden><span>Rotation</span><button class="ghost" id="zspin" type="button" aria-pressed="true">Pause</button></div>
+        </div>
+      </div>
       <div class="zgroup"><button id="zin" type="button" aria-label="Zoom in" title="Zoom in"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg></button><button id="zout" type="button" aria-label="Zoom out" title="Zoom out"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8h9"/></svg></button><button id="zfit" type="button" aria-label="Show everything" title="Show everything"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"/></svg></button></div>
-      <button id="zspin" type="button" aria-label="Pause rotation" title="Pause rotation" aria-pressed="true" hidden></button>
     </div>
     <div class="stage-note" id="note"></div>
     <div class="tip" id="tip" hidden></div>
@@ -979,7 +995,7 @@ let lastTracked = null;
 function setView(v, animate) {
   if (v !== lastTracked) { if (lastTracked) track('atlas_view', { view: v }); lastTracked = v; }
   S.view = v; CAM.snap = true; ['topics', 'citations', 'coauthors', 'table', 'trends'].forEach(x => $('m-' + x).setAttribute('aria-pressed', x === v));
-  $('selfwrap').hidden = v !== 'citations'; $('cbwrap').hidden = !!FLAT[v]; $('zspin').hidden = S.dim === 2; spinBtn();
+  $('selfwrap').hidden = v !== 'citations'; $('cbwrap').hidden = !!FLAT[v]; $('spinrow').hidden = S.dim === 2; spinBtn();
   const flat = !!FLAT[v];
   cv.hidden = flat; $('note').hidden = flat; document.querySelector('.zoom').hidden = flat;
   $('tablewrap').hidden = v !== 'table'; $('trendswrap').hidden = v !== 'trends';
@@ -1017,7 +1033,12 @@ document.addEventListener('keydown', e => {   // "/" jumps to the search box
     e.preventDefault(); $('q').focus(); $('q').select();
   }
 });
-$('colorby').addEventListener('change', e => { S.colorBy = e.target.value; track('atlas_color_by', { by: S.colorBy }); colorKey(); if (!S.sel) overview(); draw(); writeHash(false); });
+const dispSum = () => { $('dispsum').textContent = `· ${S.dim}D${S.colorBy !== 'topic' ? ' · ' + { year: 'Year', method: 'Method', suite: 'Suite' }[S.colorBy] : ''}`; };
+const dispMenu = open => { $('dispmenu').hidden = !open; $('dispbtn').setAttribute('aria-expanded', open); };
+$('dispbtn').addEventListener('click', e => { e.stopPropagation(); dispMenu($('dispmenu').hidden); });
+document.addEventListener('click', e => { if (!e.target.closest('.dispwrap')) dispMenu(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') dispMenu(false); });
+$('colorby').addEventListener('change', e => { S.colorBy = e.target.value; dispSum(); track('atlas_color_by', { by: S.colorBy }); colorKey(); if (!S.sel) overview(); draw(); writeHash(false); });
 const noteText = v => (v === 'topics' ? (S.dim === 2 ? 'Layout: 2D t-SNE of SPECTER2 abstract embeddings · axes have no units'
     : 'Layout: each paper pulled toward its 4 most similar papers (SPECTER2) · axes have no units')
   : v === 'citations' ? citeNote().replace(' · drag to rotate', '') : `${AU.length} authors · ${EM.size} co-author pairs`)
@@ -1027,7 +1048,7 @@ function setDim(d) {
   if (!applying) track('atlas_dim', { dim: d + 'D' });
   S.dim = d;
   $('d2').setAttribute('aria-pressed', d === 2); $('d3').setAttribute('aria-pressed', d === 3);
-  $('zspin').hidden = d === 2; CAM.snap = true;
+  $('spinrow').hidden = d === 2; dispSum(); CAM.snap = true;
   $('note').textContent = noteText(S.view); S.hover = null; hideTip(); userMoved = false; fit(false); if (!S.sel) overview(); draw();
   writeHash(false);
 }
@@ -1052,7 +1073,7 @@ $('reset').addEventListener('click', () => { S.q = ''; $('q').value = ''; S.y0 =
 $('zin').addEventListener('click', () => { userMoved = true; zoomAt(1.5, W / 2, H / 2, 200); });
 $('zout').addEventListener('click', () => { userMoved = true; zoomAt(1 / 1.5, W / 2, H / 2, 200); });
 $('zfit').addEventListener('click', () => { userMoved = false; fit(true, true); });
-const spinBtn = () => { const b = $('zspin'); b.innerHTML = CAM.spin ? '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4v8M10 4v8"/></svg>' : '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 3.8 12 8l-6.5 4.2z"/></svg>'; const l = CAM.spin ? 'Pause rotation' : 'Start rotation'; b.setAttribute('aria-label', l); b.title = l; b.setAttribute('aria-pressed', CAM.spin); };
+const spinBtn = () => { const b = $('zspin'); b.textContent = CAM.spin ? 'Pause' : 'Resume'; b.setAttribute('aria-label', CAM.spin ? 'Pause rotation' : 'Resume rotation'); b.setAttribute('aria-pressed', CAM.spin); };
 $('zspin').addEventListener('click', () => { CAM.spin = !CAM.spin; spinBtn(); });
 function updateStats() {
   const filtered = nShown < P.length;
@@ -1307,7 +1328,7 @@ function applyHash() {
       S.y1 = years.includes(yr[1]) ? yr[1] : years[years.length - 1];
       $('y0').value = S.y0; $('y1').value = S.y1;
       S.newOnly = q.get('new') === '1';
-      S.colorBy = ['year', 'method', 'suite'].includes(q.get('color')) ? q.get('color') : 'topic'; $('colorby').value = S.colorBy;
+      S.colorBy = ['year', 'method', 'suite'].includes(q.get('color')) ? q.get('color') : 'topic'; $('colorby').value = S.colorBy; dispSum();
       S.on = q.get('topics') ? new Set(q.get('topics').split('.').map(Number).filter(k => k >= 0 && k < TOP.length)) : new Set(TOP.map((_, k) => k));
       renderLegend();
       [['suite', 's'], ['data', 'd'], ['method', 'm']].forEach(([a, ax]) => {
@@ -1335,7 +1356,7 @@ renderLegend(); applyFilters(); renderPanel();
 new ResizeObserver(() => { resize(); if (!userMoved) fit(false); if (S.view === 'trends') renderTrends(); }).observe(stage);
 const mq = matchMedia('(prefers-color-scheme: dark)'); mq.addEventListener && mq.addEventListener('change', draw);
 new MutationObserver(draw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-applyHash();
+applyHash(); dispSum();
 document.fonts && document.fonts.ready.then(draw);
 })();
 </script>

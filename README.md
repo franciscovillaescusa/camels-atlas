@@ -17,7 +17,8 @@ The site has five views. A button switches between them:
 
 Colors show 10 topics, found by k-means clustering of the paper embeddings and named by hand.
 **▶ Play** (next to the years) animates the maps: papers appear one by one in date order (about 20 s in all).
-A *Color by* menu in the map corner switches the dot colours between topic, year, method and suite.
+The **Display** menu in the map corner holds the 2D/3D layout, *Color by* (topic, year, method or suite), the
+self-citation switch and the 3D rotation; its button shows the current settings.
 Each paper's panel lists its 5 most similar papers by embedding similarity, and selecting a paper on
 the topic map highlights them. Topic, suite, data, method and "New" filters live in the **Filters** panel; active filters show as removable
 chips next to it. Search (press `/`) covers titles, authors, IDs, abstracts and tags, ignores accents, tolerates small typos
