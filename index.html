@@ -121,8 +121,16 @@ canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: 
 canvas.hovering { cursor: pointer; }
 .stage-note { position: absolute; left: 12px; bottom: 10px; font-size: 12px; color: var(--muted); pointer-events: none;
   background: color-mix(in srgb, var(--surface) 85%, transparent); padding: 2px 6px; border-radius: 6px; }
-.zoom { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 4px; }
-.zoom button { width: 30px; height: 30px; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; cursor: pointer; font-size: 16px; line-height: 1; color: var(--ink-2); }
+.zoom { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; z-index: 2; }
+.zoom button { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; background: transparent; cursor: pointer; color: var(--ink-2); }
+.zoom button svg { width: 16px; height: 16px; }
+.zoom button:hover { color: var(--ink); background: var(--wash); }
+.zgroup, .dimtoggle, #zspin { background: var(--surface); border: 1px solid var(--line); border-radius: 9px; box-shadow: 0 1px 2px rgba(0,0,0,.05); overflow: hidden; }
+.zgroup { display: flex; flex-direction: column; }
+.zgroup button + button { border-top: 1px solid var(--line); }
+.dimtoggle { display: flex; padding: 2px; gap: 2px; }
+.dimtoggle button { width: auto; height: 26px; padding: 0 9px; border-radius: 7px; font-size: 12px; font-weight: 600; }
+.dimtoggle button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
 .tip { position: absolute; pointer-events: none; max-width: 300px; background: var(--ink); color: var(--surface); padding: 7px 10px; border-radius: 8px;
   font-size: 12.5px; line-height: 1.35; box-shadow: 0 4px 16px rgba(0,0,0,.18); }
 .tip small { display: block; opacity: .75; margin-top: 3px; font-variant-numeric: tabular-nums; }
@@ -223,7 +231,11 @@ footer { font-size: 12px; color: var(--muted); }
   <div class="stage" id="stage">
     <div class="mapopts"><label class="chk" id="selfwrap" hidden><input type="checkbox" id="selfc" checked> Count self-citations</label><label class="chk" id="minwrap" hidden><input type="checkbox" id="min2" checked> Only authors with 2+ papers</label></div>
     <canvas id="cv" aria-label="Interactive map of CAMELS publications" role="img"></canvas>
-    <div class="zoom"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button><button id="zfit" aria-label="Fit to view">⤢</button><button id="zdim" aria-label="Switch to 3D view">3D</button><button id="zspin" aria-label="Pause rotation" aria-pressed="true" hidden>⏸</button></div>
+    <div class="zoom">
+      <div class="dimtoggle" role="group" aria-label="Layout"><button id="d2" type="button" aria-pressed="true" title="Flat layout (drag to pan)">2D</button><button id="d3" type="button" aria-pressed="false" title="Rotatable 3D layout (drag to rotate)">3D</button></div>
+      <div class="zgroup"><button id="zin" type="button" aria-label="Zoom in" title="Zoom in"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg></button><button id="zout" type="button" aria-label="Zoom out" title="Zoom out"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8h9"/></svg></button><button id="zfit" type="button" aria-label="Show everything" title="Show everything"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"/></svg></button></div>
+      <button id="zspin" type="button" aria-label="Pause rotation" title="Pause rotation" aria-pressed="true" hidden></button>
+    </div>
     <div class="stage-note" id="note"></div>
     <div class="tip" id="tip" hidden></div>
     <div class="tablewrap" id="tablewrap" hidden></div>
@@ -795,12 +807,15 @@ const noteText = v => (v === 'topics' ? (S.dim === 2 ? 'Layout: 2D t-SNE of SPEC
     : 'Layout: each paper pulled toward its 4 most similar papers (SPECTER2) · axes have no units')
   : v === 'citations' ? citeNote().replace(' · drag to rotate', '') : `${AU.length} authors · ${EM.size} co-author pairs`)
   + (S.dim === 3 ? ' · drag to rotate' : ' · drag to pan');
-$('zdim').addEventListener('click', () => {
-  S.dim = S.dim === 3 ? 2 : 3;
-  const b = $('zdim'); b.textContent = S.dim === 3 ? '2D' : '3D'; b.setAttribute('aria-label', `Switch to ${S.dim === 3 ? '2D' : '3D'} view`);
-  $('zspin').hidden = S.dim === 2; CAM.snap = true;
+function setDim(d) {
+  if (S.dim === d) return;
+  S.dim = d;
+  $('d2').setAttribute('aria-pressed', d === 2); $('d3').setAttribute('aria-pressed', d === 3);
+  $('zspin').hidden = d === 2; CAM.snap = true;
   $('note').textContent = noteText(S.view); S.hover = null; hideTip(); userMoved = false; fit(false); if (!S.sel) overview(); draw();
-});
+}
+$('d2').addEventListener('click', () => setDim(2));
+$('d3').addEventListener('click', () => setDim(3));
 $('min2').addEventListener('change', e => { S.min2 = e.target.checked; fit(false); draw(); });
 $('selfc').addEventListener('change', e => {
   S.selfc = e.target.checked;
@@ -821,7 +836,7 @@ $('reset').addEventListener('click', () => { S.q = ''; $('q').value = ''; S.y0 =
 $('zin').addEventListener('click', () => { userMoved = true; zoomAt(1.5, W / 2, H / 2, 200); });
 $('zout').addEventListener('click', () => { userMoved = true; zoomAt(1 / 1.5, W / 2, H / 2, 200); });
 $('zfit').addEventListener('click', () => { userMoved = false; fit(true, true); });
-const spinBtn = () => { const b = $('zspin'); b.textContent = CAM.spin ? '⏸' : '⟳'; b.setAttribute('aria-label', CAM.spin ? 'Pause rotation' : 'Start rotation'); b.setAttribute('aria-pressed', CAM.spin); };
+const spinBtn = () => { const b = $('zspin'); b.innerHTML = CAM.spin ? '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4v8M10 4v8"/></svg>' : '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 3.8 12 8l-6.5 4.2z"/></svg>'; const l = CAM.spin ? 'Pause rotation' : 'Start rotation'; b.setAttribute('aria-label', l); b.title = l; b.setAttribute('aria-pressed', CAM.spin); };
 $('zspin').addEventListener('click', () => { CAM.spin = !CAM.spin; spinBtn(); });
 function updateStats() {
   const filtered = nShown < P.length;
