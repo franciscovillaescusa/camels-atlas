@@ -603,6 +603,48 @@ def topic_positions(X, T, emb, uids, titles, store):
     return pos2, pos3
 
 
+def similarity(X, T, emb, N):
+    """Paper-to-paper similarity: cosine of the SPECTER2 embeddings where both papers have one,
+    otherwise cosine of their title+abstract word (TF-IDF) vectors. Returns (matrix, kind matrix)."""
+    W = (T @ T.T).toarray()
+    sim, kind = W.copy(), np.full((N, N), "w")
+    row = np.array(emb)
+    E = X @ X.T
+    sim[np.ix_(row, row)] = E
+    kind[np.ix_(row, row)] = "e"
+    np.fill_diagonal(sim, -np.inf)
+    return sim, kind
+
+
+def similar_papers(sim, kind, n_best=5):
+    """For each paper, its most similar papers [(index, score)], and whether by embedding or words."""
+    out = []
+    for i in range(len(sim)):
+        own = kind[i] == "e"
+        pool = np.where(own)[0] if own.sum() > 1 else np.arange(len(sim))  # compare like with like
+        pool = pool[pool != i]
+        best = pool[np.argsort(-sim[i, pool])[:n_best]]
+        out.append({"k": "e" if own.sum() > 1 else "w",
+                    "l": [[int(j), round(float(sim[i, j]), 3)] for j in best]})
+    return out
+
+
+def topic_graph_positions(sim, kind, uids, old, n_links=4):
+    """3D topic map: link each paper to its n_links most similar papers and lay the network out like
+    the citation and co-author networks. This keeps similar papers together more faithfully than a
+    3D t-SNE (tested Nov 2026: 60% vs 47% of each paper's 5 most similar papers among its 10 nearest)."""
+    N, pairs = len(uids), set()
+    for i in range(N):
+        own = np.where(kind[i] == "e")[0] if (kind[i] == "e").sum() > 1 else np.arange(N)
+        own = own[own != i]
+        for j in own[np.argsort(-sim[i, own])[:n_links]]:
+            pairs.add((min(i, int(j)), max(i, int(j))))
+    pairs = sorted(pairs)
+    s = np.array([a for a, _ in pairs], int)
+    t = np.array([b for _, b in pairs], int)
+    return network_positions(uids, s, t, np.full(len(s), 30.0), np.full(len(s), 0.5), np.full(N, 6.0), 90, 0.1, old)
+
+
 def recluster_topics(X, T, tv, emb):
     """Fresh k-means clustering. Names are matched to clusters by the probe keywords in TOPICS,
     so check the printed titles and edit TOPICS (and TOPIC_SEED) if the clusters have changed."""
@@ -764,7 +806,10 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
     # ---- layouts (stored positions are kept; only new items are placed)
     uids = [r["uid"] for r in recs]
     tags = load_tags(tags_path, uids, [r["title"] for r in recs])
-    pos2, pos3 = topic_positions(X, T, emb, uids, [r["title"] for r in recs], store)
+    pos2, pos3 = topic_positions(X, T, emb, uids, [r["title"] for r in recs], store)  # pos3 (3D t-SNE) no longer shown
+    sim, kind = similarity(X, T, emb, N)
+    similar = similar_papers(sim, kind)
+    graph3 = topic_graph_positions(sim, kind, uids, store.get("topics3d_graph", {}))
     cs_ = np.array([n for n in range(N) for j in refs[n]], int)
     ct_ = np.array([j for n in range(N) for j in refs[n]], int)
     citers = np.bincount(ct_, minlength=N)
@@ -794,6 +839,7 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
     new_store = {
         "topics2d": {uids[n]: rd(pos2[n], 4) for n in range(N)},
         "topics3d": {uids[n]: rd(pos3[n], 4) for n in range(N)},
+        "topics3d_graph": {uids[n]: rd(graph3[n]) for n in range(N)},
         "citations": {uids[n]: rd(cit[n]) for n in range(N)},
         "coauthors2": {authors[a]: rd(v) for a, v in co["2"].items()},
         "coauthors1": {authors[a]: rd(v) for a, v in co["1"].items()},
@@ -815,7 +861,7 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
             "y": int(r["date"][:4]), "au": au, "c": r["c"], "cs": r["cs"], "bib": r["bib"], "v": r["venue"],
             "lk": r["link"], "url": r["url"], "tg": tags[n],
             "x": round(float(pos2[n][0]), 4), "yy": round(float(pos2[n][1]), 4),
-            "p3": [round(float(v), 4) for v in pos3[n]], "c3": new_store["citations"][uids[n]], "c2": new_store["citations2d"][uids[n]],
+            "p3": [round(float(v) / 420, 4) for v in graph3[n]], "sim": similar[n], "c3": new_store["citations"][uids[n]], "c2": new_store["citations2d"][uids[n]],
             "k": topic[n], "r": refs[n],
         })
 

@@ -9,13 +9,14 @@ The site has four views. A button switches between them:
 
 | View | Each dot is | Lines | Dot size |
 |---|---|---|---|
-| **Topic map** | a paper, placed by abstract similarity (t-SNE of SPECTER2 embeddings) | none | total citations |
+| **Topic map** | a paper, placed by abstract similarity (2D: t-SNE of SPECTER2 embeddings; 3D: each paper pulled toward its 4 most similar papers) | none | total citations |
 | **Citations** | a paper | one CAMELS paper cites another | citations from other CAMELS papers (a toggle hides self-citations, i.e. links between papers sharing an author: 68% of all links) |
 | **Co-authors** | an author | the two authors share a paper; darker lines mean closer collaboration | number of CAMELS papers |
 | **Table** | a paper (one row) | — | sortable columns: title, first author, year, topic, methods, citations, citations within CAMELS; keyboard accessible |
 
 Colors show 10 topics, found by k-means clustering of the paper embeddings and named by hand.
-Search, the year range and the topic buttons filter every view. A selected paper or author
+Each paper's panel lists its 5 most similar papers by embedding similarity, and selecting a paper on
+the topic map highlights them. Search, the year range and the topic buttons filter every view. A selected paper or author
 stays highlighted when you switch views. The maps open in 2D (drag to pan, scroll or pinch to zoom); a
 2D/3D button next to the zoom controls switches them to rotatable 3D layouts (drag to rotate).
 

@@ -397,7 +397,8 @@ function focusSets() {
   const f = S.hover || S.sel; if (!f) return null;
   const papers = new Set(), authors = new Set();
   if (f.kind === 'p') { papers.add(f.i); P[f.i].au.forEach(a => authors.add(a));
-    if (S.view === 'citations') { P[f.i].r.forEach(j => papers.add(j)); P[f.i].citers.forEach(j => papers.add(j)); } }
+    if (S.view === 'citations') { P[f.i].r.forEach(j => papers.add(j)); P[f.i].citers.forEach(j => papers.add(j)); }
+    if (S.view === 'topics' && P[f.i].sim) P[f.i].sim.l.forEach(([j]) => papers.add(j)); }
   else { authors.add(f.i); AU[f.i].papers.forEach(j => papers.add(j));
     if (S.view === 'coauthors') AU[f.i].papers.forEach(j => P[j].au.forEach(a => authors.add(a))); }
   return { f, papers, authors };
@@ -603,6 +604,8 @@ function paperPanel(i) {
     ${tagBlock(p)}
     <div><h3>${p.au.length} author${p.au.length > 1 ? 's' : ''}</h3><div class="names">${p.au.map(a => `<button data-a="${a}">${esc(AU[a].name)}</button>`).join('')}</div></div>
     <div><h3>Abstract</h3>${p.ab && p.abx ? `<p class="abstract">${esc(p.ab)} … <a href="https://ui.adsabs.harvard.edu/abs/${encodeURIComponent(p.bib)}/abstract" target="_blank" rel="noopener">Read the full abstract on ADS</a></p>` : p.ab ? `<p class="abstract">${esc(p.ab)}</p>` : '<p>No abstract available. Use the link above to read the full text.</p>'}</div>
+    ${p.sim && p.sim.l.length ? `<div><h3>Most similar papers <span style="text-transform:none;letter-spacing:0;font-weight:400">· by ${p.sim.k === 'e' ? 'abstract embedding (1 = identical)' : 'shared words (no embedding available)'}</span></h3><ul class="list">${p.sim.l.map(([j, s]) =>
+      `<li><button data-p="${j}">${dot(P[j].k)}<span class="tt">${esc(P[j].t)}</span><span class="num">${s.toFixed(3)}</span></button></li>`).join('')}</ul></div>` : ''}
     <div><h3>Cites ${p.r.length} CAMELS paper${p.r.length === 1 ? '' : 's'}</h3>${p.r.length ? `<ul class="list">${p.r.slice().sort((a, b) => P[b].d.localeCompare(P[a].d)).map(j => pItem(j, shares(j, p.i))).join('')}</ul>` : '<p>None found.</p>'}</div>
     <div><h3>Cited by ${p.citers.length} CAMELS paper${p.citers.length === 1 ? '' : 's'}${p.citers.length ? `, ${p.citersInd.length} without shared authors` : ''}</h3>${p.citers.length ? `<ul class="list">${p.citers.slice().sort((a, b) => P[b].d.localeCompare(P[a].d)).map(j => pItem(j, shares(j, p.i))).join('')}</ul>` : '<p>None yet.</p>'}</div>`;
 }
@@ -701,7 +704,8 @@ legend.addEventListener('click', e => { const b = e.target.closest('.chip'); if 
 [$('y0'), $('y1')].forEach((sel, n) => { sel.innerHTML = years.map(y => `<option ${y === (n ? S.y1 : S.y0) ? 'selected' : ''}>${y}</option>`).join('');
   sel.addEventListener('change', () => { S.y0 = +$('y0').value; S.y1 = +$('y1').value; if (S.y0 > S.y1) { [S.y0, S.y1] = [S.y1, S.y0]; $('y0').value = S.y0; $('y1').value = S.y1; } refresh(); }); });
 let qt; $('q').addEventListener('input', e => { clearTimeout(qt); qt = setTimeout(() => { S.q = e.target.value; refresh(); }, 120); });
-const noteText = v => (v === 'topics' ? `Layout: ${S.dim}D t-SNE of SPECTER2 abstract embeddings · axes have no units`
+const noteText = v => (v === 'topics' ? (S.dim === 2 ? 'Layout: 2D t-SNE of SPECTER2 abstract embeddings · axes have no units'
+    : 'Layout: each paper pulled toward its 4 most similar papers (SPECTER2) · axes have no units')
   : v === 'citations' ? citeNote().replace(' · drag to rotate', '') : `${AU.length} authors · ${EM.size} co-author pairs`)
   + (S.dim === 3 ? ' · drag to rotate' : ' · drag to pan');
 $('zdim').addEventListener('click', () => {
