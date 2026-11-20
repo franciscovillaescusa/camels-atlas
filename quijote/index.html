@@ -863,13 +863,21 @@ function render() {
   const boxes = [];
   const hits = b => boxes.some(o => b.x0 < o.x1 && b.x1 > o.x0 && b.y0 < o.y1 && b.y1 > o.y0);
   // place a label unless it collides with one already placed; `tries` lists vertical nudges to attempt
-  const label = (txt, x, y, font, align, tries, force) => {
+  // a name on the map; skipped if it would overlap one already drawn (unless forced: the selected item).
+  // pill: on a translucent rounded background, readable over dense dots and lines (networks); otherwise a
+  // thin halo (the topic-map region names)
+  const label = (txt, x, y, font, align, tries, force, pill) => {
     ctx.font = font; ctx.textAlign = align || 'center';
     const w = ctx.measureText(txt).width, h = 15;
     for (const dy of tries || [0]) {
       const x0 = align === 'left' ? x : x - w / 2, b = { x0: x0 - 3, x1: x0 + w + 3, y0: y + dy - h / 2, y1: y + dy + h / 2 };
       if (!force && hits(b)) continue;
-      boxes.push(b); ctx.lineWidth = 4; ctx.strokeStyle = C.surface; ctx.strokeText(txt, x, y + dy); ctx.fillStyle = C.ink; ctx.fillText(txt, x, y + dy); return;
+      boxes.push(b);
+      if (pill) {
+        ctx.save(); ctx.globalAlpha = 0.86; ctx.fillStyle = C.surface; ctx.beginPath();
+        ctx.roundRect(x0 - 4, y + dy - h / 2 - 1, w + 8, h + 2, 4); ctx.fill(); ctx.restore();
+      } else { ctx.lineWidth = 4; ctx.strokeStyle = C.surface; ctx.strokeText(txt, x, y + dy); }
+      ctx.fillStyle = C.ink; ctx.fillText(txt, x, y + dy); return;
     }
   };
   const fB = css('--f-body');
@@ -886,11 +894,11 @@ function render() {
     let cand = nodes.filter(n => aOn[n.id] && (!F || F.authors.has(n.id)))
       .sort((a, b) => (F && b.id === F.f.i) - (F && a.id === F.f.i) || AU[b.id].papers.length - AU[a.id].papers.length);
     if (!F) cand = cand.slice(0, nLab);
-    cand.forEach(n => label(AU[n.id].name, sx(n) + rad(n) + 4, sy(n), (F && F.f.kind === 'a' && F.f.i === n.id ? '600 ' : '500 ') + '11.5px ' + fB, 'left', [0, -12, 12], F && n.id === F.f.i));
+    cand.forEach(n => label(AU[n.id].name, sx(n) + rad(n) + 4, sy(n), (F && F.f.kind === 'a' && F.f.i === n.id ? '600 ' : '500 ') + '11.5px ' + fB, 'left', [0, -12, 12], F && n.id === F.f.i, true));
   }
   if (S.view === 'citations' && F && F.f.kind === 'p') {
     const cand = nodes.filter(n => n.id === F.f.i || (T.k > 1.6 && F.papers.has(n.id))).sort((a, b) => (b.id === F.f.i) - (a.id === F.f.i));
-    cand.forEach(n => { const t = P[n.id].t; label(t.length > 48 ? t.slice(0, 46) + '…' : t, sx(n) + rad(n) + 5, sy(n), '500 11.5px ' + fB, 'left', [0], n.id === F.f.i); });
+    cand.forEach(n => { const t = P[n.id].t; label(t.length > 48 ? t.slice(0, 46) + '…' : t, sx(n) + rad(n) + 5, sy(n), '500 11.5px ' + fB, 'left', [0], n.id === F.f.i, true); });
   }
 }
 
