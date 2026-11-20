@@ -1,5 +1,6 @@
 {
  "name": "CAMELS",
+ "description": "Cosmology and Astrophysics with MachinE Learning Simulations.",
  "homepage": "https://www.camel-simulations.org/",
  "pubs_url": "https://camels.readthedocs.io/en/latest/publications.html",
  "site_url": "https://franciscovillaescusa.github.io/literature-atlas/camels/",

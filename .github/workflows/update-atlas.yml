@@ -55,10 +55,11 @@ jobs:
             echo "::endgroup::"
           done
           echo "FAILED=$failed" >> "$GITHUB_ENV"
+          python build_index.py   # the landing page: one card per built project, with its counts
 
       - name: Commit if changed
         run: |
-          git add -A -- $(ls projects) projects/*/positions.json projects/*/s2_matches.json
+          git add -A -- $(ls projects) projects/*/positions.json projects/*/s2_matches.json index.html
           if git diff --cached --quiet; then
             echo "No changes."
             exit 0

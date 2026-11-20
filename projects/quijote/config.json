@@ -1,5 +1,6 @@
 {
  "name": "Quijote",
+ "description": "Thousands of N-body simulations for cosmology and machine learning.",
  "homepage": "https://quijote-simulations.readthedocs.io/",
  "pubs_url": "https://quijote-simulations.readthedocs.io/en/latest/publications.html",
  "site_url": "https://franciscovillaescusa.github.io/literature-atlas/quijote/",
