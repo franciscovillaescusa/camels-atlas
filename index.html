@@ -276,12 +276,30 @@ function coauthorLayout(min2) {
   return { nodes, links, labels: [], R, is3d: true };
 }
 // camera for the 3D view
-const CAM = { yaw: 0.6, pitch: -0.25, spin: !matchMedia('(prefers-reduced-motion: reduce)').matches };
+const CAM = { yaw: 0.6, pitch: -0.25, spin: !matchMedia('(prefers-reduced-motion: reduce)').matches, pv: [0, 0, 0], snap: true };
+// Rotation centre: the selected node; for a selection of the other kind, the mean of its related nodes
+// (an author's papers in the paper views, a paper's authors in the co-author view); else the graph centre.
+function pivotTarget(lay) {
+  if (!S.sel || !lay.nodes.length) return [0, 0, 0];
+  const isP = lay.nodes[0].kind === 'p', ids = new Set();
+  if (S.sel.kind === (isP ? 'p' : 'a')) ids.add(S.sel.i);
+  else if (S.sel.kind === 'a') AU[S.sel.i].papers.forEach(j => ids.add(j));
+  else P[S.sel.i].au.forEach(a => ids.add(a));
+  const ns = lay.nodes.filter(n => ids.has(n.id));
+  if (!ns.length) return [0, 0, 0];
+  return ['x3', 'y3', 'z3'].map(k => ns.reduce((s, n) => s + n[k], 0) / ns.length);
+}
 function project(lay) {
+  // glide the rotation centre toward its target (instantly on view switch or with reduced motion)
+  const tg = pivotTarget(lay), pv = CAM.pv, inst = CAM.snap || matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let moving = false;
+  for (let i = 0; i < 3; i++) { const d = tg[i] - pv[i]; if (inst || Math.abs(d) < 0.05) pv[i] = tg[i]; else { pv[i] += d * 0.15; moving = true; } }
+  CAM.snap = false; if (moving) draw();
   const cy = Math.cos(CAM.yaw), sy_ = Math.sin(CAM.yaw), cp = Math.cos(CAM.pitch), sp = Math.sin(CAM.pitch), Dc = lay.R * 3;
   for (const n of lay.nodes.concat(lay.labels)) {
-    const x1 = n.x3 * cy + n.z3 * sy_, z1 = -n.x3 * sy_ + n.z3 * cy;
-    const y2 = n.y3 * cp - z1 * sp, z2 = n.y3 * sp + z1 * cp, f = Dc / Math.max(Dc + z2, Dc * 0.3);
+    const X = n.x3 - pv[0], Y = n.y3 - pv[1], Z = n.z3 - pv[2];
+    const x1 = X * cy + Z * sy_, z1 = -X * sy_ + Z * cy;
+    const y2 = Y * cp - z1 * sp, z2 = Y * sp + z1 * cp, f = Dc / Math.max(Dc + z2, Dc * 0.3);
     n.x = x1 * f; n.y = y2 * f; n.s = Math.min(f, 2); n.dz = z2; n.fog = Math.max(0.35, Math.min(1, 0.45 + 0.55 * (1 - (z2 + lay.R) / (2 * lay.R))));
   }
 }
@@ -529,7 +547,7 @@ function select(s) { S.sel = s; renderPanel(); draw(); }
 
 // ---------- controls ----------
 function setView(v, animate) {
-  S.view = v; ['topics', 'citations', 'coauthors'].forEach(x => $('m-' + x).setAttribute('aria-pressed', x === v));
+  S.view = v; CAM.snap = true; ['topics', 'citations', 'coauthors'].forEach(x => $('m-' + x).setAttribute('aria-pressed', x === v));
   $('minwrap').hidden = v !== 'coauthors'; $('zspin').hidden = false; spinBtn();
   cv.tabIndex = 0;
   $('note').textContent = v === 'topics' ? 'Layout: 3D t-SNE of SPECTER2 abstract embeddings · axes have no units · drag to rotate'
