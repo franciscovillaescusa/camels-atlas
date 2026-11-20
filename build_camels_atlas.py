@@ -579,22 +579,22 @@ def tsne(X, dim):
 
 
 def topic_positions(X, T, emb, uids, titles, store):
-    """2D and 3D topic-map positions. First build: t-SNE of the embeddings. Later builds: stored
+    """2D topic-map positions. First build: t-SNE of the embeddings. Later builds: stored
     positions; new papers go to the mean position of their 3 most similar placed papers."""
-    old2, old3 = store.get("topics2d", {}), store.get("topics3d", {})
+    old2 = store.get("topics2d", {})
     N, row = len(uids), {n: j for j, n in enumerate(emb)}
-    pos2, pos3 = {}, {}
-    known = [n for n in range(N) if uids[n] in old2 and uids[n] in old3]
+    pos2 = {}
+    known = [n for n in range(N) if uids[n] in old2]
     if known:
         for n in known:
-            pos2[n], pos3[n] = np.array(old2[uids[n]]), np.array(old3[uids[n]])
+            pos2[n] = np.array(old2[uids[n]])
     else:
-        Y2, Y3 = tsne(X, 2), tsne(X, 3)
+        Y2 = tsne(X, 2)
         for j, n in enumerate(emb):
-            pos2[n], pos3[n] = Y2[j], Y3[j]
-    placed = list(pos3)
+            pos2[n] = Y2[j]
+    placed = list(pos2)
     for n in range(N):
-        if n in pos3:
+        if n in pos2:
             continue
         cand = [m for m in placed if m in row]
         if n in row and cand:      # by embedding similarity
@@ -603,11 +603,9 @@ def topic_positions(X, T, emb, uids, titles, store):
             cand = placed
             sims = (T[cand] @ T[n].T).toarray().ravel()
         nn = [cand[i] for i in np.argsort(-sims)[:3]]
-        jit = 0.03 * np.cos(np.arange(3) + n)
-        pos3[n] = np.mean([pos3[m] for m in nn], 0) + jit
-        pos2[n] = np.mean([pos2[m] for m in nn], 0) + jit[:2]
+        pos2[n] = np.mean([pos2[m] for m in nn], 0) + 0.03 * np.cos(np.arange(2) + n)
         log(f"placed next to similar papers: {titles[n][:70]}")
-    return pos2, pos3
+    return pos2
 
 
 def similarity(X, T, emb, N):
@@ -829,7 +827,7 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
     # ---- layouts (stored positions are kept; only new items are placed)
     uids = [r["uid"] for r in recs]
     tags = load_tags(tags_path, uids, [r["title"] for r in recs])
-    pos2, pos3 = topic_positions(X, T, emb, uids, [r["title"] for r in recs], store)  # pos3 (3D t-SNE) no longer shown
+    pos2 = topic_positions(X, T, emb, uids, [r["title"] for r in recs], store)
     sim, kind = similarity(X, T, emb, N)
     similar = similar_papers(sim, kind)
     graph3 = topic_graph_positions(sim, kind, uids, store.get("topics3d_graph", {}))
@@ -846,14 +844,14 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
             for y in range(x + 1, len(au)):
                 pairs[(min(au[x], au[y]), max(au[x], au[y]))] += 1
     co, co2 = {}, {}
-    for mode, keep in (("2", [a for a in range(len(authors)) if npap[a] >= 2]), ("1", list(range(len(authors))))):
+    for mode, keep in (("1", list(range(len(authors)))),):   # all authors
         loc = {a: i for i, a in enumerate(keep)}
         pl = [(loc[a], loc[b], c) for (a, b), c in pairs.items() if a in loc and b in loc]
         s_ = np.array([x[0] for x in pl], int)
         t_ = np.array([x[1] for x in pl], int)
         c_ = np.array([x[2] for x in pl], float)
         co_args = ([authors[a] for a in keep], s_, t_, 60 / np.sqrt(c_), np.minimum(0.6, 0.04 * c_),
-                   2.5 + np.sqrt(np.array([npap[a] for a in keep], float)) * 2, 240 if mode == "2" else 70, 0.12)
+                   2.5 + np.sqrt(np.array([npap[a] for a in keep], float)) * 2, 70, 0.12)
         pos = network_positions(*co_args, store.get("coauthors" + mode, {}))
         pos2d = network_positions(*co_args, store.get("coauthors" + mode + "_2d", {}), dim=2)
         co[mode] = {a: pos[i] for i, a in enumerate(keep)}
@@ -861,13 +859,10 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
     rd = lambda v, nd=2: [round(float(x), nd) for x in v]
     new_store = {
         "topics2d": {uids[n]: rd(pos2[n], 4) for n in range(N)},
-        "topics3d": {uids[n]: rd(pos3[n], 4) for n in range(N)},
         "topics3d_graph": {uids[n]: rd(graph3[n]) for n in range(N)},
         "citations": {uids[n]: rd(cit[n]) for n in range(N)},
-        "coauthors2": {authors[a]: rd(v) for a, v in co["2"].items()},
         "coauthors1": {authors[a]: rd(v) for a, v in co["1"].items()},
         "citations2d": {uids[n]: rd(cit2[n]) for n in range(N)},
-        "coauthors2_2d": {authors[a]: rd(v) for a, v in co2["2"].items()},
         "coauthors1_2d": {authors[a]: rd(v) for a, v in co2["1"].items()},
     }
     # when each paper first appeared on the site ("launch" = already there at the first recorded build);
