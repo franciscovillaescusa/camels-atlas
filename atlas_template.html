@@ -191,7 +191,7 @@ footer { font-size: 12px; color: var(--muted); }
 <main>
   <div class="stage" id="stage">
     <canvas id="cv" aria-label="Interactive map of CAMELS publications" role="img"></canvas>
-    <div class="zoom"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button><button id="zfit" aria-label="Fit to view">⤢</button><button id="zdim" aria-label="Switch to 2D view">2D</button><button id="zspin" aria-label="Pause rotation" aria-pressed="true" hidden>⏸</button></div>
+    <div class="zoom"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button><button id="zfit" aria-label="Fit to view">⤢</button><button id="zdim" aria-label="Switch to 3D view">3D</button><button id="zspin" aria-label="Pause rotation" aria-pressed="true" hidden>⏸</button></div>
     <div class="stage-note" id="note"></div>
     <div class="tip" id="tip" hidden></div>
     <div class="tablewrap" id="tablewrap" hidden></div>
@@ -234,7 +234,7 @@ const CE = []; P.forEach(p => p.r.forEach(j => CE.push({ s: p.i, t: j, self: sha
 const years = [...new Set(P.map(p => p.y))].sort();
 
 // ---------- state ----------
-const S = { view: 'topics', sel: null, hover: null, q: '', y0: years[0], y1: years[years.length - 1], on: new Set(TOP.map((_, k) => k)), min2: true, selfc: true, dim: 3, tag: { s: '', d: '', m: '' }, nTop: { topics: 25, citations: 25, coauthors: 25 } };
+const S = { view: 'topics', sel: null, hover: null, q: '', y0: years[0], y1: years[years.length - 1], on: new Set(TOP.map((_, k) => k)), min2: true, selfc: true, dim: 2, tag: { s: '', d: '', m: '' }, nTop: { topics: 25, citations: 25, coauthors: 25 } };
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
