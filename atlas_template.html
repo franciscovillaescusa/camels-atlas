@@ -81,6 +81,10 @@ select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; ba
 .dlmenu button { all: unset; padding: 7px 10px; border-radius: 6px; font-size: 13px; color: var(--ink); cursor: pointer; }
 .dlmenu button:hover, .dlmenu button:focus-visible { background: var(--wash); }
 .mapopts { position: absolute; left: 10px; top: 10px; z-index: 2; display: flex; flex-direction: column; gap: 4px; }
+.playbtn { padding: 5px 9px; }
+.playbtn[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.playyear { position: absolute; right: 64px; bottom: 26px; font-family: var(--f-display); font-size: 56px; font-weight: 700;
+  color: var(--ink); opacity: .16; pointer-events: none; font-variant-numeric: tabular-nums; line-height: 1; }
 .mapopts select { font-size: 12px; padding: 1px 4px; margin-left: 4px; border-radius: 6px; }
 .cbkey { background: color-mix(in srgb, var(--surface) 92%, transparent); border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px;
   font-size: 11.5px; color: var(--ink-2); display: grid; gap: 3px; max-width: 230px; }
@@ -247,8 +251,8 @@ footer { font-size: 12px; color: var(--muted); }
 
 <div class="toolbar">
   <label class="search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3.5 3.5"/></svg>
-    <input id="q" type="search" placeholder="Search papers and authors  ( / )" aria-label="Search papers, authors, abstracts and tags"><span class="qcount" id="qcount" aria-live="polite"></span></label>
-  <span class="field"><label for="y0">Years</label> <select id="y0"></select> <span aria-hidden="true">–</span> <select id="y1" aria-label="To year"></select></span>
+    <input id="q" type="search" placeholder="Search  ( / )" aria-label="Search papers, authors, abstracts and tags"><span class="qcount" id="qcount" aria-live="polite"></span></label>
+  <span class="field"><label for="y0">Years</label> <select id="y0"></select> <span aria-hidden="true">–</span> <select id="y1" aria-label="To year"></select> <button class="ghost playbtn" id="play" type="button" title="Play the history: papers appear year by year" aria-label="Play the history year by year">▶ Play</button></span>
   <span class="field"><label for="f-suite">Suite</label> <select id="f-suite"></select></span>
   <span class="field"><label for="f-data">Data</label> <select id="f-data"></select></span>
   <span class="field"><label for="f-method">Method</label> <select id="f-method"></select></span>
@@ -271,6 +275,7 @@ footer { font-size: 12px; color: var(--muted); }
     <div class="tip" id="tip" hidden></div>
     <div class="tablewrap" id="tablewrap" hidden></div>
     <div class="trendswrap" id="trendswrap" hidden></div>
+    <div class="playyear" id="playyear" hidden aria-live="polite"></div>
     <div class="tapcard" id="tapcard" hidden><span class="tt" id="tapcard-t"></span><button class="ghost" id="tapcard-go">Details ↓</button><button class="ghost" id="tapcard-x" aria-label="Close">×</button></div>
   </div>
   <aside id="panel" aria-live="polite"></aside>
@@ -1143,6 +1148,33 @@ $('dlmenu').addEventListener('click', e => {
   else download(`camels-papers-${stamp}.csv`, '﻿' + csv(list), 'text/csv');
   dlMenu(false);
 });
+
+// ---------- play history: papers appear year by year ----------
+const PLAY = { on: false, timer: 0, saved: null };
+function stopPlay(restore) {
+  if (!PLAY.on) return;
+  PLAY.on = false; clearTimeout(PLAY.timer);
+  $('play').setAttribute('aria-pressed', 'false'); $('play').textContent = '▶ Play'; $('playyear').hidden = true;
+  if (restore && PLAY.saved) { [S.y0, S.y1] = PLAY.saved; $('y0').value = S.y0; $('y1').value = S.y1; refresh(); }
+}
+function startPlay() {
+  if (FLAT[S.view]) setView('topics', false);
+  PLAY.on = true; PLAY.saved = [S.y0, S.y1];
+  $('play').setAttribute('aria-pressed', 'true'); $('play').textContent = '■ Stop';
+  const ys = years.filter(y => y >= S.y0 && y <= S.y1);
+  let i = 0;
+  const step = () => {
+    if (!PLAY.on) return;
+    if (i >= ys.length) { PLAY.timer = setTimeout(() => stopPlay(true), 1200); return; }
+    S.y1 = ys[i]; $('y1').value = S.y1; refresh();
+    const py = $('playyear'); py.textContent = ys[i]; py.hidden = false;
+    i++; PLAY.timer = setTimeout(step, 1500);
+  };
+  step();
+}
+$('play').addEventListener('click', e => { e.stopPropagation(); PLAY.on ? stopPlay(true) : startPlay(); });
+cv.addEventListener('pointerdown', () => stopPlay(true));
+['y0', 'y1'].forEach(id => $(id).addEventListener('change', () => stopPlay(false)));
 
 // ---------- shareable links ----------
 // On the public site the address holds the view, the selected paper/author, the filters and 2D/3D,
