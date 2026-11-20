@@ -37,12 +37,12 @@ jobs:
 
       - name: Commit if changed
         run: |
-          if git diff --quiet -- index.html atlas_positions.json; then
+          if git diff --quiet -- index.html atlas_positions.json preview.png; then
             echo "No changes."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
-          git add index.html atlas_positions.json
+          git add index.html atlas_positions.json preview.png
           git commit -m "Weekly atlas update ($(date -u +%Y-%m-%d))"
           git push

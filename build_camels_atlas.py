@@ -67,6 +67,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.manifold import TSNE
 
 PUBS_URL = "https://camels.readthedocs.io/en/latest/publications.html"
+SITE_URL = "https://franciscovillaescusa.github.io/camels-atlas/"   # public address, used for link previews
 UA = {"User-Agent": "camels-atlas-builder/1.0"}
 N_TOPICS = 10
 SEED = 0
@@ -900,6 +901,43 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
     return data, new_store
 
 
+# ----------------------------------------------------------------------------- link-preview image
+def make_preview(data, template, path):
+    """1200x630 image shown when the site link is shared: the 2D topic map plus title and counts.
+    Colors are read from the page template (light theme) so they always match the site."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    root = template[template.index(":root {"):]
+    root = root[:root.index("}")]
+    col = {int(k): v for k, v in re.findall(r"--t(\d+): (#[0-9a-fA-F]{6})", root)}
+    bg, ink, ink2 = (re.search(r"--%s: (#[0-9a-fA-F]{6})" % n, root).group(1) for n in ("bg", "ink", "ink-2"))
+    papers = data["papers"]
+    xy = np.array([[p["x"], p["yy"]] for p in papers])
+    xy -= xy.mean(0)
+    w, v = np.linalg.eigh(np.cov(xy.T))            # turn the long axis horizontal, as on the site
+    xy = xy @ v[:, ::-1]
+    size = np.array([(3 + 2.2 * np.log1p(p["c"])) ** 2 * 1.6 for p in papers])
+    colors = [col.get(p["k"], "#8b9099") for p in papers]
+    fig = plt.figure(figsize=(12, 6.3), dpi=100, facecolor=bg)
+    ax = fig.add_axes([0.47, 0.06, 0.50, 0.88]); ax.set_facecolor(bg); ax.axis("off")
+    ax.scatter(xy[:, 0], xy[:, 1], s=size * 9, c=colors, alpha=0.10, linewidths=0)   # soft glow
+    ax.scatter(xy[:, 0], xy[:, 1], s=size, c=colors, alpha=0.95, linewidths=0.8, edgecolors=bg)
+    pad = 0.06 * (xy.max(0) - xy.min(0))
+    ax.set_xlim(xy[:, 0].min() - pad[0], xy[:, 0].max() + pad[0]); ax.set_ylim(xy[:, 1].min() - pad[1], xy[:, 1].max() + pad[1])
+    ax.set_aspect("equal", adjustable="box")   # keep the map inside its own area, never behind the text
+    fig.text(0.05, 0.74, "CAMELS", fontsize=46, fontweight="bold", color=ink, family="DejaVu Sans")
+    fig.text(0.05, 0.645, "Literature Atlas", fontsize=46, fontweight="bold", color=ink, family="DejaVu Sans")
+    fig.text(0.05, 0.50, "Every paper that uses the CAMELS\nsimulations, mapped by topic,\ncitations and collaborations.",
+             fontsize=19, color=ink2, linespacing=1.45, va="top", family="DejaVu Sans")
+    n_links = sum(len(p["r"]) for p in papers)
+    fig.text(0.05, 0.20, f"{len(papers)} papers · {len(data['authors'])} authors · {n_links} citation links",
+             fontsize=16, color=ink, family="DejaVu Sans")
+    fig.text(0.05, 0.13, SITE_URL.replace("https://", "").rstrip("/"), fontsize=14, color=col.get(6, ink2), family="DejaVu Sans")
+    fig.savefig(path, dpi=100, facecolor=bg, metadata={"Software": None})   # no version stamp: same data, same bytes
+    plt.close(fig)
+
+
 # ----------------------------------------------------------------------------- main
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -963,12 +1001,13 @@ def main():
         data["fetched"] = prev["fetched"]
     blob = json.dumps(data, separators=(",", ":"), ensure_ascii=False).replace("</", "<\\/")
     with open(args.template, encoding="utf-8") as f:
-        html = f.read().replace("__DATA__", blob)
+        template = f.read()
+    html = template.replace("__DATA__", blob)
     if not args.artifact:  # a complete document that opens directly in a browser or on GitHub Pages
         head, body = html.split("<header>", 1)
         head = head.replace('<meta name="claude:viewport-fit-sides" content="cover">\n', "")  # claude.ai-only
         n = len(data["papers"])
-        desc = (f"Interactive 3D map of the {n} papers that use the CAMELS simulations: "
+        desc = (f"Interactive map of the {n} papers that use the CAMELS simulations: "
                 "topics, citation network and co-author network.")
         html = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
                 '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
@@ -976,9 +1015,15 @@ def main():
                 '<meta property="og:title" content="CAMELS Literature Atlas">\n'
                 f'<meta property="og:description" content="{desc}">\n'
                 '<meta property="og:type" content="website">\n'
+                f'<meta property="og:url" content="{SITE_URL}">\n'
+                f'<meta property="og:image" content="{SITE_URL}preview.png">\n'
+                '<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n'
+                '<meta name="twitter:card" content="summary_large_image">\n'
                 + head.strip() + '\n<style>body{margin:0}</style>\n</head>\n<body>\n<header>' + body + '\n</body>\n</html>\n')
     with open(args.positions, "w") as f:
         json.dump(new_store, f, separators=(",", ":"), sort_keys=True)
+    if not args.artifact:  # link-preview image next to the page
+        make_preview(data, template, os.path.join(os.path.dirname(os.path.abspath(args.out)), "preview.png"))
     old = open(args.out, encoding="utf-8").read() if os.path.exists(args.out) else None
     if old == html:
         log(f"\nno changes: {args.out} left as it was (data as of {data['fetched']}).")

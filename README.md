@@ -38,6 +38,7 @@ stays highlighted when you switch views. The maps open in 2D (drag to pan, scrol
 | `atlas_tags.json` | suite / data / method tags per paper (hand-editable) |
 | `atlas_overrides.json` | hand corrections per paper |
 | `atlas_positions.json` | stored layout positions (generated; commit it) |
+| `preview.png` | link-preview image shown when the site is shared (generated; commit it) |
 
 ## Rebuilding
 
