@@ -705,6 +705,7 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
         recs.append({"uid": ax or e["bibcode"] or "title:" + norm_title(e["title"])[:80], "title": title, "abstract": abstract,
                      "date": date_, "authors": authors or ["Unknown"], "link": link, "url": url,
                      "c": c, "cs": cs, "bib": bib, "venue": p.get("venue") or (rec or {}).get("pub") or "",
+                     "doi": (p.get("externalIds") or {}).get("DOI") or ((rec or {}).get("doi") or [""])[0],
                      "s2": p, "dq": False,
                      # journal abstracts from ADS are the publisher's copyright: publish only an excerpt
                      "excerpt": bool(rec) and not (ax and ax in arx)})
@@ -890,7 +891,7 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
             "id": r["uid"], "t": r["title"], "ab": first_sentence(r["abstract"]) if r.get("excerpt") else r["abstract"],
             "abx": int(bool(r.get("excerpt"))), "nw": int(is_new(r["uid"])), "d": r["date"], "dq": int(r["dq"]),
             "y": int(r["date"][:4]), "au": au, "c": r["c"], "cs": r["cs"], "bib": r["bib"], "v": r["venue"],
-            "lk": r["link"], "url": r["url"], "tg": tags[n],
+            "lk": r["link"], "url": r["url"], "doi": r["doi"], "tg": tags[n],
             "x": round(float(pos2[n][0]), 4), "yy": round(float(pos2[n][1]), 4),
             "p3": [round(float(v) / 420, 4) for v in graph3[n]], "sim": similar[n], "c3": new_store["citations"][uids[n]], "c2": new_store["citations2d"][uids[n]],
             "k": topic[n], "r": refs[n], "rm": int(r["refmissing"]),

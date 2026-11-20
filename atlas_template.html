@@ -69,7 +69,13 @@ dialog#about::backdrop { background: rgba(10,12,16,.45); }
 .search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--muted); }
 select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-variant-numeric: tabular-nums; }
 .toolbar select { max-width: 175px; }
-#reset { margin-left: auto; }
+#dlwrap { margin-left: auto; position: relative; }
+#dlwrap:not([hidden]) + #reset, #reset { margin-left: 0; }
+#dlwrap[hidden] + #reset { margin-left: auto; }
+.dlmenu { position: absolute; right: 0; top: calc(100% + 4px); z-index: 5; display: flex; flex-direction: column; min-width: 170px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 9px; box-shadow: 0 8px 24px rgba(0,0,0,.14); padding: 4px; }
+.dlmenu button { all: unset; padding: 7px 10px; border-radius: 6px; font-size: 13px; color: var(--ink); cursor: pointer; }
+.dlmenu button:hover, .dlmenu button:focus-visible { background: var(--wash); }
 .mapopts { position: absolute; left: 10px; top: 10px; z-index: 2; display: flex; flex-direction: column; gap: 4px; }
 .mapopts .chk { background: color-mix(in srgb, var(--surface) 88%, transparent); border: 1px solid var(--line); border-radius: 8px; padding: 4px 9px; font-size: 12.5px; }
 .tablewrap { position: absolute; inset: 0; overflow: auto; }
@@ -234,6 +240,8 @@ footer { font-size: 12px; color: var(--muted); }
   <span class="field"><label for="f-suite">Suite</label> <select id="f-suite"></select></span>
   <span class="field"><label for="f-data">Data</label> <select id="f-data"></select></span>
   <span class="field"><label for="f-method">Method</label> <select id="f-method"></select></span>
+  <span class="dlwrap" id="dlwrap" hidden><button class="ghost" id="dlbtn" type="button" aria-haspopup="true" aria-expanded="false" title="Download the papers currently shown">Download ▾</button>
+    <span class="dlmenu" id="dlmenu" hidden><button type="button" data-dl="bib">BibTeX (.bib)</button><button type="button" data-dl="csv">Spreadsheet (.csv)</button></span></span>
   <button class="ghost" id="reset">Clear filters</button>
 </div>
 <div class="legend" id="legend" aria-label="Topics"></div>
@@ -963,6 +971,53 @@ $('trendswrap').addEventListener('mousemove', e => {
   tip.hidden = false; tip.style.left = Math.min(box.width - tip.offsetWidth - 8, e.clientX - box.left + 14) + 'px'; tip.style.top = (e.clientY - box.top + 14) + 'px';
 });
 $('trendswrap').addEventListener('mouseleave', hideTip);
+
+// ---------- export the papers currently shown (public site only; claude.ai blocks downloads) ----------
+function shownPapers() { return P.filter(p => pOn[p.i]).sort((a, b) => b.d.localeCompare(a.d)); }
+function bibtex(list) {
+  const used = new Set();
+  const tex = s => String(s).replace(/([&%$#_])/g, '\\$1').replace(/\^/g, '\\textasciicircum{}').replace(/~/g, '\\textasciitilde{}');
+  const lastFirst = n => { const w = n.trim().split(/\s+/); return w.length < 2 ? n : `${w[w.length - 1]}, ${w.slice(0, -1).join(' ')}`; };
+  return list.map(p => {
+    const first = p.au.length ? AU[p.au[0]].name.trim().split(/\s+/).pop() : 'anon';
+    const word = (p.t.match(/[A-Za-z]{3,}/) || ['paper'])[0];
+    let key = (first.normalize('NFKD').replace(/[^A-Za-z]/g, '') || 'anon') + p.y + word.toLowerCase(), k = key, n = 1;
+    while (used.has(k)) k = key + String.fromCharCode(96 + n++);
+    used.add(k);
+    const ax = /^\d{4}\.\d{4,5}$/.test(p.id) ? p.id : '';
+    const journal = p.v && !/arxiv/i.test(p.v) ? p.v : '';
+    const f = [['title', `{${tex(p.t)}}`], ['author', p.au.map(a => tex(lastFirst(AU[a].name))).join(' and ')], ['year', p.y],
+      journal && ['journal', tex(journal)], p.doi && ['doi', p.doi], ax && ['eprint', ax], ax && ['archivePrefix', 'arXiv'],
+      p.bib && ['adsurl', `https://ui.adsabs.harvard.edu/abs/${p.bib}`], ['url', p.url || (ax ? `https://arxiv.org/abs/${ax}` : '')]]
+      .filter(x => x && x[1] !== '' && x[1] !== undefined);
+    return `@${journal ? 'article' : 'misc'}{${k},\n` + f.map(([a, b]) => `  ${a} = {${b}}`).join(',\n') + '\n}';
+  }).join('\n\n') + '\n';
+}
+function csv(list) {
+  const q = v => { const s = String(v ?? ''); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const head = ['title', 'authors', 'year', 'date', 'topic', 'suites', 'data', 'methods', 'citations', 'citation_source', 'cited_in_camels', 'arxiv', 'doi', 'ads_bibcode', 'url'];
+  const rows = list.map(p => [p.t, p.au.map(a => AU[a].name).join('; '), p.y, p.d, TOP[p.k], p.tg ? p.tg.s.join('; ') : '', p.tg ? p.tg.d.join('; ') : '',
+    p.tg ? p.tg.m.join('; ') : '', p.cs === 2 ? '' : p.c, ['ADS', 'Semantic Scholar', 'unknown'][p.cs], p.citers.length,
+    /^\d{4}\.\d{4,5}$/.test(p.id) ? p.id : '', p.doi || '', p.bib || '', p.url || '']);
+  return [head, ...rows].map(r => r.map(q).join(',')).join('\n') + '\n';
+}
+function download(name, text, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+if (D.urlstate) $('dlwrap').hidden = false;
+const dlMenu = open => { $('dlmenu').hidden = !open; $('dlbtn').setAttribute('aria-expanded', open); };
+$('dlbtn').addEventListener('click', e => { e.stopPropagation(); dlMenu($('dlmenu').hidden); });
+document.addEventListener('click', e => { if (!e.target.closest('#dlwrap')) dlMenu(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') dlMenu(false); });
+$('dlmenu').addEventListener('click', e => {
+  const b = e.target.closest('button[data-dl]'); if (!b) return;
+  const list = shownPapers(), stamp = String(D.fetched);
+  if (b.dataset.dl === 'bib') download(`camels-papers-${stamp}.bib`, bibtex(list), 'application/x-bibtex');
+  else download(`camels-papers-${stamp}.csv`, '﻿' + csv(list), 'text/csv');
+  dlMenu(false);
+});
 
 // ---------- shareable links ----------
 // On the public site the address holds the view, the selected paper/author, the filters and 2D/3D,

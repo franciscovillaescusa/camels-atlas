@@ -21,6 +21,11 @@ the topic map highlights them. Search, the year range and the topic buttons filt
 stays highlighted when you switch views. The maps open in 2D (drag to pan, scroll or pinch to zoom); a
 2D/3D button next to the zoom controls switches them to rotatable 3D layouts (drag to rotate).
 
+### Downloading papers
+
+**Download ▾** (next to *Clear filters*) saves the papers currently shown, after search and filters, as
+BibTeX (`.bib`, with DOI, arXiv ID and ADS link where available) or as a spreadsheet (`.csv`).
+
 ### New papers
 
 The build records when each paper first appeared on the site (in `atlas_positions.json`). Papers added in
