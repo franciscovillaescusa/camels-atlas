@@ -8,6 +8,7 @@
 <meta property="og:description" content="Interactive 3D map of the 155 papers that use the CAMELS simulations: topics, citation network and co-author network.">
 <meta property="og:type" content="website">
 <title>CAMELS Literature Atlas</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%227%22%20fill%3D%22%2312151c%22/%3E%3Cg%20stroke%3D%22%235b9cf0%22%20stroke-width%3D%221.6%22%20opacity%3D%22.8%22%3E%3Cpath%20d%3D%22M8%2022%20L14%2011%20L23%209%20M14%2011%20L19%2020%20L8%2022%20M19%2020%20L25%2023%22/%3E%3C/g%3E%3Cg%20fill%3D%22%235b9cf0%22%3E%3Ccircle%20cx%3D%228%22%20cy%3D%2222%22%20r%3D%222.6%22/%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2211%22%20r%3D%223.2%22/%3E%3Ccircle%20cx%3D%2223%22%20cy%3D%229%22%20r%3D%222.2%22/%3E%3Ccircle%20cx%3D%2219%22%20cy%3D%2220%22%20r%3D%222.8%22/%3E%3Ccircle%20cx%3D%2225%22%20cy%3D%2223%22%20r%3D%221.8%22/%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -41,6 +42,7 @@ button, input, select { font: inherit; color: inherit; }
 header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
 .brand { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 h1 { font-family: var(--f-display); font-weight: 700; font-size: 22px; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+.tagline { margin: 0; color: var(--ink-2); font-size: 14px; max-width: 100ch; text-wrap: pretty; }
 .stats { color: var(--ink-2); font-size: 13px; font-variant-numeric: tabular-nums; }
 .stats b { color: var(--ink); font-weight: 600; }
 
@@ -167,6 +169,7 @@ footer { font-size: 12px; color: var(--muted); }
 <header>
   <div class="brand">
     <h1>CAMELS Literature Atlas</h1>
+    <p class="tagline">Every paper that uses the <a href="https://www.camel-simulations.org/" target="_blank" rel="noopener">CAMELS simulations</a>, mapped by topic, citations and collaborations.</p>
     <div class="stats" id="stats"></div>
   </div>
   <div class="modes" role="group" aria-label="View">
