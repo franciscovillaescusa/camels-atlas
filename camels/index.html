@@ -594,8 +594,24 @@ function citationLayout() {
   const nodes = P.map(p => ({ id: p.i, kind: 'p', r: dotR(citeCount(p), 2.6),
     ...(d2 ? { x: p.c2[0], y: p.c2[1] } : { x3: p.c3[0], y3: p.c3[1], z3: p.c3[2] }) }));
   const links = CE.map(e => ({ source: nodes[e.s], target: nodes[e.t], s: e.s, t: e.t, w: 0.45, self: e.self }));
-  if (d2) alignWide(nodes);
-  return d2 ? { nodes, links, labels: [], is3d: false } : { nodes, links, labels: [], R: centre3d(nodes), is3d: true };
+  if (!d2) return { nodes, links, labels: [], R: centre3d(nodes), is3d: true };
+  // papers with no citation link in either direction (their reference lists are in neither ADS nor Semantic
+  // Scholar: theses, very recent papers) would float around the network: put them in a tidy grid below it,
+  // grouped by topic, with a caption (drawn in render)
+  const unlinked = nodes.filter(n => !P[n.id].r.length && !P[n.id].citers.length);
+  const linked = nodes.filter(n => P[n.id].r.length || P[n.id].citers.length);
+  alignWide(linked.length >= 3 ? linked : nodes);
+  let grid = null;
+  if (unlinked.length && linked.length) {
+    const xs = linked.map(n => n.x), ys = linked.map(n => n.y);
+    const x0 = Math.min(...xs), x1 = Math.max(...xs), bw = x1 - x0, bh = Math.max(...ys) - Math.min(...ys);
+    const sp = bw / 28, cols = Math.min(unlinked.length, 26), rows = Math.ceil(unlinked.length / cols);
+    const gx = (x0 + x1) / 2 - (cols - 1) * sp / 2, gy = Math.max(...ys) + 0.10 * bh + sp;
+    unlinked.sort((a, b) => P[a.id].k - P[b.id].k || P[b.id].y - P[a.id].y)
+      .forEach((n, i) => { n.x = gx + (i % cols) * sp; n.y = gy + Math.floor(i / cols) * sp; });
+    grid = { x: gx + (cols - 1) * sp / 2, y: gy - sp * 0.9, ids: unlinked.map(n => n.id), rows };   // x: centre
+  }
+  return { nodes, links, labels: [], is3d: false, unlinked: grid };
 }
 function coauthorLayout() {   // all authors
   const d2 = S.dim === 2, pos = (d2 ? D.co2d : D.co)['1'], keep = AU.filter(a => pos[a.i]);
@@ -898,6 +914,17 @@ function render() {
       .sort((a, b) => (F && b.id === F.f.i) - (F && a.id === F.f.i) || AU[b.id].papers.length - AU[a.id].papers.length);
     if (!F) cand = cand.slice(0, nLab);
     cand.forEach(n => label(AU[n.id].name, sx(n) + rad(n) + 4, sy(n), (F && F.f.kind === 'a' && F.f.i === n.id ? '600 ' : '500 ') + '11.5px ' + fB, 'left', [0, -12, 12], F && n.id === F.f.i, true));
+  }
+  if (S.view === 'citations' && lay.unlinked) {
+    const n = lay.unlinked.ids.filter(i => pOn[i]).length;
+    if (n) {   // centred over the grid; a shorter wording when the full one does not fit (phones)
+      ctx.font = '500 11.5px ' + fB; ctx.textAlign = 'center'; ctx.fillStyle = C.muted;
+      const what = `${n} paper${n === 1 ? '' : 's'} without reference data`;
+      let txt = `${what} in ADS or Semantic Scholar (mostly theses and very recent papers)`;
+      if (ctx.measureText(txt).width > W - 24) txt = what;
+      const x = Math.min(W - 12 - ctx.measureText(txt).width / 2, Math.max(12 + ctx.measureText(txt).width / 2, T.applyX(lay.unlinked.x)));
+      ctx.fillText(txt, x, T.applyY(lay.unlinked.y) - 6);
+    }
   }
   if (S.view === 'citations' && F && F.f.kind === 'p') {
     const cand = nodes.filter(n => n.id === F.f.i || (T.k > 1.6 && F.papers.has(n.id))).sort((a, b) => (b.id === F.f.i) - (a.id === F.f.i));
