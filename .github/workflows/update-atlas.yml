@@ -1,0 +1,48 @@
+name: Update atlas
+
+# Rebuilds index.html every Monday (and on demand) so new CAMELS papers and
+# updated citation counts appear on the site. GitHub Pages serves index.html
+# from the main branch.
+on:
+  schedule:
+    - cron: "0 6 * * 1"   # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-atlas
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build the atlas
+        env:
+          ADS_TOKEN: ${{ secrets.ADS_TOKEN }}     # optional; without it citation counts come from Semantic Scholar
+          S2_API_KEY: ${{ secrets.S2_API_KEY }}   # optional; avoids Semantic Scholar rate limits
+        run: python build_camels_atlas.py --out index.html
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- index.html atlas_positions.json; then
+            echo "No changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
+          git add index.html atlas_positions.json
+          git commit -m "Weekly atlas update ($(date -u +%Y-%m-%d))"
+          git push
