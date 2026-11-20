@@ -1,0 +1,14 @@
+{
+ "_help": [
+  "Hand corrections applied by build_camels_atlas.py. Key each entry by arXiv ID (e.g. 2010.00619),",
+  "ADS bibcode, or the paper's title as it appears on the CAMELS publications page.",
+  "Fields (all optional): topic (exact topic name, or 'Unassigned (new papers)'), date ('2025', '2025-06'",
+  "or '2025-06-30'), abstract, url, link (label of the link), title, authors (list of names),",
+  "hide (true leaves the entry out of the site), comment (free text, ignored).",
+  "Keys starting with '_' are ignored. The build reports every correction it applies."
+ ],
+ "Leveraging Machine Learning and Hydrodynamic Simulations of Galaxy Formation to Illuminate the Effects of Incident Radiation Fields on Atomic Gas Cooling and Heating Functions": {
+  "topic": "Unassigned (new papers)",
+  "comment": "PhD thesis without abstract; the automatic topic (from its title) was wrong."
+ }
+}

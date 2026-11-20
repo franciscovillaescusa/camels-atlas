@@ -379,6 +379,56 @@ def ads_author(a):
     return f"{first.strip()} {last.strip()}".strip()
 
 
+# ----------------------------------------------------------------------------- hand corrections
+OVERRIDE_FIELDS = {"topic", "date", "abstract", "url", "link", "authors", "title", "hide", "comment"}
+
+
+def apply_overrides(recs, overrides):
+    """Apply hand corrections. Keys are an arXiv ID, an ADS bibcode or the paper title; values may set
+    topic (a topic name), date ("YYYY", "YYYY-MM" or "YYYY-MM-DD"), abstract, url, link (label),
+    authors (list), title, hide (true leaves the entry out) and comment (ignored).
+    Returns the remaining records and {record index: topic index} for topic overrides."""
+    by_key = {}
+    for n, r in enumerate(recs):
+        by_key[r["uid"]] = n
+        by_key["title:" + norm_title(r["title"])] = n
+    hidden, topic_of, used = set(), {}, 0
+    for key, ov in overrides.items():
+        if key.startswith("_"):
+            continue  # help text
+        n = by_key.get(key, by_key.get("title:" + norm_title(key)))
+        if n is None:
+            log(f"overrides: no paper matches {key!r}; check the arXiv ID, bibcode or title")
+            continue
+        bad = set(ov) - OVERRIDE_FIELDS
+        if bad:
+            log(f"overrides: unknown field(s) {sorted(bad)} for {key!r}; allowed: {sorted(OVERRIDE_FIELDS)}")
+        r, used, done = recs[n], used + 1, []
+        if ov.get("hide"):
+            hidden.add(n)
+            done.append("hide")
+        for f in ("abstract", "url", "link", "authors", "title"):
+            if f in ov:
+                r[f] = ov[f]
+                done.append(f)
+        if "date" in ov:
+            if not re.fullmatch(r"\d{4}(-\d{2}){0,2}", str(ov["date"])):
+                log(f"overrides: date {ov['date']!r} for {key!r} must look like 2025, 2025-06 or 2025-06-30")
+            else:
+                r["date"], r["dq"] = str(ov["date"]), False
+                done.append("date")
+        if "topic" in ov:
+            if ov["topic"] in TOPIC_NAMES:
+                topic_of[r["uid"]] = TOPIC_NAMES.index(ov["topic"])
+                done.append("topic")
+            else:
+                log(f"overrides: unknown topic {ov['topic']!r} for {key!r}; allowed: {TOPIC_NAMES}")
+        if done:
+            log(f"overrides: applied {done} to {r['title'][:60]}")
+    keep = [r for n, r in enumerate(recs) if n not in hidden]
+    return keep, {n: topic_of[r["uid"]] for n, r in enumerate(keep) if r["uid"] in topic_of}
+
+
 # ----------------------------------------------------------------------------- tags
 # Tags on three axes, assigned by reading each abstract and stored in atlas_tags.json (--tags), which
 # you can edit by hand: {id: {"title", "suite": [...], "data": [...], "method": [...], "uncertain": [...]}}.
@@ -550,7 +600,8 @@ def recluster_topics(X, T, tv, emb):
     return {n: lab2topic[L[j]] for j, n in enumerate(emb)}
 
 
-def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tags_path, recluster=False):
+def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tags_path, overrides,
+               recluster=False):
     # ---- one record per entry on the publications page
     recs = []
     for e, p in zip(entries, s2):
@@ -581,6 +632,9 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
                      "date": date_, "authors": authors or ["Unknown"], "link": link, "url": url,
                      "c": c, "cs": cs, "bib": bib, "venue": p.get("venue") or (rec or {}).get("pub") or "",
                      "s2": p, "dq": False})
+
+    # ---- hand corrections from the overrides file (applied before anything is derived from them)
+    recs, topic_override = apply_overrides(recs, overrides)
 
     # ---- entries with no date: estimate from neighbours (the list is newest first)
     years = [int(r["date"][:4]) if r["date"] else None for r in recs]
@@ -632,6 +686,8 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
             nn = np.argsort(-sims)[:3]
             topic[n] = TOPIC_SEED.get(recs[n]["uid"], Counter(topic[emb[j]] for j in nn).most_common(1)[0][0])
             log(f"no embedding: topic from word similarity  {recs[n]['title'][:60]}")
+    for n, k in topic_override.items():
+        topic[n] = k
 
     # ---- citation links between listed entries (match by Semantic Scholar ID, arXiv ID or DOI)
     by_pid, by_ax, by_doi = {}, {}, {}
@@ -755,6 +811,8 @@ def main():
     ap.add_argument("--offline", action="store_true", help="rebuild from the cached downloads, no network")
     ap.add_argument("--recluster", action="store_true",
                     help="redo the k-means topic clustering instead of using the fixed TOPIC_SEED assignments")
+    ap.add_argument("--overrides", default="atlas_overrides.json",
+                    help="file with hand corrections per paper (default: atlas_overrides.json)")
     ap.add_argument("--tags", default="atlas_tags.json",
                     help="file with the suite/data/method tags of each paper (default: atlas_tags.json)")
     ap.add_argument("--positions", default="atlas_positions.json",
@@ -797,7 +855,8 @@ def main():
     store = {}
     if not args.relayout and os.path.exists(args.positions):
         store = json.load(open(args.positions))
-    data, new_store = build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, args.tags,
+    overrides = json.load(open(args.overrides)) if os.path.exists(args.overrides) else {}
+    data, new_store = build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, args.tags, overrides,
                                  recluster=args.recluster)
     # same papers, citations and positions as the current page: keep its date, so nothing changes
     strip = lambda d: json.dumps({k: v for k, v in d.items() if k != "fetched"}, sort_keys=True)

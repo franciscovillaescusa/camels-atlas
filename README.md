@@ -56,6 +56,13 @@ You can also start it by hand from the **Actions** tab ("Update atlas" → "Run 
 To use ADS citation counts there, add the token as a repository secret named `ADS_TOKEN`
 (Settings → Secrets and variables → Actions → New repository secret).
 
+### Hand corrections
+
+`atlas_overrides.json` corrects individual entries without touching the code. Key an entry by arXiv ID,
+ADS bibcode or title, and set any of: `topic`, `date`, `abstract`, `url`, `link`, `title`, `authors`,
+`hide` (leave the entry out) or `comment`. The build reports each correction it applies and warns about
+keys that match no paper, unknown fields and unknown topic names.
+
 ### Tags
 
 `atlas_tags.json` gives every paper tags on three axes, assigned with AI assistance from its abstract:
