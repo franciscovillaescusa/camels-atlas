@@ -801,12 +801,6 @@ function render() {
     ctx.strokeStyle = C.edgeHi;
     paths.forEach((p, q) => { ctx.globalAlpha = (q + 0.5) * 0.06 * (F ? 0.35 : 1); ctx.lineWidth = 0.4 + q * 0.12; ctx.stroke(p); });
     ctx.globalAlpha = 1;
-  } else if (links.length) {
-    ctx.lineWidth = 1; ctx.strokeStyle = C.edge; ctx.globalAlpha = F ? 0.45 : 1; ctx.beginPath();
-    for (const l of links) { const a = l.source, b = l.target; if (!on(a) || !on(b)) continue;
-      if (!isP && !l.papers.some(j => pOn[j])) continue;
-      ctx.moveTo(sx(a), sy(a)); ctx.lineTo(sx(b), sy(b)); }
-    ctx.stroke(); ctx.globalAlpha = 1;
   }
   if (links.length) {
     if (F) {
@@ -1149,8 +1143,11 @@ function setView(v, animate) {
   S.hover = null; hideTip(); userMoved = false; fit(animate); if (!S.sel) overview(); draw(); updateStats(); tapCard(); colorKey();
 }
 document.querySelectorAll('.modes button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view, true)));
-window.addEventListener('hashchange', applyHash);
-window.addEventListener('popstate', applyHash);
+// Back/Forward and edited addresses fire popstate and/or hashchange (often both): apply each address once
+let lastHash = null;
+const onNav = () => { if (location.hash !== lastHash) applyHash(); };
+window.addEventListener('hashchange', onNav);
+window.addEventListener('popstate', onNav);
 const legend = $('legend');
 function renderLegend() {
   legend.innerHTML = TOP.map((t, k) => !P.some(p => p.k === k) ? '' : `<button class="chip" data-k="${k}" aria-pressed="${S.on.has(k)}"><i style="background:var(--t${k})"></i>${esc(t)} <span class="n">${P.filter(p => p.k === k).length}</span></button>`).join('');
@@ -1179,10 +1176,24 @@ document.addEventListener('keydown', e => {   // "/" jumps to the search box
   }
 });
 const dispSum = () => { $('dispsum').textContent = `· ${S.dim}D${S.colorBy !== 'topic' ? ' · ' + { year: 'Year', method: 'Method', suite: 'Suite' }[S.colorBy] : ''}`; };
-const dispMenu = open => { $('dispmenu').hidden = !open; $('dispbtn').setAttribute('aria-expanded', open); };
-$('dispbtn').addEventListener('click', e => { e.stopPropagation(); dispMenu($('dispmenu').hidden); });
-document.addEventListener('click', e => { if (!e.target.closest('.dispwrap')) dispMenu(false); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') dispMenu(false); });
+// ---------- pop-ups (Display menu, Filters panel, Download menu) ----------
+// The button toggles its pop-up (closing the others); a click outside it or Escape closes it. "Outside" uses
+// composedPath() (the path at dispatch time), so a click on a button that a handler has since removed from
+// the page (re-rendered chips) still counts as inside.
+const POPUPS = [];
+function popup(btn, box, inside) {
+  const set = open => { $(box).hidden = !open; $(btn).setAttribute('aria-expanded', open); };
+  const me = { set, inside };
+  POPUPS.push(me);
+  $(btn).addEventListener('click', e => { e.stopPropagation(); POPUPS.forEach(p => { if (p !== me) p.set(false); }); set($(box).hidden); });
+  return set;
+}
+document.addEventListener('click', e => {
+  const path = e.composedPath().filter(n => n.nodeType === 1);
+  POPUPS.forEach(p => { if (!path.some(n => n.matches(p.inside))) p.set(false); });
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') POPUPS.forEach(p => p.set(false)); });
+const dispMenu = popup('dispbtn', 'dispmenu', '.dispwrap');
 $('colorby').addEventListener('change', e => { S.colorBy = e.target.value; dispSum(); track('atlas_color_by', { by: S.colorBy }); colorKey(); if (!S.sel) overview(); draw(); writeHash(false); });
 const noteText = v => (v === 'topics' ? (S.dim === 2 ? 'Layout: 2D t-SNE of SPECTER2 abstract embeddings · axes have no units'
     : 'Layout: each paper pulled toward its 4 most similar papers (SPECTER2) · axes have no units')
@@ -1335,12 +1346,7 @@ $('active').addEventListener('click', e => {
   else { S.tag[k] = ''; $('f-' + { s: 'suite', d: 'data', m: 'method' }[k]).value = ''; }
   refresh();
 });
-const fPanel = open => { $('fpanel').hidden = !open; $('fbtn').setAttribute('aria-expanded', open); };
-$('fbtn').addEventListener('click', e => { e.stopPropagation(); fPanel($('fpanel').hidden); });
-// composedPath() is the path at dispatch time, so a click on a button that a handler has since removed
-// from the page still counts as inside the panel
-document.addEventListener('click', e => { if (!$('fpanel').hidden && !e.composedPath().some(n => n === $('fpanel') || n === $('fbtn'))) fPanel(false); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') fPanel(false); });
+const fPanel = popup('fbtn', 'fpanel', '#fpanel, #fbtn');
 
 // ---------- export the papers currently shown ----------
 function shownPapers() { return P.filter(p => pOn[p.i]).sort((a, b) => b.d.localeCompare(a.d)); }
@@ -1376,12 +1382,10 @@ function download(name, text, type) {
   a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name;
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
 }
-const dlMenu = open => { $('dlmenu').hidden = !open; $('dlbtn').setAttribute('aria-expanded', open); };
-$('dlbtn').addEventListener('click', e => { e.stopPropagation(); dlMenu($('dlmenu').hidden); });
-document.addEventListener('click', e => { if (!e.target.closest('#dlwrap')) dlMenu(false);
+const dlMenu = popup('dlbtn', 'dlmenu', '#dlwrap');
+document.addEventListener('click', e => {
   if (e.target.closest('.reportlink a')) track('atlas_report_problem');
   if (e.target.closest('#foot a[href*="issues/new"]')) track('atlas_suggest_paper'); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') dlMenu(false); });
 $('dlmenu').addEventListener('click', e => {
   const b = e.target.closest('button[data-dl]'); if (!b) return;
   const list = shownPapers(), stamp = String(D.fetched);
@@ -1460,9 +1464,10 @@ function writeHash(push) {   // push: add a history entry (selections), else rep
   if (applying || PLAY.on) return;
   const h = stateHash();
   if (location.hash === h) return;
-  try { if (push) history.pushState(null, '', h); else history.replaceState(null, '', h); } catch (e) {}
+  try { if (push) history.pushState(null, '', h); else history.replaceState(null, '', h); lastHash = location.hash; } catch (e) {}
 }
 function applyHash() {
+  lastHash = location.hash;
   stopPlay();   // another shared link, or Back/Forward
   const amp = location.hash.indexOf('&');
   const raw = amp < 0 ? location.hash.slice(1) : location.hash.slice(1, amp);
