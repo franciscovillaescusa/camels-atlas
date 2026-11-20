@@ -483,6 +483,15 @@ def load_tags(path, uids, titles):
 # Positions are stored in a JSON file (--positions) and kept fixed on later builds, so the maps
 # don't rearrange when papers are added. Only new papers/authors are placed.
 
+def spiral(n, dim=3):
+    """Deterministic start positions on a spherical (3D) or flat (2D) spiral."""
+    if dim == 2:
+        i = np.arange(n)
+        r, th = 10 * np.sqrt(0.5 + i), i * np.pi * (3 - np.sqrt(5))
+        return np.stack([r * np.cos(th), r * np.sin(th)], 1)
+    return spiral3d(n)
+
+
 def spiral3d(n):
     """Deterministic start positions on a spherical spiral."""
     i = np.arange(n)
@@ -528,14 +537,14 @@ def force3d(pos, s, t, length, k, r, charge, gravity, fixed, iters=300):
     return pos
 
 
-def network_positions(keys, s, t, length, k, r, charge, gravity, old):
+def network_positions(keys, s, t, length, k, r, charge, gravity, old, dim=3):
     """Positions for a network. Known keys keep their stored position; new nodes start next to
     their known neighbours (or on the outer spiral) and settle while the known ones stay fixed."""
     n = len(keys)
     fixed = np.array([key in old for key in keys], bool)
     if not fixed.any():
-        return force3d(spiral3d(n), s, t, length, k, r, charge, gravity, fixed)
-    pos = spiral3d(n) * 3.0
+        return force3d(spiral(n, dim), s, t, length, k, r, charge, gravity, fixed)
+    pos = spiral(n, dim) * 3.0
     nb = defaultdict(list)
     for a, b in zip(s, t):
         nb[a].append(b)
@@ -546,7 +555,7 @@ def network_positions(keys, s, t, length, k, r, charge, gravity, old):
     for i in np.where(~fixed)[0]:
         known = [j for j in nb[i] if fixed[j]]
         if known:
-            pos[i] = np.mean(pos[known], 0) + np.cos(np.arange(3) + i) * 5
+            pos[i] = np.mean(pos[known], 0) + np.cos(np.arange(dim) + i) * 5
     if fixed.all():
         return pos
     return force3d(pos, s, t, length, k, r, charge, gravity, fixed)
@@ -755,25 +764,28 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
     cs_ = np.array([n for n in range(N) for j in refs[n]], int)
     ct_ = np.array([j for n in range(N) for j in refs[n]], int)
     citers = np.bincount(ct_, minlength=N)
-    cit = network_positions(uids, cs_, ct_, np.full(len(cs_), 40.0), np.full(len(cs_), 0.35),
-                            3 + np.sqrt(citers) * 2.2, 90, 0.18, store.get("citations", {}))
+    cit_args = (uids, cs_, ct_, np.full(len(cs_), 40.0), np.full(len(cs_), 0.35), 3 + np.sqrt(citers) * 2.2, 90, 0.18)
+    cit = network_positions(*cit_args, store.get("citations", {}))
+    cit2 = network_positions(*cit_args, store.get("citations2d", {}), dim=2)
     npap = Counter(a for au in au_of for a in au)
     pairs = Counter()
     for au in au_of:
         for x in range(len(au)):
             for y in range(x + 1, len(au)):
                 pairs[(min(au[x], au[y]), max(au[x], au[y]))] += 1
-    co = {}
+    co, co2 = {}, {}
     for mode, keep in (("2", [a for a in range(len(authors)) if npap[a] >= 2]), ("1", list(range(len(authors))))):
         loc = {a: i for i, a in enumerate(keep)}
         pl = [(loc[a], loc[b], c) for (a, b), c in pairs.items() if a in loc and b in loc]
         s_ = np.array([x[0] for x in pl], int)
         t_ = np.array([x[1] for x in pl], int)
         c_ = np.array([x[2] for x in pl], float)
-        pos = network_positions([authors[a] for a in keep], s_, t_, 60 / np.sqrt(c_), np.minimum(0.6, 0.04 * c_),
-                                2.5 + np.sqrt(np.array([npap[a] for a in keep], float)) * 2,
-                                240 if mode == "2" else 70, 0.12, store.get("coauthors" + mode, {}))
+        co_args = ([authors[a] for a in keep], s_, t_, 60 / np.sqrt(c_), np.minimum(0.6, 0.04 * c_),
+                   2.5 + np.sqrt(np.array([npap[a] for a in keep], float)) * 2, 240 if mode == "2" else 70, 0.12)
+        pos = network_positions(*co_args, store.get("coauthors" + mode, {}))
+        pos2d = network_positions(*co_args, store.get("coauthors" + mode + "_2d", {}), dim=2)
         co[mode] = {a: pos[i] for i, a in enumerate(keep)}
+        co2[mode] = {a: pos2d[i] for i, a in enumerate(keep)}
     rd = lambda v, nd=2: [round(float(x), nd) for x in v]
     new_store = {
         "topics2d": {uids[n]: rd(pos2[n], 4) for n in range(N)},
@@ -781,6 +793,9 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
         "citations": {uids[n]: rd(cit[n]) for n in range(N)},
         "coauthors2": {authors[a]: rd(v) for a, v in co["2"].items()},
         "coauthors1": {authors[a]: rd(v) for a, v in co["1"].items()},
+        "citations2d": {uids[n]: rd(cit2[n]) for n in range(N)},
+        "coauthors2_2d": {authors[a]: rd(v) for a, v in co2["2"].items()},
+        "coauthors1_2d": {authors[a]: rd(v) for a, v in co2["1"].items()},
     }
 
     papers = []
@@ -796,7 +811,7 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
             "y": int(r["date"][:4]), "au": au, "c": r["c"], "cs": r["cs"], "bib": r["bib"], "v": r["venue"],
             "lk": r["link"], "url": r["url"], "tg": tags[n],
             "x": round(float(pos2[n][0]), 4), "yy": round(float(pos2[n][1]), 4),
-            "p3": [round(float(v), 4) for v in pos3[n]], "c3": new_store["citations"][uids[n]],
+            "p3": [round(float(v), 4) for v in pos3[n]], "c3": new_store["citations"][uids[n]], "c2": new_store["citations2d"][uids[n]],
             "k": topic[n], "r": refs[n],
         })
 
@@ -810,6 +825,7 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
             log(f"      - {p['t'][:90]}")
     data = {"topics": TOPIC_NAMES, "authors": authors, "papers": papers,
             "co": {m: [new_store["coauthors" + m].get(a) for a in authors] for m in ("1", "2")},
+            "co2d": {m: [new_store["coauthors" + m + "_2d"].get(a) for a in authors] for m in ("1", "2")},
             "refsrc": {"both": n_both, "s2": n_s2, "ads": n_ads}, "tagaxes": TAG_AXES,
             "fetched": fetched, "nads": sum(1 for p in papers if p["cs"] == 0)}
     return data, new_store
@@ -1076,7 +1092,7 @@ footer { font-size: 12px; color: var(--muted); }
 <main>
   <div class="stage" id="stage">
     <canvas id="cv" aria-label="Interactive map of CAMELS publications" role="img"></canvas>
-    <div class="zoom"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button><button id="zfit" aria-label="Fit to view">⤢</button><button id="zspin" aria-label="Pause rotation" aria-pressed="true" hidden>⏸</button></div>
+    <div class="zoom"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button><button id="zfit" aria-label="Fit to view">⤢</button><button id="zdim" aria-label="Switch to 2D view">2D</button><button id="zspin" aria-label="Pause rotation" aria-pressed="true" hidden>⏸</button></div>
     <div class="stage-note" id="note"></div>
     <div class="tip" id="tip" hidden></div>
     <div class="tablewrap" id="tablewrap" hidden></div>
@@ -1118,7 +1134,7 @@ const CE = []; P.forEach(p => p.r.forEach(j => CE.push({ s: p.i, t: j, self: sha
 const years = [...new Set(P.map(p => p.y))].sort();
 
 // ---------- state ----------
-const S = { view: 'topics', sel: null, hover: null, q: '', y0: years[0], y1: years[years.length - 1], on: new Set(TOP.map((_, k) => k)), min2: true, selfc: true, tag: { s: '', d: '', m: '' }, nTop: { topics: 25, citations: 25, coauthors: 25 } };
+const S = { view: 'topics', sel: null, hover: null, q: '', y0: years[0], y1: years[years.length - 1], on: new Set(TOP.map((_, k) => k)), min2: true, selfc: true, dim: 3, tag: { s: '', d: '', m: '' }, nTop: { topics: 25, citations: 25, coauthors: 25 } };
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -1145,9 +1161,16 @@ function centre3d(nodes) {
   const ds = nodes.map(n => Math.hypot(n.x3, n.y3, n.z3)).sort((a, b) => a - b);
   return Math.max(1, ds[Math.floor(0.9 * (N - 1))]);
 }
+const med = a => { const s = a.slice().sort((u, v) => u - v); return s[s.length >> 1]; };
 function topicLayout() {
+  if (S.dim === 2) {
+    const nodes = P.map(p => ({ id: p.i, kind: 'p', x: p.x * 420, y: -p.yy * 420, r: Math.min(16, 3 + Math.sqrt(p.c) * 0.9) }));
+    const labels = TOP.map((name, k) => { const pts = nodes.filter(n => P[n.id].k === k);
+      return { k, name, x: med(pts.map(n => n.x)), y: med(pts.map(n => n.y)) }; }).filter(l => l.x !== undefined);
+    return { nodes, links: [], labels, is3d: false };
+  }
   const nodes = P.map(p => ({ id: p.i, kind: 'p', x3: p.p3[0] * 420, y3: -p.p3[1] * 420, z3: p.p3[2] * 420, r: Math.min(16, 3 + Math.sqrt(p.c) * 0.9) }));
-  const R = centre3d(nodes), med = a => { const s = a.slice().sort((u, v) => u - v); return s[s.length >> 1]; };
+  const R = centre3d(nodes);
   const labels = TOP.map((name, k) => {
     const pts = nodes.filter(n => P[n.id].k === k);
     return { k, name, x3: med(pts.map(n => n.x3)), y3: med(pts.map(n => n.y3)), z3: med(pts.map(n => n.z3)) };
@@ -1156,18 +1179,21 @@ function topicLayout() {
 }
 // Network positions are computed by the Python build script and shipped with the data.
 function citationLayout() {
-  const nodes = P.map(p => ({ id: p.i, kind: 'p', r: 3 + Math.sqrt(citeCount(p)) * 2.2, x3: p.c3[0], y3: p.c3[1], z3: p.c3[2] }));
+  const d2 = S.dim === 2;
+  const nodes = P.map(p => ({ id: p.i, kind: 'p', r: 3 + Math.sqrt(citeCount(p)) * 2.2,
+    ...(d2 ? { x: p.c2[0], y: p.c2[1] } : { x3: p.c3[0], y3: p.c3[1], z3: p.c3[2] }) }));
   const links = CE.map(e => ({ source: nodes[e.s], target: nodes[e.t], s: e.s, t: e.t, w: 0.45, self: e.self }));
-  return { nodes, links, labels: [], R: centre3d(nodes), is3d: true };
+  return d2 ? { nodes, links, labels: [], is3d: false } : { nodes, links, labels: [], R: centre3d(nodes), is3d: true };
 }
 function coauthorLayout(min2) {
-  const pos = D.co[min2 ? '2' : '1'], keep = AU.filter(a => pos[a.i]);
-  const nodes = keep.map(a => ({ id: a.i, kind: 'a', r: 2.5 + Math.sqrt(a.papers.length) * 2, x3: pos[a.i][0], y3: pos[a.i][1], z3: pos[a.i][2] }));
+  const d2 = S.dim === 2, pos = (d2 ? D.co2d : D.co)[min2 ? '2' : '1'], keep = AU.filter(a => pos[a.i]);
+  const nodes = keep.map(a => ({ id: a.i, kind: 'a', r: 2.5 + Math.sqrt(a.papers.length) * 2,
+    ...(d2 ? { x: pos[a.i][0], y: pos[a.i][1] } : { x3: pos[a.i][0], y3: pos[a.i][1], z3: pos[a.i][2] }) }));
   const byId = new Map(nodes.map(n => [n.id, n]));
   const links = [...EM.values()].filter(e => byId.has(e.s) && byId.has(e.t)).map(e => ({
     source: byId.get(e.s), target: byId.get(e.t), s: e.s, t: e.t, papers: e.papers,
     w: e.papers.reduce((s, j) => s + 1 / (P[j].au.length - 1), 0) }));  // Newman collaboration strength
-  return { nodes, links, labels: [], R: centre3d(nodes), is3d: true };
+  return d2 ? { nodes, links, labels: [], is3d: false } : { nodes, links, labels: [], R: centre3d(nodes), is3d: true };
 }
 // camera for the 3D view
 const CAM = { yaw: 0.6, pitch: -0.25, spin: !matchMedia('(prefers-reduced-motion: reduce)').matches, pv: [0, 0, 0], snap: true };
@@ -1198,7 +1224,7 @@ function project(lay) {
   }
 }
 const layout = () => {
-  const key = S.view === 'coauthors' ? 'co' + (S.min2 ? 2 : 1) : S.view;
+  const key = (S.view === 'coauthors' ? 'co' + (S.min2 ? 2 : 1) : S.view) + '-' + S.dim + 'd';
   if (!L[key]) L[key] = S.view === 'topics' ? topicLayout() : S.view === 'citations' ? citationLayout() : coauthorLayout(S.min2);
   return L[key];
 };
@@ -1288,11 +1314,11 @@ function render() {
   const hot = n => !F || (isP ? F.papers.has(n.id) : F.authors.has(n.id));
   const sx = n => T.applyX(n.x), sy = n => T.applyY(n.y);
   // edges
-  if (links.length && lay.is3d) {
+  if (links.length) {
     // thin hairlines; opacity/width follow collaboration strength and depth, drawn in 10 buckets
     const NB = 10, paths = Array.from({ length: NB }, () => new Path2D());
     for (const l of links) { const a = l.source, b = l.target; if (!on(a) || !on(b) || (l.papers && !l.papers.some(j => pOn[j])) || (l.self && !S.selfc)) continue;
-      const v = (0.05 + 0.55 * Math.min(1, l.w)) * (a.fog + b.fog) / 2, q = Math.min(NB - 1, Math.floor(v / 0.06));
+      const v = (0.05 + 0.55 * Math.min(1, l.w)) * ((a.fog ?? 1) + (b.fog ?? 1)) / 2, q = Math.min(NB - 1, Math.floor(v / 0.06));
       paths[q].moveTo(sx(a), sy(a)); paths[q].lineTo(sx(b), sy(b)); }
     ctx.strokeStyle = C.edgeHi;
     paths.forEach((p, q) => { ctx.globalAlpha = (q + 0.5) * 0.06 * (F ? 0.35 : 1); ctx.lineWidth = 0.4 + q * 0.12; ctx.stroke(p); });
@@ -1396,7 +1422,8 @@ cv.addEventListener('pointerdown', e => {
 cv.addEventListener('pointermove', e => {
   if (!rot || !e.buttons) return;
   if (pointers.size > 1) { rot.x = e.clientX; rot.y = e.clientY; dragged = true; return; }
-  CAM.yaw += (e.clientX - rot.x) * 0.008; CAM.pitch = Math.max(-1.45, Math.min(1.45, CAM.pitch + (e.clientY - rot.y) * 0.008));
+  if (S.dim === 2) { cancelAnimationFrame(zAnim); zTarget = null; T.x += e.clientX - rot.x; T.y += e.clientY - rot.y; }
+  else { CAM.yaw += (e.clientX - rot.x) * 0.008; CAM.pitch = Math.max(-1.45, Math.min(1.45, CAM.pitch + (e.clientY - rot.y) * 0.008)); }
   rot.x = e.clientX; rot.y = e.clientY; if (Math.hypot(e.clientX - rot.x0, e.clientY - rot.y0) > 4) dragged = true;
   hideTip(); draw();
 });
@@ -1404,7 +1431,9 @@ const endRot = () => { rot = null; };
 cv.addEventListener('pointerup', endRot); cv.addEventListener('pointercancel', endRot);
 cv.addEventListener('keydown', e => {
   const m = { ArrowLeft: [-0.12, 0], ArrowRight: [0.12, 0], ArrowUp: [0, -0.12], ArrowDown: [0, 0.12] }[e.key]; if (!m) return;
-  e.preventDefault(); CAM.yaw += m[0]; CAM.pitch = Math.max(-1.45, Math.min(1.45, CAM.pitch + m[1])); draw();
+  e.preventDefault();
+  if (S.dim === 2) { T.x -= m[0] * 300; T.y -= m[1] * 300; } else { CAM.yaw += m[0]; CAM.pitch = Math.max(-1.45, Math.min(1.45, CAM.pitch + m[1])); }
+  draw();
 });
 // auto-rotation pauses after 20 s without interaction and while the canvas is off-screen (saves battery);
 // any click, drag, scroll, key press or pointer movement over the map restarts it
@@ -1414,7 +1443,7 @@ let lastUse = performance.now(), onScreen = true;
 cv.addEventListener('pointermove', () => { lastUse = performance.now(); }, { passive: true });
 if ('IntersectionObserver' in window) new IntersectionObserver(es => { onScreen = es[0].isIntersecting; }).observe(stage);
 (function spin() {
-  if (CAM.spin && !rot && !S.hover && !document.hidden && S.view !== 'table' && onScreen && performance.now() - lastUse < IDLE_MS) { CAM.yaw += 0.0025; render(); }
+  if (CAM.spin && !rot && !S.hover && !document.hidden && S.view !== 'table' && S.dim === 3 && onScreen && performance.now() - lastUse < IDLE_MS) { CAM.yaw += 0.0025; render(); }
   requestAnimationFrame(spin);
 })();
 cv.addEventListener('click', e => { if (dragged) { dragged = false; return; } const r = cv.getBoundingClientRect(); select(pick(e.clientX - r.left, e.clientY - r.top)); });
@@ -1430,9 +1459,11 @@ const VIEWINFO = {
   coauthors: ['Each dot is an author, laid out in 3D. A line joins people who wrote a CAMELS paper together. Darker lines mean a closer collaboration: each shared paper counts more when it has fewer authors, so links from 40-author papers stay faint. Nearer authors look larger and brighter.', 'Number of CAMELS papers', 'Author’s most frequent topic'],
 };
 const USE_TXT = 'Drag to rotate (or use the arrow keys), scroll or pinch to zoom. Rotation pauses while you hover. Click a dot for details; your selection stays highlighted when you switch views.';
+const USE2 = 'Drag to pan (or use the arrow keys), scroll or pinch to zoom. Click a dot for details; your selection stays highlighted when you switch views.';
 const USE = { topics: USE_TXT, citations: USE_TXT, coauthors: USE_TXT };
 function overview() {
   let [what, size, color] = VIEWINFO[S.view];
+  if (S.dim === 2) what = what.replace(', laid out in 3D', '').replace(/ Nearer (papers|authors) look larger and brighter\./, '');
   if (S.view === 'citations' && !S.selfc) size += ', not counting papers that share an author (self-citations hidden)';
   let list = '';
   if (S.view === 'table') {
@@ -1454,7 +1485,7 @@ function overview() {
   }
   panel.innerHTML = `<div><h3>How to read this view</h3><p>${what}</p></div>
     <div class="how"><div><b>Size</b><span>${size}</span></div><div><b>Color</b><span>${color}</span></div>
-    <div><b>Use</b><span>${USE[S.view]}</span></div></div>${list}`;
+    <div><b>Use</b><span>${S.dim === 2 && S.view !== 'table' ? USE2 : USE[S.view]}</span></div></div>${list}`;
 }
 function tagBlock(p) {
   if (!p.tg) return '<div><h3>Tags</h3><p>Not tagged yet.</p></div>';
@@ -1539,13 +1570,12 @@ $('tablewrap').addEventListener('keydown', e => {
 // ---------- controls ----------
 function setView(v, animate) {
   S.view = v; CAM.snap = true; ['topics', 'citations', 'coauthors', 'table'].forEach(x => $('m-' + x).setAttribute('aria-pressed', x === v));
-  $('minwrap').hidden = v !== 'coauthors'; $('selfwrap').hidden = v !== 'citations'; $('zspin').hidden = false; spinBtn();
+  $('minwrap').hidden = v !== 'coauthors'; $('selfwrap').hidden = v !== 'citations'; $('zspin').hidden = S.dim === 2; spinBtn();
   const tbl = v === 'table';
   cv.hidden = tbl; $('note').hidden = tbl; document.querySelector('.zoom').hidden = tbl; $('tablewrap').hidden = !tbl;
   if (tbl) renderTable();
   cv.tabIndex = 0;
-  $('note').textContent = v === 'topics' ? 'Layout: 3D t-SNE of SPECTER2 abstract embeddings · axes have no units · drag to rotate'
-    : v === 'citations' ? citeNote() : `${AU.length} authors · ${EM.size} co-author pairs · drag to rotate`;
+  $('note').textContent = noteText(v);
   try { if (location.hash !== '#' + v) history.replaceState(null, '', '#' + v); } catch (e) {}
   S.hover = null; hideTip(); fit(animate); if (!S.sel) overview(); draw(); updateStats();
 }
@@ -1561,11 +1591,20 @@ legend.addEventListener('click', e => { const b = e.target.closest('.chip'); if 
 [$('y0'), $('y1')].forEach((sel, n) => { sel.innerHTML = years.map(y => `<option ${y === (n ? S.y1 : S.y0) ? 'selected' : ''}>${y}</option>`).join('');
   sel.addEventListener('change', () => { S.y0 = +$('y0').value; S.y1 = +$('y1').value; if (S.y0 > S.y1) { [S.y0, S.y1] = [S.y1, S.y0]; $('y0').value = S.y0; $('y1').value = S.y1; } refresh(); }); });
 let qt; $('q').addEventListener('input', e => { clearTimeout(qt); qt = setTimeout(() => { S.q = e.target.value; refresh(); }, 120); });
+const noteText = v => (v === 'topics' ? `Layout: ${S.dim}D t-SNE of SPECTER2 abstract embeddings · axes have no units`
+  : v === 'citations' ? citeNote().replace(' · drag to rotate', '') : `${AU.length} authors · ${EM.size} co-author pairs`)
+  + (S.dim === 3 ? ' · drag to rotate' : ' · drag to pan');
+$('zdim').addEventListener('click', () => {
+  S.dim = S.dim === 3 ? 2 : 3;
+  const b = $('zdim'); b.textContent = S.dim === 3 ? '2D' : '3D'; b.setAttribute('aria-label', `Switch to ${S.dim === 3 ? '2D' : '3D'} view`);
+  $('zspin').hidden = S.dim === 2; CAM.snap = true;
+  $('note').textContent = noteText(S.view); S.hover = null; hideTip(); fit(false); if (!S.sel) overview(); draw();
+});
 $('min2').addEventListener('change', e => { S.min2 = e.target.checked; fit(false); draw(); });
 $('selfc').addEventListener('change', e => {
   S.selfc = e.target.checked;
-  if (L.citations) L.citations.nodes.forEach(n => { n.r = 3 + Math.sqrt(citeCount(P[n.id])) * 2.2; });
-  $('note').textContent = citeNote(); refresh(); if (S.sel) renderPanel();
+  Object.keys(L).filter(k => k.startsWith('citations')).forEach(k => L[k].nodes.forEach(n => { n.r = 3 + Math.sqrt(citeCount(P[n.id])) * 2.2; }));
+  $('note').textContent = noteText('citations'); refresh(); if (S.sel) renderPanel();
 });
 $('reset').addEventListener('click', () => { S.q = ''; $('q').value = ''; S.y0 = years[0]; S.y1 = years[years.length - 1]; $('y0').value = S.y0; $('y1').value = S.y1;
   S.on = new Set(TOP.map((_, k) => k)); S.tag = { s: '', d: '', m: '' }; ['suite', 'data', 'method'].forEach(a => { $('f-' + a).value = ''; });

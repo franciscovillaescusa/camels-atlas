@@ -16,7 +16,8 @@ The site has four views. A button switches between them:
 
 Colors show 10 topics, found by k-means clustering of the paper embeddings and named by hand.
 Search, the year range and the topic buttons filter every view. A selected paper or author
-stays highlighted when you switch views. Drag to rotate, scroll or pinch to zoom.
+stays highlighted when you switch views. Drag to rotate, scroll or pinch to zoom. A 2D/3D button next to
+the zoom controls switches the three map views to flat layouts, where dragging pans.
 
 ## Data sources
 
