@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 """
-CAMELS Literature Atlas builder
-================================
+Literature Atlas builder
+========================
 
-Rebuilds the interactive "CAMELS Literature Atlas" web page (topic map, citation
-network and co-author network, all in rotatable 3D) from scratch.
+Rebuilds an interactive literature atlas (topic map, citation network, co-author network, table and
+trends) for one project: every paper on a simulation suite's publications page. Each project lives in
+projects/<name>/ (config.json, tags.json, overrides.json, positions.json) and its site in <name>/index.html.
+config.json holds what differs between projects: name, publications page, site address, analytics ID,
+topic names, the hand-checked topic of every paper (topic_seed) and the allowed tag names.
 
 Pipeline
-  1. Publications list   https://camels.readthedocs.io/en/latest/publications.html  (every entry)
+  1. Publications list   pubs_url in the project's config.json  (every entry)
   2. arXiv API           titles, abstracts, authors, dates for entries with an arXiv link
   3. NASA ADS            full records for entries that link to ADS instead of arXiv, and total
                          citation counts (token read from ~/.ads/dev_key or $ADS_TOKEN; without a
                          token, citation counts come from Semantic Scholar)
-  4. Semantic Scholar    SPECTER2 embeddings + references (citation links between CAMELS papers;
+  4. Semantic Scholar    SPECTER2 embeddings + references (citation links between the listed papers;
                          an optional free API key in $S2_API_KEY avoids rate limits),
                          matched by arXiv ID, DOI or exact title
   Entries with no arXiv or ADS record (e.g. theses) use the title and authors from the
@@ -24,12 +27,11 @@ Pipeline
                          Only Google Fonts and Google Analytics are loaded from outside.
 
 Usage
-  python3 build_camels_atlas.py                 # fetch everything fresh, write index.html
-  python3 build_camels_atlas.py --offline       # reuse the cached downloads in ./atlas_cache
-  python3 build_camels_atlas.py --out page.html --cache mycache
-  python3 build_camels_atlas.py --recluster     # redo the topic clustering (then check/rename topics)
+  python3 build_atlas.py --project camels                # fetch everything fresh, write camels/index.html
+  python3 build_atlas.py --project camels --offline      # reuse the cached downloads in atlas_cache/camels
+  python3 build_atlas.py --project camels --recluster    # redo the topic clustering (then check/rename topics)
 
-Layout positions are stored in atlas_positions.json (--positions) and reused on later builds, so the
+Layout positions are stored in projects/<name>/positions.json (--positions) and reused on later builds, so the
 maps keep their shape as papers are added; only new papers and authors are placed. --relayout
 recomputes every layout from scratch.
 
@@ -39,11 +41,12 @@ entries have embeddings. If not, it stops without touching the page or the cache
 
 Requirements: Python 3.9+, requests, numpy, scipy, scikit-learn.
 
-Topics: 10 k-means clusters of the SPECTER2 embeddings, named by hand after reading their titles
-(Nov 2026). The topic of every paper checked then is stored in TOPIC_SEED, so the names keep
-matching their papers. New papers join the topic whose centre (mean embedding) is nearest, or,
+Topics: k-means clusters of the SPECTER2 embeddings (one per entry in the config's "topics"), named by
+hand after reading their titles. The topic of every paper checked then is stored in "topic_seed", so the
+names keep matching their papers. New papers join the topic whose centre (mean embedding) is nearest, or,
 without an embedding, the topic most common among the papers with the most similar words.
---recluster redoes the clustering from scratch (then check the printed titles and edit TOPICS).
+--recluster redoes the clustering from scratch (then check the printed titles and edit "topics"); a
+project with an empty "topic_seed" (a new project) is clustered from scratch automatically.
 """
 import argparse
 import html as html_mod
@@ -65,66 +68,38 @@ from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.manifold import TSNE
 
-PUBS_URL = "https://camels.readthedocs.io/en/latest/publications.html"
-SITE_URL = "https://franciscovillaescusa.github.io/camels-atlas/"
-NEW_DAYS = 30
-GA_ID = "G-XRRM15GMS9"   # Google Analytics 4 (same property as franciscovillaescusa.github.io); "" disables it   # papers added to the site within this many days are marked "New"   # public address, used for link previews
-UA = {"User-Agent": "camels-atlas-builder/1.0"}
-N_TOPICS = 10
+REPO_URL = "https://github.com/franciscovillaescusa/literature-atlas"
+NEW_DAYS = 30   # papers added to the site within this many days are marked "New"
+UA = {"User-Agent": "literature-atlas-builder/1.0"}
 SEED = 0
 
-# (name, probe terms used to match the name to a k-means cluster)
-TOPICS = [
-    ("HI & multifield maps", ["neutral hydrogen", "maps", "hi"]),
-    ("Baryonic feedback: CGM, IGM, FRBs & SZ", ["agn feedback", "baryonic feedback", "feedback"]),
-    ("Simulation-based inference methods", ["sbi", "loss", "inference neural"]),
-    ("Primordial non-Gaussianity & analytic models", ["primordial non", "non gaussianity", "b_φ"]),
-    ("Fast & differentiable simulators", ["particle mesh", "differentiable", "fast"]),
-    ("Diffusion models & field generation", ["diffusion", "diffusion models", "generative"]),
-    ("Halos, clusters & galaxy environments", ["haloes", "cluster", "ray"]),
-    ("Galaxy properties & CAMELS releases", ["galaxy properties", "single galaxy", "properties"]),
-    ("Field-level inference & graph networks", ["graph neural", "field level", "galaxy catalogs"]),
-    ("Halo concentration & baryonic imprints", ["concentration", "concentration mass", "imprints"]),
-]
+# Set from the project's config.json by configure() before anything else runs.
+NAME = PUBS_URL = SITE_URL = HOMEPAGE = GA_ID = None
+N_TOPICS = UNASSIGNED = None
+TOPICS = TOPIC_NAMES = TOPIC_SHORT = TOPIC_SEED = TAG_AXES = None
 
-# Papers that fit no topic get this extra index (shown in gray as "Unassigned (new papers)").
-UNASSIGNED = len(TOPICS)
-TOPIC_NAMES = [n for n, _ in TOPICS] + ["Unassigned (new papers)"]
-# short forms used where space is tight (e.g. the table view); same order as TOPIC_NAMES
-TOPIC_SHORT = ["HI & multifield", "Baryonic feedback", "SBI methods", "Primordial NG", "Fast simulators",
-               "Diffusion models", "Halos & clusters", "Galaxy properties", "Field-level inference",
-               "Halo concentration", "Unassigned"]
 
-# Hand-checked topic of every paper in the Nov 2026 clustering (arXiv ID -> index into TOPICS).
-# These stay fixed so the hand-written names keep matching their papers. New papers join the topic
-# whose centre (mean embedding) is nearest. Run with --recluster to redo the clustering from scratch.
-TOPIC_SEED = {
-    "2010.00619": 7, "2011.05992": 8, "2109.04484": 6, "2109.07070": 0, "2109.09747": 8, "2109.10360": 8,
-    "2109.10915": 7, "2110.02983": 0, "2111.08683": 8, "2111.14874": 8, "2201.01300": 7, "2201.01305": 3,
-    "2201.01663": 1, "2201.02202": 7, "2201.02708": 1, "2201.04142": 1, "2204.02408": 6, "2204.13713": 8,
-    "2205.02245": 6, "2207.05509": 4, "2208.08927": 0, "2209.00657": 6, "2209.02075": 1, "2209.06843": 8,
-    "2210.02467": 1, "2211.05000": 0, "2211.12444": 5, "2211.12724": 0, "2211.15675": 1, "2211.16461": 7,
-    "2212.05964": 9, "2301.02186": 1, "2301.02231": 1, "2301.02253": 6, "2301.09655": 4, "2302.01363": 6,
-    "2302.14101": 8, "2302.14591": 8, "2303.07473": 7, "2304.02096": 7, "2304.06084": 7, "2305.00992": 9,
-    "2305.07531": 4, "2306.07728": 6, "2306.10943": 2, "2307.06360": 1, "2307.06967": 3, "2307.11832": 1,
-    "2307.14362": 0, "2308.09751": 2, "2308.14822": 6, "2309.07912": 6, "2309.12048": 7, "2310.04499": 6,
-    "2310.08634": 7, "2310.15234": 8, "2311.00799": 0, "2311.00833": 5, "2311.01588": 8, "2311.03491": 9,
-    "2311.08558": 5, "2311.10088": 3, "2311.18007": 0, "2311.18017": 4, "2312.07534": 5, "2401.12318": 6,
-    "2401.15891": 9, "2402.10997": 0, "2403.02313": 1, "2403.08611": 1, "2403.10609": 3, "2403.10648": 5,
-    "2404.04327": 6, "2405.04447": 7, "2405.05255": 5, "2407.18349": 1, "2408.04864": 1, "2410.10942": 6,
-    "2410.16361": 1, "2410.21722": 7, "2411.02496": 8, "2411.08957": 8, "2411.10515": 0, "2411.13960": 1,
-    "2411.17682": 3, "2412.04559": 1, "2412.05131": 5, "2501.16709": 7, "2501.17922": 1, "2502.06954": 3,
-    "2502.13239": 6, "2502.13589": 6, "2502.17568": 7, "2503.21736": 3, "2503.22654": 7, "2504.11794": 5,
-    "2504.17839": 8, "2504.18745": 1, "2505.02920": 3, "2505.13620": 4, "2505.21215": 4, "2505.23904": 8,
-    "2506.06087": 2, "2506.08783": 3, "2507.01820": 6, "2507.03707": 4, "2507.12530": 8, "2507.16816": 1,
-    "2507.21682": 0, "2508.05744": 2, "2508.21152": 1, "2509.01881": 3, "2509.18260": 1, "2510.19224": 4,
-    "2510.26593": 4, "2510.26851": 4, "2511.08438": 5, "2511.21881": 9, "2512.03038": 1, "2512.10222": 8,
-    "2512.17964": 9, "2601.06258": 1, "2601.06290": 6, "2601.14377": 5, "2602.07651": 3, "2602.12357": 3,
-    "2602.15938": 1, "2602.15951": 4, "2603.13011": 7, "2604.21790": 3, "2605.26210": 8, "2605.28516": 2,
-    "2606.10024": 3, "2606.10038": 7, "2607.18229": 3, "2609.00807": 9, "2609.09504": 8, "2609.10709": 8,
-    "2609.10710": 1, "2609.19295": 5, "2609.23982": 7, "2610.00725": 8, "2610.03544": 9, "2610.03946": 9,
-    "2610.10741": 1, "2610.33955": 4, "2610.37825": 5, "2610.40218": 8,
-}
+def configure(cfg):
+    """Project settings from config.json:
+      name, homepage, pubs_url, site_url (public address, used for link previews),
+      ga_id (Google Analytics 4 measurement ID; "" disables it),
+      topics: [{name, short (used where space is tight), probes (terms that match the name to a k-means
+              cluster in --recluster)}], unassigned_short,
+      topic_seed: {arXiv ID: index into topics}  (hand-checked topics, kept fixed on later builds),
+      tag_axes: {suite: [...], data: [...], method: [...]}  (allowed tag names)."""
+    global NAME, PUBS_URL, SITE_URL, HOMEPAGE, GA_ID, N_TOPICS, UNASSIGNED
+    global TOPICS, TOPIC_NAMES, TOPIC_SHORT, TOPIC_SEED, TAG_AXES
+    NAME, PUBS_URL, SITE_URL, HOMEPAGE = cfg["name"], cfg["pubs_url"], cfg["site_url"], cfg["homepage"]
+    GA_ID = cfg.get("ga_id", "")
+    # (name, probe terms used to match the name to a k-means cluster)
+    TOPICS = [(t["name"], t.get("probes", [])) for t in cfg["topics"]]
+    N_TOPICS = len(TOPICS)
+    # papers that fit no topic get this extra index (shown in gray as "Unassigned (new papers)")
+    UNASSIGNED = len(TOPICS)
+    TOPIC_NAMES = [n for n, _ in TOPICS] + ["Unassigned (new papers)"]
+    TOPIC_SHORT = [t.get("short", t["name"]) for t in cfg["topics"]] + [cfg.get("unassigned_short", "Unassigned")]
+    TOPIC_SEED = {k: int(v) for k, v in cfg.get("topic_seed", {}).items()}
+    TAG_AXES = cfg["tag_axes"]
 
 
 def log(*a):
@@ -368,6 +343,15 @@ def canonical_authors(names):
         for nm in nms:
             f = norm_name(nm)[0]
             (full[f] if len(f) > 1 else abbrev).append(nm)
+        # a two-part given name written as one word elsewhere: Jun-Qing Xia joins Junqing Xia
+        for f in list(full):
+            for nm in list(full[f]):
+                t = norm_name(nm)
+                if len(t) >= 3 and t[0] + t[1] in full and t[0] + t[1] != f:
+                    full[f].remove(nm)
+                    full[t[0] + t[1]].append(nm)
+            if not full[f]:
+                del full[f]
         if not full:
             full[key[0]], abbrev = abbrev, []
         best = max(full, key=lambda f: len(full[f]))
@@ -449,18 +433,9 @@ def apply_overrides(recs, overrides):
 
 
 # ----------------------------------------------------------------------------- tags
-# Tags on three axes, assigned by reading each abstract and stored in atlas_tags.json (--tags), which
-# you can edit by hand: {id: {"title", "suite": [...], "data": [...], "method": [...], "uncertain": [...]}}.
-TAG_AXES = {
-    "suite": ["IllustrisTNG", "SIMBA", "Astrid", "Swift-EAGLE", "CROCODILE", "Magneticum", "Ramses",
-              "N-body (dark matter only)", "CAMELS-SAM", "Zoom-ins (zoomGZ)", "CAMELS (suite not stated)",
-              "Non-CAMELS simulations"],
-    "data": ["2D maps", "3D fields", "Particle snapshots", "Halo & galaxy catalogs", "Merger trees",
-             "Power spectra & summary statistics", "Profiles", "Synthetic observables"],
-    "method": ["CNN", "Graph neural networks", "Simulation-based inference", "Normalizing flows", "Generative models",
-               "Symbolic regression", "Emulators & regression ML", "Other ML", "No ML"],
-}
-
+# Tags on three axes, assigned by reading each abstract and stored in projects/<name>/tags.json (--tags),
+# which you can edit by hand: {id: {"title", "suite": [...], "data": [...], "method": [...], "uncertain": [...]}}.
+# The allowed names per axis are "tag_axes" in the project's config.json.
 
 def load_tags(path, uids, titles):
     """Tags per paper from the tags file; warns about unknown tag names and untagged papers."""
@@ -700,6 +675,8 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
             c, cs, bib = p["citationCount"], 1, ""
         else:
             c, cs, bib = 0, 2, ""  # unknown
+        # drop "names" without letters (arXiv records occasionally list e.g. " :" as an author)
+        authors = [nm for nm in authors if norm_name(nm)]
         recs.append({"uid": ax or e["bibcode"] or "title:" + norm_title(e["title"])[:80], "title": title, "abstract": abstract,
                      "date": date_, "authors": authors or ["Unknown"], "link": link, "url": url,
                      "c": c, "cs": cs, "bib": bib, "venue": p.get("venue") or (rec or {}).get("pub") or "",
@@ -728,7 +705,7 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
     X /= np.linalg.norm(X, axis=1, keepdims=True)
     tv = TfidfVectorizer(stop_words="english", ngram_range=(1, 2), min_df=2, max_df=0.5, sublinear_tf=True)
     T = tv.fit_transform(docs)
-    if recluster:
+    if recluster or not TOPIC_SEED:
         topic = recluster_topics(X, T, tv, emb)
     else:
         # fixed topics: known papers keep their hand-checked topic; new papers join the nearest topic centre
@@ -904,7 +881,8 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
             "co": {"1": [new_store["coauthors1"].get(a) for a in authors]},   # all authors
             "co2d": {"1": [new_store["coauthors1_2d"].get(a) for a in authors]},
             "refsrc": {"both": n_both, "s2": n_s2, "ads": n_ads}, "tagaxes": TAG_AXES,
-            "fetched": fetched, "nads": sum(1 for p in papers if p["cs"] == 0)}
+            "fetched": fetched, "nads": sum(1 for p in papers if p["cs"] == 0),
+            "proj": {"name": NAME, "pubs": PUBS_URL, "repo": REPO_URL, "home": HOMEPAGE}}
     return data, new_store
 
 
@@ -933,9 +911,9 @@ def make_preview(data, template, path):
     pad = 0.06 * (xy.max(0) - xy.min(0))
     ax.set_xlim(xy[:, 0].min() - pad[0], xy[:, 0].max() + pad[0]); ax.set_ylim(xy[:, 1].min() - pad[1], xy[:, 1].max() + pad[1])
     ax.set_aspect("equal", adjustable="box")   # keep the map inside its own area, never behind the text
-    fig.text(0.05, 0.74, "CAMELS", fontsize=46, fontweight="bold", color=ink, family="DejaVu Sans")
+    fig.text(0.05, 0.74, NAME, fontsize=46, fontweight="bold", color=ink, family="DejaVu Sans")
     fig.text(0.05, 0.645, "Literature Atlas", fontsize=46, fontweight="bold", color=ink, family="DejaVu Sans")
-    fig.text(0.05, 0.50, "Every paper that uses the CAMELS\nsimulations, mapped by topic,\ncitations and collaborations.",
+    fig.text(0.05, 0.50, f"Every paper that uses the {NAME}\nsimulations, mapped by topic,\ncitations and collaborations.",
              fontsize=19, color=ink2, linespacing=1.45, va="top", family="DejaVu Sans")
     n_links = sum(len(p["r"]) for p in papers)
     fig.text(0.05, 0.20, f"{len(papers)} papers · {len(data['authors'])} authors · {n_links} citation links",
@@ -948,25 +926,33 @@ def make_preview(data, template, path):
 # ----------------------------------------------------------------------------- main
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--out", default="index.html", help="output HTML file (default: index.html, the GitHub Pages site)")
-    ap.add_argument("--cache", default="atlas_cache", help="folder for downloaded data (default: atlas_cache)")
+    ap.add_argument("--project", required=True, help="project name: a folder in projects/ (e.g. camels, quijote)")
+    ap.add_argument("--out", help="output HTML file (default: <project>/index.html, served by GitHub Pages)")
+    ap.add_argument("--cache", help="folder for downloaded data (default: atlas_cache/<project>)")
     ap.add_argument("--offline", action="store_true", help="rebuild from the cached downloads, no network")
     ap.add_argument("--recluster", action="store_true",
                     help="redo the k-means topic clustering instead of using the fixed TOPIC_SEED assignments")
     ap.add_argument("--template", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "atlas.html"),
                     help="page template; its styles and code are read from atlas.css and atlas.js next to it")
-    ap.add_argument("--overrides", default="atlas_overrides.json",
-                    help="file with hand corrections per paper (default: atlas_overrides.json)")
-    ap.add_argument("--tags", default="atlas_tags.json",
-                    help="file with the suite/data/method tags of each paper (default: atlas_tags.json)")
-    ap.add_argument("--positions", default="atlas_positions.json",
-                    help="file with the stored layout positions (default: atlas_positions.json)")
+    ap.add_argument("--overrides", help="file with hand corrections per paper (default: projects/<project>/overrides.json)")
+    ap.add_argument("--tags", help="file with the suite/data/method tags of each paper (default: projects/<project>/tags.json)")
+    ap.add_argument("--positions", help="file with the stored layout positions (default: projects/<project>/positions.json)")
     ap.add_argument("--relayout", action="store_true",
                     help="ignore the stored positions and compute all layouts from scratch")
     ap.add_argument("--force", action="store_true",
                     help="build even if the sanity checks fail (e.g. papers were really removed from the list)")
     args = ap.parse_args()
+    pdir = os.path.join("projects", args.project)
+    if not os.path.exists(os.path.join(pdir, "config.json")):
+        sys.exit(f"no project {args.project!r}: {pdir}/config.json not found")
+    configure(json.load(open(os.path.join(pdir, "config.json"), encoding="utf-8")))
+    args.out = args.out or os.path.join(args.project, "index.html")
+    args.cache = args.cache or os.path.join("atlas_cache", args.project)
+    args.overrides = args.overrides or os.path.join(pdir, "overrides.json")
+    args.tags = args.tags or os.path.join(pdir, "tags.json")
+    args.positions = args.positions or os.path.join(pdir, "positions.json")
     os.makedirs(args.cache, exist_ok=True)
+    os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
 
     entries = load_or_fetch(args.cache, "entries.json", fetch_entries, args.offline)
     ax_ids = [e["arxiv"] for e in entries if e["arxiv"]]
@@ -1011,16 +997,17 @@ def main():
     base = os.path.splitext(args.template)[0]
     read = lambda path: open(path, encoding="utf-8").read()
     template = read(args.template).replace("__CSS__", read(base + ".css")).replace("__JS__", read(base + ".js"))
+    template = template.replace("__NAME__", html_mod.escape(NAME)).replace("__HOME__", html_mod.escape(HOMEPAGE))
     html = template.replace("__DATA__", blob)
     # complete document: <head> with description, link-preview and analytics tags
     head, body = html.split("<header>", 1)
     n = len(data["papers"])
-    desc = (f"Interactive map of the {n} papers that use the CAMELS simulations: "
+    desc = (f"Interactive map of the {n} papers that use the {NAME} simulations: "
             "topics, citation network and co-author network.")
     html = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
             f'<meta name="description" content="{desc}">\n'
-            '<meta property="og:title" content="CAMELS Literature Atlas">\n'
+            f'<meta property="og:title" content="{NAME} Literature Atlas">\n'
             f'<meta property="og:description" content="{desc}">\n'
             '<meta property="og:type" content="website">\n'
             f'<meta property="og:url" content="{SITE_URL}">\n'

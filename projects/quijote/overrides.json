@@ -1,0 +1,14 @@
+{
+ "_help": [
+  "Hand corrections applied by build_quijote_atlas.py. Key each entry by arXiv ID (e.g. 1909.05273),",
+  "ADS bibcode, or the paper's title as it appears on the Quijote publications page.",
+  "Fields (all optional): topic (exact topic name, or 'Unassigned (new papers)'), date ('2025', '2025-06'",
+  "or '2025-06-30'), abstract, url, link (label of the link), title, authors (list of names),",
+  "hide (true leaves the entry out of the site), comment (free text, ignored).",
+  "Keys starting with '_' are ignored. The build reports every correction it applies."
+ ],
+ "https://www.teses.usp.br/teses/disponiveis/43/43134/tde-15072024-101341/publico/tesenatalisolermatubarodesanti.pdf": {
+  "title": "PhD thesis, Universidade de São Paulo (2024)",
+  "comment": "The publications page gives only the PDF link as the title. Placeholder: replace with the real thesis title."
+ }
+}

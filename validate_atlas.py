@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Validation tests for the CAMELS Literature Atlas data.
+Validation tests for the data of one literature atlas (one project in projects/).
 
 Checks the data embedded in index.html against the downloaded sources (atlas_cache/) and against
 itself. Key results (self-citations, co-author links, similar papers, trends, author merging) are
 recomputed here independently instead of trusting the build code.
 
 Usage
-  python3 validate_atlas.py                 # offline: index.html vs atlas_cache/
-  python3 validate_atlas.py --online        # also re-fetch the CAMELS publications page and spot-check ADS
+  python3 validate_atlas.py --project camels            # offline: camels/index.html vs atlas_cache/camels/
+  python3 validate_atlas.py --project camels --online   # also re-fetch the publications page and spot-check ADS
 
 Exit code 1 if any check fails.
 """
@@ -65,13 +65,21 @@ def main():
 
 def run():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--page", default="index.html")
-    ap.add_argument("--cache", default="atlas_cache")
-    ap.add_argument("--positions", default="atlas_positions.json")
-    ap.add_argument("--tags", default="atlas_tags.json")
-    ap.add_argument("--overrides", default="atlas_overrides.json")
+    ap.add_argument("--project", required=True, help="project name: a folder in projects/ (e.g. camels, quijote)")
+    ap.add_argument("--page")
+    ap.add_argument("--cache")
+    ap.add_argument("--positions")
+    ap.add_argument("--tags")
+    ap.add_argument("--overrides")
     ap.add_argument("--online", action="store_true")
     args = ap.parse_args()
+    pdir = os.path.join("projects", args.project)
+    CFG = json.load(open(os.path.join(pdir, "config.json"), encoding="utf-8"))
+    args.page = args.page or os.path.join(args.project, "index.html")
+    args.cache = args.cache or os.path.join("atlas_cache", args.project)
+    args.positions = args.positions or os.path.join(pdir, "positions.json")
+    args.tags = args.tags or os.path.join(pdir, "tags.json")
+    args.overrides = args.overrides or os.path.join(pdir, "overrides.json")
     h, D, C, POS, TAGS, OV = load(args)
     P, AU, TOP = D["papers"], D["authors"], D["topics"]
     N = len(P)
@@ -108,7 +116,7 @@ def run():
         check(f"ADS-only paper dated by first appearance ({b[:19]})", p["d"] == min(x for x in (issue, entry) if x),
               f"{p['d']} vs issue {issue}, listed {entry}")
     yrs = [p["y"] for p in P]
-    check("years are plausible", min(yrs) >= 2020 and max(yrs) <= date.today().year, f"{min(yrs)}-{max(yrs)}")
+    check("years are plausible", min(yrs) >= CFG["first_year"] and max(yrs) <= date.today().year, f"{min(yrs)}-{max(yrs)}")
     check("year field agrees with date", all(str(p["y"]) == p["d"][:4] for p in P))
     check("only papers without any date are marked estimated",
           all(not p["dq"] or (p["id"] not in ax and p["id"] not in C["ads_rec"]) for p in P),
@@ -140,7 +148,7 @@ def run():
                 by.setdefault(ident, i)
     s2_by_id = {}
     for e, s in zip(E, C["s2"]):
-        uid = e["arxiv"] or e["bibcode"]
+        uid = e["arxiv"] or e["bibcode"] or "title:" + norm_title(e["title"])[:80]   # same IDs as the build
         if s and uid in by:
             s2_by_id[by[uid]] = s
     pid = {s["paperId"]: i for i, s in s2_by_id.items() if s.get("paperId")}
@@ -177,7 +185,7 @@ def run():
           f"{[k for k, v in keys.items() if v > 1][:3]}")
     used = Counter(a for p in P for a in set(p["au"]))
     check("every author has at least one paper", len(used) == len(AU) and all(0 <= a < len(AU) for a in used))
-    raw = {re.sub(r"\s+", " ", n) for i in ax for n in ax[i]["authors"]}
+    raw = {re.sub(r"\s+", " ", n) for i in ax for n in ax[i]["authors"] if norm_name(n)}   # the build drops names without letters
     lost = [n for n in raw if norm_name(n) not in {norm_name(a) for a in AU}
             and not any(norm_name(a).endswith(norm_name(n.split()[-1])) for a in AU)]
     check("every arXiv author name is represented", not lost, f"{lost[:3]}")
@@ -202,8 +210,11 @@ def run():
 
     # ------------------------------------------------------------------ 6. topics, overrides, tags
     check("every paper has a valid topic", all(0 <= p["k"] < len(TOP) for p in P))
-    src = open("build_camels_atlas.py", encoding="utf-8").read()
-    seed = {k: int(v) for k, v in re.findall(r'"([^"]+)": (\d+)', src[src.index("TOPIC_SEED = {"):src.index("}", src.index("TOPIC_SEED = {"))])}
+    seed = {k: int(v) for k, v in CFG.get("topic_seed", {}).items()}
+    check("topic names on the page = config",
+          TOP == [t["name"] for t in CFG["topics"]] + ["Unassigned (new papers)"])
+    check("project name and publications page on the page = config",
+          D["proj"]["name"] == CFG["name"] and D["proj"]["pubs"] == CFG["pubs_url"])
     ovt = {}
     for key, v in OV.items():
         if key.startswith("_") or "topic" not in v:
@@ -215,6 +226,7 @@ def run():
     check("hand-checked topics are kept (TOPIC_SEED)", not bad, f"{len(seed)} seeded, {len(bad)} changed {bad[:3]}")
     check("topic overrides are applied", all(next(q for q in P if q["id"] == i)["k"] == k for i, k in ovt.items()),
           f"{len(ovt)} overrides")
+    check("tag vocabulary on the page = config", D["tagaxes"] == CFG["tag_axes"])
     allowed = {ax_: set(v) for ax_, v in D["tagaxes"].items()}
     bad_tag = [(p["id"], t) for p in P if p["tg"] for ax_, s in (("suite", "s"), ("data", "d"), ("method", "m")) for t in p["tg"][s] if t not in allowed[ax_]]
     check("all tags are from the allowed vocabulary", not bad_tag, f"{bad_tag[:3]}")
@@ -227,7 +239,7 @@ def run():
     # ------------------------------------------------------------------ 7. similar papers (recomputed from embeddings)
     emb = {}
     for e, s in zip(E, C["s2"]):
-        uid = e["arxiv"] or e["bibcode"]
+        uid = e["arxiv"] or e["bibcode"] or "title:" + norm_title(e["title"])[:80]   # same IDs as the build
         if s and s.get("embedding") and uid in by:
             v = np.array(s["embedding"]["vector"], float)
             emb[by[uid]] = v / np.linalg.norm(v)
@@ -264,14 +276,17 @@ def run():
     check("'New' badges match first-seen dates", {p["id"] for p in P if p["nw"]} == exp_new, f"{len(exp_new)} new")
 
     # ------------------------------------------------------------------ 10. page-level facts
-    check("Google Analytics tag present (public site)", "googletagmanager.com/gtag/js?id=G-" in h)
-    check("link-preview image declared and present", 'og:image' in h and os.path.exists("preview.png"))
+    ga = CFG.get("ga_id", "")
+    check("Google Analytics tag present iff the config sets ga_id",
+          (f"googletagmanager.com/gtag/js?id={ga}" in h) if ga else ("googletagmanager" not in h))
+    check("link-preview image declared and present", f'og:image" content="{CFG["site_url"]}preview.png"' in h
+          and os.path.exists(os.path.join(os.path.dirname(os.path.abspath(args.page)), "preview.png")))
     check("no claude.ai-only markup left", "claude:" not in h)
 
     # ------------------------------------------------------------------ 11. optional: compare with live sources
     if args.online:
         import requests
-        page = requests.get("https://camels.readthedocs.io/en/latest/publications.html", timeout=60).text
+        page = requests.get(CFG["pubs_url"], timeout=60).text
         n_live = len(re.findall(r'<li><div class="line-block">', page))
         check("site covers the live publications page", N >= n_live - len(hidden) - 2,
               f"site {N}, live page {n_live} (a few new entries are fine until the next update)")

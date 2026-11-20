@@ -1,9 +1,9 @@
-name: Update atlas
+name: Update atlases
 
-# Rebuilds index.html on the 1st and 15th of each month (and on demand) so new
-# CAMELS papers and updated citation counts appear on the site. GitHub Pages
-# serves index.html from the main branch. If new papers still need tags, it
-# opens (or updates) a "New papers need tags" issue; see CLAUDE.md.
+# Rebuilds every project's atlas (<project>/index.html) on the 1st and 15th of each month (and on
+# demand) so new papers and updated citation counts appear on the sites. GitHub Pages serves the
+# main branch. A project whose build or checks fail is left as it was; the others are still published.
+# If new papers still need tags, it opens (or updates) a "New papers need tags (<name>)" issue; see CLAUDE.md.
 on:
   schedule:
     - cron: "0 6 1,15 * *"   # 1st and 15th of each month, 06:00 UTC
@@ -29,47 +29,64 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          pip install -r requirements.txt playwright==1.48.0
+          python -m playwright install --with-deps chromium
 
-      - name: Build the atlas
+      - name: Build, validate and check every project
         env:
           ADS_TOKEN: ${{ secrets.ADS_TOKEN }}     # optional; without it citation counts come from Semantic Scholar
           S2_API_KEY: ${{ secrets.S2_API_KEY }}   # optional; avoids Semantic Scholar rate limits
-        run: python build_camels_atlas.py --out index.html
-
-      - name: Validate the data against the downloaded sources
-        run: python validate_atlas.py
-
-      - name: Check the built page in a headless browser
         run: |
-          pip install playwright==1.48.0
-          python -m playwright install --with-deps chromium
-          python check_atlas.py
+          failed=""
+          for p in $(ls projects); do
+            echo "::group::$p"
+            if python build_atlas.py --project "$p" && python validate_atlas.py --project "$p" && python check_atlas.py --project "$p"; then
+              echo "$p: ok"
+            else
+              echo "::error::$p failed; its site is left unchanged"
+              git checkout -- "$p" "projects/$p/positions.json" 2>/dev/null || true
+              git clean -fdq -- "$p" "projects/$p/positions.json" || true
+              failed="$failed $p"
+            fi
+            echo "::endgroup::"
+          done
+          echo "FAILED=$failed" >> "$GITHUB_ENV"
 
       - name: Commit if changed
         run: |
-          if git diff --quiet -- index.html atlas_positions.json preview.png; then
+          git add -A -- $(ls projects) projects/*/positions.json
+          if git diff --cached --quiet; then
             echo "No changes."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
-          git add index.html atlas_positions.json preview.png
-          git commit -m "Weekly atlas update ($(date -u +%Y-%m-%d))"
+          git commit -m "Atlas update ($(date -u +%Y-%m-%d))"
           git push
 
-      - name: Open or update the "New papers need tags" issue
+      - name: Open or update the "New papers need tags" issues
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          n=$(python tagging.py count)
-          if [ "$n" = "0" ]; then echo "All papers are tagged."; exit 0; fi
-          python tagging.py issue > issue.md
-          title="New papers need tags"
-          num=$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number')
-          if [ -n "$num" ]; then
-            gh issue edit "$num" --body-file issue.md
-            gh issue comment "$num" --body "Updated: $n paper(s) now need tags. @franciscovillaescusa"
-          else
-            gh issue create --title "$title" --body-file issue.md
-          fi
+          for p in $(ls projects); do
+            [ -f "$p/index.html" ] || continue
+            n=$(python tagging.py "$p" count)
+            name=$(python -c "import json; print(json.load(open('projects/$p/config.json'))['name'])")
+            if [ "$n" = "0" ]; then echo "$name: all papers are tagged."; continue; fi
+            python tagging.py "$p" issue > issue.md
+            title="New papers need tags ($name)"
+            num=$(gh issue list --state open --search "\"$title\" in:title" --json number,title --jq ".[] | select(.title == \"$title\") | .number" | head -1)
+            if [ -n "$num" ]; then
+              gh issue edit "$num" --body-file issue.md
+              gh issue comment "$num" --body "Updated: $n paper(s) now need tags. @franciscovillaescusa"
+            else
+              gh issue create --title "$title" --body-file issue.md
+            fi
+          done
+
+      - name: Fail if a project failed
+        if: env.FAILED != ''
+        run: |
+          echo "Projects that failed (left unchanged):$FAILED"
+          exit 1

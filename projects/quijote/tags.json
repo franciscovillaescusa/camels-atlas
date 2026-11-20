@@ -1,0 +1,5824 @@
+{
+ "2606.11295": {
+  "title": "Interpretable Neural Marked Statistics for Cosmological Inference",
+  "suite": [
+   "Fiducial",
+   "Latin hypercube",
+   "Fisher derivatives"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Other ML",
+   "Fisher forecasts"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Latin hypercube",
+   "Fisher forecasts"
+  ]
+ },
+ "2605.30305": {
+  "title": "Augmented Correlation Functions for Spectroscopic Galaxy Surveys",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos",
+   "Higher-order statistics"
+  ]
+ },
+ "2605.21483": {
+  "title": "Velocityformer: Broken-Symmetry-Matched Equivariant Graph Transformers for Cosmological Velocity Reconstruction",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Galaxy mocks (HOD)",
+   "Redshift space"
+  ],
+  "method": [
+   "Graph neural networks"
+  ],
+  "uncertain": [
+   "Non-Quijote simulations",
+   "Galaxy mocks (HOD)",
+   "Redshift space"
+  ]
+ },
+ "2605.18938": {
+  "title": "First detection of the moving lens effect with ACT and DESI LS",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Power spectra",
+   "Weak lensing & 2D maps"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2605.09004": {
+  "title": "Separate Universe Super-Resolution Emulator",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields",
+   "Particle snapshots",
+   "Halo catalogs",
+   "Power spectra"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": [
+   "Non-Quijote simulations",
+   "Particle snapshots"
+  ]
+ },
+ "2605.04864": {
+  "title": "Efficient estimators for power spectrum and bispectrum multipole measurements",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Redshift space"
+  ]
+ },
+ "title:capsanalyzeratoolforinvestigatingthestructureoftheuniverse": {
+  "title": "Caps-analyzer: a tool for investigating the structure of the universe",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Quijote (set not stated)",
+   "Density fields",
+   "Higher-order statistics",
+   "No ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2605.00980": {
+  "title": "Coverage is not enough: Frequentist tests of simulation-based inference for primordial non-Gaussianity",
+  "suite": [
+   "Fiducial",
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Simulation-based inference"
+  ],
+  "uncertain": [
+   "Quijote-PNG",
+   "Fiducial"
+  ]
+ },
+ "2604.23236": {
+  "title": "The functional form of galaxy and halo luminosity and mass functions",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Halo catalogs"
+  ],
+  "method": [
+   "Symbolic regression"
+  ],
+  "uncertain": [
+   "Non-Quijote simulations"
+  ]
+ },
+ "2604.19613": {
+  "title": "MG-NECOLA: A Field-Level Emulator for $f(R)$ Gravity and Massive Neutrino Cosmologies",
+  "suite": [
+   "Massive neutrinos",
+   "Quijote-MG",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "CNN",
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "Massive neutrinos",
+   "Emulators & regression ML"
+  ]
+ },
+ "2604.17981": {
+  "title": "Efficiently emulating distribution functions in gigaparsec volumes for varying cosmological parameters",
+  "suite": [
+   "Latin hypercube"
+  ],
+  "data": [
+   "Halo catalogs"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "Latin hypercube"
+  ]
+ },
+ "2604.18581": {
+  "title": "If at First You Don't Succeed, Trispectrum: I. Estimating the Matter Power Spectrum Covariance with Higher-Order Statistics",
+  "suite": [
+   "Fiducial"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Perturbation theory & analytic models"
+  ]
+ },
+ "2604.16853": {
+  "title": "Signatures of Massive Neutrinos in the Cosmic Web via Persistent Homology",
+  "suite": [
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2604.09148": {
+  "title": "The Cosmic Web and Its Filaments: Neutrino Mass from Topology and Persistent Homology",
+  "suite": [
+   "Massive neutrinos",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields",
+   "Particle snapshots",
+   "Halo catalogs",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Particle snapshots",
+   "Halo catalogs"
+  ]
+ },
+ "title:newmachinelearningalgorithmstostudythelargescalestructureoftheuniverse": {
+  "title": "New Machine Learning Algorithms to Study the Large-Scale Structure of the Universe",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields"
+  ],
+  "method": [
+   "Other ML"
+  ],
+  "uncertain": [
+   "Quijote (set not stated)",
+   "Density fields",
+   "Other ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2604.00097": {
+  "title": "Lagrangian Bias as a Gaussian Random Field",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Density fields"
+  ]
+ },
+ "2603.22797": {
+  "title": "Enhancing cosmological constraints with nonlinear tanh transformations of Hermite-Gaussian Derivative fields",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos",
+   "Higher-order statistics",
+   "Fisher forecasts"
+  ]
+ },
+ "title:cosmologyasanoptimisationproblem": {
+  "title": "Cosmology as an Optimisation Problem",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields"
+  ],
+  "method": [
+   "Other ML"
+  ],
+  "uncertain": [
+   "Quijote (set not stated)",
+   "Density fields",
+   "Other ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2603.20855": {
+  "title": "Field-Level Inference of Primordial Non-Gaussianity with the Quijote Simulation Suite",
+  "suite": [
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Quijote-PNG",
+   "Density fields",
+   "Perturbation theory & analytic models"
+  ]
+ },
+ "2603.19734": {
+  "title": "Morphological Signatures of Gravitational Evolution, Redshift-Space Distortions, and Massive Neutrinos in Large-Scale Structure",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "title:fromlanguagemodelstocosmicstructuresageometricperspective": {
+  "title": "From language models to cosmic structures: A geometric perspective",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields"
+  ],
+  "method": [
+   "Other ML"
+  ],
+  "uncertain": [
+   "Quijote (set not stated)",
+   "Density fields",
+   "Other ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2602.20070": {
+  "title": "Generative Modeling via Kernelized Stochastic Interpolants",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": [
+   "Density fields",
+   "Higher-order statistics"
+  ]
+ },
+ "2602.17211": {
+  "title": "MGD: Moment Guided Diffusion for Maximum Entropy Generation",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": [
+   "Density fields"
+  ]
+ },
+ "2602.15951": {
+  "title": "MadEvolve: Evolutionary Optimization of Cosmological Algorithms with Large Language Models",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields"
+  ],
+  "method": [
+   "Other ML"
+  ],
+  "uncertain": [
+   "Non-Quijote simulations"
+  ]
+ },
+ "2602.14630": {
+  "title": "Bayesian Cosmic Void Finding with Graph Flows",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Void catalogs"
+  ],
+  "method": [
+   "Graph neural networks",
+   "Generative models"
+  ],
+  "uncertain": [
+   "Halo catalogs"
+  ]
+ },
+ "2602.10172": {
+  "title": "Cosmo3DFlow: Wavelet Flow Matching for Spatial-to-Spectral Compression in Reconstructing the Early Universe",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": []
+ },
+ "2602.06463": {
+  "title": "ELUCID-DESI I: A Parallel MPI Implementation of the Initial Condition Solver for Large-Scale Reconstruction Simulations",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields",
+   "Particle snapshots"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Particle snapshots"
+  ]
+ },
+ "2602.05816": {
+  "title": "Bayesian imaging inverse problem with scattering transform",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Higher-order statistics",
+   "Weak lensing & 2D maps"
+  ],
+  "method": [
+   "Other ML"
+  ],
+  "uncertain": [
+   "Other ML"
+  ]
+ },
+ "2602.04504": {
+  "title": "Weak Lensing Low Multipoles",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Power spectra",
+   "Weak lensing & 2D maps"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2601.14362": {
+  "title": "The era of precision cosmology with voids",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Void catalogs"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Non-Quijote simulations",
+   "No ML",
+   "Perturbation theory & analytic models"
+  ]
+ },
+ "2601.13245": {
+  "title": "An efficient model of cosmology dependence in the covariance matrix of the matter power spectrum",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives"
+  ],
+  "data": [
+   "Power spectra"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Perturbation theory & analytic models"
+  ]
+ },
+ "2601.08524": {
+  "title": "Revisiting the Great Attractor: The Local Group's streamline trajectory, cosmic velocity and dynamical fate",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Density fields"
+  ]
+ },
+ "2512.24422": {
+  "title": "OmniCosmos: Transferring Particle Physics Knowledge Across the Cosmos",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Galaxy mocks (HOD)"
+  ],
+  "method": [
+   "Other ML"
+  ],
+  "uncertain": [
+   "Non-Quijote simulations",
+   "Halo catalogs",
+   "Galaxy mocks (HOD)"
+  ]
+ },
+ "2512.16992": {
+  "title": "The imprints of massive neutrinos on the three-point correlation function of large-scale structures",
+  "suite": [
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Fisher derivatives"
+  ]
+ },
+ "2512.12304": {
+  "title": "Recovering Subtle Cosmological Information with the Zel'dovich-inspired Transform",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos",
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fisher derivatives",
+   "Massive neutrinos",
+   "Quijote-PNG"
+  ]
+ },
+ "2512.09852": {
+  "title": "Primordial non-Gaussianity -- Fast simulations and persistent summary statistics",
+  "suite": [
+   "Quijote-PNG",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Simulation-based inference",
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "Simulation-based inference"
+  ]
+ },
+ "title:optimalinformationextractionfromcosmologicalsummarystatisticswithneuralnetworks": {
+  "title": "Optimal information extraction from cosmological summary statistics with neural networks",
+  "suite": [
+   "Latin hypercube"
+  ],
+  "data": [
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "Latin hypercube",
+   "Power spectra",
+   "Higher-order statistics",
+   "Emulators & regression ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2512.07236": {
+  "title": "Counting voids and filaments: Betti Curves as a Topological Probe for Cosmology",
+  "suite": [
+   "Latin hypercube"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "Latin hypercube"
+  ]
+ },
+ "2511.14677": {
+  "title": "Equilateral non-Gaussian Bias at the Field Level",
+  "suite": [
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Quijote-PNG",
+   "Density fields"
+  ]
+ },
+ "title:disentanglingmassiveneutrinocosmologieswithhigherorderclusteringstatistics": {
+  "title": "Disentangling Massive Neutrino Cosmologies with Higher-Order Clustering Statistics",
+  "suite": [
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Massive neutrinos",
+   "Halo catalogs",
+   "Higher-order statistics",
+   "No ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2511.13393": {
+  "title": "Learning Cosmology from Nearest Neighbour Statistics",
+  "suite": [
+   "Latin hypercube"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "CNN",
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "Latin hypercube",
+   "CNN"
+  ]
+ },
+ "2511.09945": {
+  "title": "Slow neutrinos: non-linearity and momentum-space emulation",
+  "suite": [
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Halo catalogs"
+  ],
+  "method": [
+   "Emulators & regression ML",
+   "Perturbation theory & analytic models"
+  ],
+  "uncertain": [
+   "Massive neutrinos",
+   "Particle snapshots",
+   "Halo catalogs"
+  ]
+ },
+ "title:probingcosmicwebstructureswithgenerativemodels": {
+  "title": "Probing cosmic web structures with generative models",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": [
+   "Quijote (set not stated)",
+   "Density fields",
+   "Generative models"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2511.03636": {
+  "title": "Quantifying Weighted Morphological Content of Large-Scale Structures via Simulation-Based Inference",
+  "suite": [
+   "Fiducial",
+   "Big Sobol Sequence (BSQ)"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Simulation-based inference"
+  ],
+  "uncertain": [
+   "Fiducial"
+  ]
+ },
+ "2510.20086": {
+  "title": "MG-NECOLA: Fast Neural Emulators for Modified Gravity Cosmologies",
+  "suite": [
+   "Massive neutrinos",
+   "Quijote-MG",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "CNN",
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "Massive neutrinos",
+   "Emulators & regression ML"
+  ]
+ },
+ "2510.19168": {
+  "title": "Transfer Learning Beyond the Standard Model",
+  "suite": [
+   "Latin hypercube",
+   "Massive neutrinos",
+   "Quijote-PNG",
+   "Quijote-MG"
+  ],
+  "data": [
+   "Density fields"
+  ],
+  "method": [
+   "CNN",
+   "Simulation-based inference",
+   "Other ML"
+  ],
+  "uncertain": [
+   "Latin hypercube",
+   "Density fields",
+   "CNN",
+   "Simulation-based inference"
+  ]
+ },
+ "2510.12715": {
+  "title": "Hierarchical summaries for primordial non-Gaussianities",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "CNN",
+   "Fisher forecasts"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "title:constrainingcosmologywithhigherordersummarystatisticsofgalaxiesabispectrum3pcfst": {
+  "title": "Constraining cosmology with higher-order summary statistics of galaxies: a bispectrum & 3PCF study and application to DESI DR1",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Galaxy mocks (HOD)",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations",
+   "Galaxy mocks (HOD)",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2510.08573": {
+  "title": "Reconstructing the local density field with combined convolutional and point cloud architecture",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs"
+  ],
+  "method": [
+   "CNN",
+   "Other ML"
+  ],
+  "uncertain": []
+ },
+ "2510.07375": {
+  "title": "Control variates from Eulerian and Lagrangian perturbation theory: Application to the bispectrum",
+  "suite": [
+   "Fiducial"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial"
+  ]
+ },
+ "2509.15223": {
+  "title": "Parameter sensitivity of cosmic pairwise velocities in the non-linear regime of structure formation",
+  "suite": [
+   "Fisher derivatives",
+   "Massive neutrinos",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Halo catalogs"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fisher derivatives",
+   "Massive neutrinos",
+   "Non-Quijote simulations",
+   "Halo catalogs",
+   "Particle snapshots"
+  ]
+ },
+ "2509.13207": {
+  "title": "Parity in Composite-Field Galaxy Correlators",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Non-Quijote simulations"
+  ]
+ },
+ "2509.08884": {
+  "title": "Extracting the Alcock-Paczynski signal from voids: A novel approach via reconstruction",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Void catalogs",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Halo catalogs"
+  ]
+ },
+ "2509.03165": {
+  "title": "PatchNet: A hierarchical approach for neural field-level inference from Quijote Simulations",
+  "suite": [
+   "Fiducial",
+   "Latin hypercube",
+   "Fisher derivatives"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "CNN",
+   "Simulation-based inference"
+  ],
+  "uncertain": [
+   "Latin hypercube",
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "2508.21182": {
+  "title": "The Impact of Spectroscopic Redshift Errors on Cosmological Measurements",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Galaxy mocks (HOD)",
+   "Power spectra",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Galaxy mocks (HOD)"
+  ]
+ },
+ "2508.16990": {
+  "title": "Score Matching on Large Geometric Graphs for Cosmology Generation",
+  "suite": [
+   "Latin hypercube"
+  ],
+  "data": [
+   "Halo catalogs"
+  ],
+  "method": [
+   "Graph neural networks",
+   "Generative models"
+  ],
+  "uncertain": [
+   "Latin hypercube"
+  ]
+ },
+ "title:themassandclusteringofdynamicalhalos": {
+  "title": "The Mass and Clustering of Dynamical Halos",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Halo catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Quijote (set not stated)",
+   "Halo catalogs",
+   "No ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2508.06762": {
+  "title": "Power Spectrum, Bispectrum, 2- and 3-Point Correlation Function, and Beyond",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "No ML",
+   "Perturbation theory & analytic models"
+  ]
+ },
+ "2508.06759": {
+  "title": "From Theory to Forecast: Neutrino Mass Effects on Mode-Coupling Kernels and Their Observational Implications",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Halo catalogs"
+  ]
+ },
+ "2508.01855": {
+  "title": "$\\texttt{GENGARS}$: Accurate non-Gaussian initial conditions with arbitrary bispectrum for N-body simulations",
+  "suite": [
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Quijote-PNG",
+   "Density fields"
+  ]
+ },
+ "2507.13433": {
+  "title": "Reanalyzing DESI DR1: 1. $Λ$CDM Constraints from the Power Spectrum and Bispectrum",
+  "suite": [
+   "Fiducial",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Non-Quijote simulations"
+  ]
+ },
+ "title:darkenergyandvoiddynamics": {
+  "title": "Dark Energy and Void Dynamics",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Void catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Quijote (set not stated)",
+   "Void catalogs",
+   "No ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2507.11462": {
+  "title": "From Redshift to Real Space: Combining Linear Theory With Neural Networks",
+  "suite": [
+   "Fiducial"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs",
+   "Void catalogs",
+   "Redshift space"
+  ],
+  "method": [
+   "CNN",
+   "Perturbation theory & analytic models"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "CNN",
+   "Void catalogs"
+  ]
+ },
+ "2507.10091": {
+  "title": "Non-Gaussian Expansion of Minkowski Tensors in Redshift Space",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2507.03707": {
+  "title": "CosmoBench: A Multiscale, Multiview, Multitask Cosmology Benchmark for Geometric Deep Learning",
+  "suite": [
+   "Latin hypercube",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Galaxy mocks (HOD)",
+   "Merger trees"
+  ],
+  "method": [
+   "Graph neural networks",
+   "Other ML"
+  ],
+  "uncertain": [
+   "Latin hypercube",
+   "Non-Quijote simulations",
+   "Galaxy mocks (HOD)"
+  ]
+ },
+ "title:harnessingthepowerofdeeplearningforastrophysicaldiscoveries": {
+  "title": "Harnessing the Power of Deep Learning for Astrophysical Discoveries",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields"
+  ],
+  "method": [
+   "CNN"
+  ],
+  "uncertain": [
+   "Quijote (set not stated)",
+   "Density fields",
+   "CNN"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2506.09688": {
+  "title": "CSST Cosmological Emulator II: Generalized Accurate Halo Mass Function Emulation",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Halo catalogs"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": []
+ },
+ "2506.07514": {
+  "title": "Power Spectrum Emulators from Neural Networks and Tree-Based Methods",
+  "suite": [
+   "Latin hypercube",
+   "Massive neutrinos",
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Power spectra"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "Quijote-PNG",
+   "Massive neutrinos"
+  ]
+ },
+ "2505.13443": {
+  "title": "Wonderings on Wiggly Bispectra: Non-linear Evolution and Reconstruction of Oscillations in the Squeezed Bispectrum",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Non-Quijote simulations"
+  ]
+ },
+ "2505.13591": {
+  "title": "Modeling Galaxy Surveys with Hybrid SBI",
+  "suite": [
+   "Latin hypercube",
+   "Molino / HOD galaxy mocks"
+  ],
+  "data": [
+   "Galaxy mocks (HOD)",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Simulation-based inference",
+   "Perturbation theory & analytic models"
+  ],
+  "uncertain": [
+   "Latin hypercube",
+   "Molino / HOD galaxy mocks",
+   "Higher-order statistics"
+  ]
+ },
+ "2505.00608": {
+  "title": "Turning dispersion into signal: density-split analyses of pairwise velocities",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Higher-order statistics"
+  ]
+ },
+ "title:themarkedpowerspectrumofcosmologicallargescalestructure": {
+  "title": "The marked power spectrum of cosmological large scale structure",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Density fields",
+   "Higher-order statistics",
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2504.06919": {
+  "title": "Correcting for interloper contamination in the power spectrum with neural networks",
+  "suite": [
+   "Fiducial",
+   "Latin hypercube"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "Latin hypercube",
+   "Fiducial"
+  ]
+ },
+ "2504.03424": {
+  "title": "The AI Cosmologist I: An Agentic System for Automated Data Analysis",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra"
+  ],
+  "method": [
+   "Other ML"
+  ],
+  "uncertain": [
+   "Density fields",
+   "Power spectra"
+  ]
+ },
+ "2504.01092": {
+  "title": "Initial Conditions from Galaxies: Machine-Learning Subgrid Correction to Standard Reconstruction",
+  "suite": [
+   "Molino / HOD galaxy mocks"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs",
+   "Galaxy mocks (HOD)",
+   "Redshift space"
+  ],
+  "method": [
+   "CNN",
+   "Fisher forecasts",
+   "Perturbation theory & analytic models"
+  ],
+  "uncertain": [
+   "Molino / HOD galaxy mocks",
+   "CNN",
+   "Perturbation theory & analytic models"
+  ]
+ },
+ "2503.21736": {
+  "title": "Local Primordial non-Gaussian Bias from Time Evolution",
+  "suite": [
+   "Quijote-PNG",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Galaxy mocks (HOD)"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Quijote-PNG",
+   "Non-Quijote simulations",
+   "Galaxy mocks (HOD)"
+  ]
+ },
+ "2503.13755": {
+  "title": "How many simulations do we need for simulation-based inference in cosmology?",
+  "suite": [
+   "Latin hypercube",
+   "Big Sobol Sequence (BSQ)"
+  ],
+  "data": [
+   "Power spectra"
+  ],
+  "method": [
+   "Emulators & regression ML",
+   "Fisher forecasts"
+  ],
+  "uncertain": [
+   "Emulators & regression ML",
+   "Fisher forecasts"
+  ]
+ },
+ "2503.11778": {
+  "title": "The Power of the Cosmic Web",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos",
+   "Fisher forecasts",
+   "Higher-order statistics"
+  ]
+ },
+ "2503.06655": {
+  "title": "Redshift-Space Distortions in Massive Neutrinos Cosmologies",
+  "suite": [
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Massive neutrinos"
+  ]
+ },
+ "2502.11846": {
+  "title": "Neural Network Reconstruction of Non-Gaussian Initial Conditions from Dark Matter Halos",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "CNN",
+   "Fisher forecasts"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Density fields"
+  ]
+ },
+ "2502.09709": {
+  "title": "Cosmological information content of Betti curves and $k$-nearest neighbor distributions",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "2502.07713": {
+  "title": "Geometric Interpretations of the $k$-Nearest Neighbour Distributions",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Halo catalogs"
+  ]
+ },
+ "2502.05262": {
+  "title": "Cosmological Inference with Cosmic Voids and Neural Network Emulators",
+  "suite": [
+   "Latin hypercube",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Void catalogs"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "Latin hypercube"
+  ]
+ },
+ "2502.03139": {
+  "title": "Fast Sampling of Cosmological Initial Conditions with Gaussian Neural Posterior Estimation",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields"
+  ],
+  "method": [
+   "Simulation-based inference"
+  ],
+  "uncertain": []
+ },
+ "2412.15405": {
+  "title": "Cosmology with Persistent Homology: Parameter Inference via Machine Learning",
+  "suite": [
+   "Latin hypercube",
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Simulation-based inference",
+   "Other ML"
+  ],
+  "uncertain": [
+   "Latin hypercube",
+   "Halo catalogs"
+  ]
+ },
+ "title:onepointmatterpdfsbeyondtophatfilters": {
+  "title": "One-point matter pdf’s beyond tophat filters",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Quijote (set not stated)",
+   "Density fields",
+   "Higher-order statistics",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2412.05662": {
+  "title": "Probing massive neutrinos and modified gravity with redshift-space morphologies and anisotropies of large-scale structure",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos",
+   "Quijote-MG"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos",
+   "Density fields"
+  ]
+ },
+ "2412.04807": {
+  "title": "Testing $f(R)$ Gravity from Cosmic Shear Measurements",
+  "suite": [
+   "Quijote-MG"
+  ],
+  "data": [
+   "Power spectra",
+   "Weak lensing & 2D maps"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": []
+ },
+ "title:inspectingsignaturesofparityviolationwithangularredshiftfluctuations": {
+  "title": "Inspecting signatures of parity violation with angular redshift fluctuations",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Galaxy mocks (HOD)",
+   "Higher-order statistics",
+   "Redshift space",
+   "Weak lensing & 2D maps"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Quijote (set not stated)",
+   "Galaxy mocks (HOD)",
+   "Higher-order statistics",
+   "Redshift space",
+   "Weak lensing & 2D maps",
+   "No ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2412.01888": {
+  "title": "The Millennium and Astrid galaxies in effective field theory: comparison with galaxy-halo connection models at the field level",
+  "suite": [
+   "Molino / HOD galaxy mocks",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields",
+   "Galaxy mocks (HOD)",
+   "Redshift space"
+  ],
+  "method": [
+   "Normalizing flows",
+   "Perturbation theory & analytic models"
+  ],
+  "uncertain": [
+   "Molino / HOD galaxy mocks",
+   "Normalizing flows"
+  ]
+ },
+ "title:fastimplementationofnonlinearperturbationtheorystatisticsincludinggalaxybiasandr": {
+  "title": "Fast implementation of nonlinear perturbation theory statistics including galaxy bias and redshift-space distortion",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Quijote (set not stated)",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2412.00968": {
+  "title": "Probing primordial non-Gaussianity by reconstructing the initial conditions",
+  "suite": [
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "CNN",
+   "Fisher forecasts",
+   "Perturbation theory & analytic models"
+  ],
+  "uncertain": [
+   "Quijote-PNG",
+   "Fisher forecasts"
+  ]
+ },
+ "title:towardsreliablesimulationbasedinference": {
+  "title": "Towards Reliable Simulation-based Inference",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Power spectra"
+  ],
+  "method": [
+   "Simulation-based inference"
+  ],
+  "uncertain": [
+   "Quijote (set not stated)",
+   "Power spectra",
+   "Simulation-based inference"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2411.18399": {
+  "title": "De-baryonifying halos via optimal transport",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields",
+   "Weak lensing & 2D maps"
+  ],
+  "method": [
+   "Normalizing flows"
+  ],
+  "uncertain": []
+ },
+ "2411.16500": {
+  "title": "Cosmic Structure Formation in the Non-linear Regime: Beyond Gaussian Statistics and Standard Cosmologies",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Non-Quijote simulations"
+  ]
+ },
+ "2411.14748": {
+  "title": "Cosmological Analysis with Calibrated Neural Quantile Estimation and Approximate Simulators",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields",
+   "Weak lensing & 2D maps"
+  ],
+  "method": [
+   "Simulation-based inference"
+  ],
+  "uncertain": [
+   "Non-Quijote simulations"
+  ]
+ },
+ "2411.14377": {
+  "title": "The constraining power of the Marked Power Spectrum: an analytical study",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos",
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Quijote-PNG",
+   "Massive neutrinos",
+   "Halo catalogs"
+  ]
+ },
+ "2411.14392": {
+  "title": "Convolutional Vision Transformer for Cosmology Parameter Inference",
+  "suite": [
+   "Latin hypercube"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs"
+  ],
+  "method": [
+   "CNN",
+   "Other ML"
+  ],
+  "uncertain": [
+   "Latin hypercube"
+  ]
+ },
+ "2410.21457": {
+  "title": "A revisited Correction to the Halo Mass Function for local-type Primordial non-Gaussianity",
+  "suite": [
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Halo catalogs"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Quijote-PNG",
+   "Particle snapshots"
+  ]
+ },
+ "2410.20516": {
+  "title": "A Cosmic-Scale Benchmark for Symmetry-Preserving Data Processing",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Galaxy mocks (HOD)"
+  ],
+  "method": [
+   "Graph neural networks"
+  ],
+  "uncertain": [
+   "Galaxy mocks (HOD)"
+  ]
+ },
+ "2410.18524": {
+  "title": "Modelling the covariance matrix for the power spectra before and after the BAO reconstruction",
+  "suite": [
+   "Fiducial"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial"
+  ]
+ },
+ "2410.18039": {
+  "title": "Local Primordial Non-Gaussian Bias at the Field Level",
+  "suite": [
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Density fields",
+   "Particle snapshots",
+   "Halo catalogs"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Quijote-PNG",
+   "Particle snapshots"
+  ]
+ },
+ "2410.15808": {
+  "title": "Mean-Field Simulation-Based Inference for Cosmological Initial Conditions",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields"
+  ],
+  "method": [
+   "Simulation-based inference"
+  ],
+  "uncertain": []
+ },
+ "2410.14623": {
+  "title": "syren-new: Precise formulae for the linear and nonlinear matter power spectra with massive neutrinos and dynamical dark energy",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Power spectra"
+  ],
+  "method": [
+   "Symbolic regression"
+  ],
+  "uncertain": []
+ },
+ "2410.11883": {
+  "title": "Simulation-based inference with scattering representations: scattering is all you need",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics",
+   "Weak lensing & 2D maps"
+  ],
+  "method": [
+   "Simulation-based inference",
+   "Normalizing flows"
+  ],
+  "uncertain": [
+   "Normalizing flows",
+   "Weak lensing & 2D maps"
+  ]
+ },
+ "2410.07349": {
+  "title": "Psi-GAN: A power-spectrum-informed generative adversarial network for the emulation of large-scale structure maps across cosmologies and redshifts",
+  "suite": [
+   "Latin hypercube"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics",
+   "Weak lensing & 2D maps"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": []
+ },
+ "2410.03507": {
+  "title": "LOO-PIT: A sensitive posterior test",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Galaxy mocks (HOD)",
+   "Power spectra"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Galaxy mocks (HOD)",
+   "Power spectra"
+  ]
+ },
+ "2410.01897": {
+  "title": "Testing the robustness of the BAO determination in the presence of massive neutrinos",
+  "suite": [
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Redshift space"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Redshift space"
+  ]
+ },
+ "2410.01751": {
+  "title": "Impact of Redshift Space Distortion on Persistent Homology of cosmic matter density field",
+  "suite": [
+   "Fiducial"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial"
+  ]
+ },
+ "2410.01007": {
+  "title": "A Tale of Two Fields: Neural Network-Enhanced non-Gaussianity Search with Halos",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Halo catalogs"
+  ],
+  "method": [
+   "Other ML",
+   "Perturbation theory & analytic models"
+  ],
+  "uncertain": [
+   "Other ML"
+  ]
+ },
+ "2409.20507": {
+  "title": "Constraining Cosmology with Simulation-based inference and Optical Galaxy Cluster Abundance",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Halo catalogs"
+  ],
+  "method": [
+   "Simulation-based inference"
+  ],
+  "uncertain": []
+ },
+ "2409.18182": {
+  "title": "Cosmology on point: modelling spectroscopic tracer one-point statistics",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Molino / HOD galaxy mocks"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Galaxy mocks (HOD)",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Molino / HOD galaxy mocks"
+  ]
+ },
+ "2409.13583": {
+  "title": "Constraining Primordial Non-Gaussianity with Density-Split Clustering",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "2409.11401": {
+  "title": "Teaching dark matter simulations to speak the halo language",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": [
+   "Non-Quijote simulations"
+  ]
+ },
+ "2409.10609": {
+  "title": "Full-shape analysis with simulation-based priors: cosmological parameters and the structure growth anomaly",
+  "suite": [
+   "Molino / HOD galaxy mocks"
+  ],
+  "data": [
+   "Density fields",
+   "Galaxy mocks (HOD)",
+   "Power spectra",
+   "Redshift space"
+  ],
+  "method": [
+   "Normalizing flows",
+   "Perturbation theory & analytic models"
+  ],
+  "uncertain": [
+   "Molino / HOD galaxy mocks",
+   "Normalizing flows"
+  ]
+ },
+ "2409.09124": {
+  "title": "CHARM: Creating Halos with Auto-Regressive Multi-stage networks",
+  "suite": [
+   "Latin hypercube",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs",
+   "Galaxy mocks (HOD)",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Simulation-based inference",
+   "Normalizing flows",
+   "Generative models"
+  ],
+  "uncertain": [
+   "Latin hypercube",
+   "Non-Quijote simulations"
+  ]
+ },
+ "2409.03822": {
+  "title": "Map-level baryonification: Efficient modelling of higher-order correlations in the weak lensing and thermal Sunyaev-Zeldovich fields",
+  "suite": [
+   "Latin hypercube",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Higher-order statistics",
+   "Weak lensing & 2D maps"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Latin hypercube",
+   "Fisher forecasts",
+   "Halo catalogs"
+  ]
+ },
+ "title:voidwherestatisticallyprohibitedconstraininggravitywithcosmicvoidsandaddressings": {
+  "title": "Void where statistically prohibited: constraining gravity with cosmic voids and addressing statistical noise within simulation based Fisher forecasts",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Quijote-MG"
+  ],
+  "data": [
+   "Void catalogs",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Quijote-MG",
+   "Void catalogs",
+   "Higher-order statistics",
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "title:noveltechniquesforthecalibrationofsystematicsinnextgenerationgalaxysurveys": {
+  "title": "Novel Techniques for the Calibration of Systematics in Next Generation Galaxy Surveys",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Galaxy mocks (HOD)",
+   "Power spectra"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Quijote (set not stated)",
+   "Galaxy mocks (HOD)",
+   "Power spectra",
+   "No ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "title:askewedperspectiveontheuniverseadvancementschallengesandprospectsinthehuntforpri": {
+  "title": "A skewed perspective on the universe: advancements, challenges and prospects in the hunt for primordial non-Gaussianity",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Quijote-PNG",
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics",
+   "Fisher forecasts",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2408.16398": {
+  "title": "Pair Counting without Binning -- A New Approach to Correlation Functions in Clustering Statistics",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Non-Quijote simulations",
+   "Particle snapshots"
+  ]
+ },
+ "2408.15136": {
+  "title": "Low-Budget Simulation-Based Inference with Bayesian Neural Networks",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Power spectra"
+  ],
+  "method": [
+   "Simulation-based inference"
+  ],
+  "uncertain": [
+   "Power spectra"
+  ]
+ },
+ "2408.13876": {
+  "title": "Capturing primordial non-Gaussian signatures in the late Universe by multi-scale extrema of the cosmic log-density field",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "2408.10307": {
+  "title": "The streaming model for the three-point correlation function and its connection to standard perturbation theory",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Particle snapshots"
+  ]
+ },
+ "2408.07699": {
+  "title": "Field-level Emulation of Cosmic Structure Formation with Cosmology and Redshift Dependence",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Particle snapshots",
+   "Merger trees"
+  ],
+  "method": [
+   "CNN",
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "CNN"
+  ]
+ },
+ "2407.18647": {
+  "title": "Towards unveiling the large-scale nature of gravity with the wavelet scattering transform",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos",
+   "Quijote-MG"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "2407.16640": {
+  "title": "Interpretable and physics-informed emulator for the linear matter power spectrum from machine learning",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Power spectra"
+  ],
+  "method": [
+   "Symbolic regression"
+  ],
+  "uncertain": []
+ },
+ "title:httpswwwtesesuspbrtesesdisponiveis4343134tde15072024101341publicotesenatalisoler": {
+  "title": "PhD thesis, Universidade de São Paulo (2024)",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Quijote (set not stated)",
+   "Halo catalogs",
+   "Power spectra",
+   "No ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "title:extractingcosmologicalinformationatnonlinearscalesusingmachinelearning": {
+  "title": "Extracting cosmological information at non-linear scales using machine learning",
+  "suite": [
+   "Latin hypercube"
+  ],
+  "data": [
+   "Density fields"
+  ],
+  "method": [
+   "CNN"
+  ],
+  "uncertain": [
+   "Latin hypercube",
+   "Density fields",
+   "CNN"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2407.08731": {
+  "title": "Massive-ish Particles from Small-ish Scales: Non-Perturbative Techniques for Cosmological Collider Physics from Large-Scale Structure Surveys",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fisher forecasts",
+   "Particle snapshots"
+  ]
+ },
+ "title:conservativesimulationbasedinferencewithbayesiandeeplearning": {
+  "title": "Conservative Simulation-Based Inference with Bayesian Deep Learning",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Power spectra"
+  ],
+  "method": [
+   "Simulation-based inference"
+  ],
+  "uncertain": [
+   "Quijote (set not stated)",
+   "Power spectra",
+   "Simulation-based inference"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2407.06641": {
+  "title": "Cosmological simulations of scale-dependent primordial non-Gaussianity",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Halo catalogs",
+   "Void catalogs",
+   "Power spectra"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Particle snapshots"
+  ]
+ },
+ "2407.02210": {
+  "title": "Baryon Acoustic Oscillations analyses with Density-Split Statistics",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2407.02699": {
+  "title": "Alcock-Paczyński effect on void-finding: Implications for void-galaxy cross-correlation modelling",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Void catalogs",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Halo catalogs",
+   "Higher-order statistics"
+  ]
+ },
+ "2406.15546": {
+  "title": "The Impact of Non-Gaussian Primordial Tails on Cosmological Observables",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Weak lensing & 2D maps"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2406.06067": {
+  "title": "Fisher's Mirage: Noise Tightening of Cosmological Constraints in Simulation-Based Inference",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos",
+   "Molino / HOD galaxy mocks"
+  ],
+  "data": [
+   "Galaxy mocks (HOD)",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Molino / HOD galaxy mocks",
+   "Galaxy mocks (HOD)",
+   "Higher-order statistics"
+  ]
+ },
+ "2406.04054": {
+  "title": "Dynamics-based halo model for large scale structure",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Halo catalogs"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Particle snapshots"
+  ]
+ },
+ "2405.13119": {
+  "title": "Cosmology from Point Clouds with Dark Matter Halos from the Quijote Simulations",
+  "suite": [
+   "Latin hypercube"
+  ],
+  "data": [
+   "Halo catalogs"
+  ],
+  "method": [
+   "Simulation-based inference",
+   "Other ML"
+  ],
+  "uncertain": [
+   "Latin hypercube"
+  ]
+ },
+ "2405.12302": {
+  "title": "Significance of void shape: Neutrino mass from Voronoi void halos?",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Void catalogs",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Fisher forecasts"
+  ]
+ },
+ "2405.05840": {
+  "title": "FREmu: Power Spectrum Emulator for $f(R)$ Gravity",
+  "suite": [
+   "Quijote-MG"
+  ],
+  "data": [
+   "Power spectra"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": []
+ },
+ "2405.03468": {
+  "title": "Hierarchic Flows to Estimate and Sample High-dimensional Probabilities",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics",
+   "Weak lensing & 2D maps"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": []
+ },
+ "2405.02252": {
+  "title": "A Parameter-Masked Mock Data Challenge for Beyond-Two-Point Galaxy Clustering Statistics",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Galaxy mocks (HOD)",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Simulation-based inference",
+   "Emulators & regression ML",
+   "Perturbation theory & analytic models"
+  ],
+  "uncertain": [
+   "Non-Quijote simulations"
+  ]
+ },
+ "2405.00635": {
+  "title": "Bye-bye, Local-in-matter-density Bias: The Statistics of the Halo Field Are Poorly Determined by the Local Mass Density",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2404.09483": {
+  "title": "Deep learning for cosmological parameter inference from a dark matter halo density field",
+  "suite": [
+   "Latin hypercube",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "CNN"
+  ],
+  "uncertain": [
+   "Latin hypercube"
+  ]
+ },
+ "2404.04228": {
+  "title": "{\\sc SimBIG}: Cosmological Constraints using Simulation-Based Inference of Galaxy Clustering with Marked Power Spectra",
+  "suite": [
+   "Latin hypercube",
+   "Molino / HOD galaxy mocks"
+  ],
+  "data": [
+   "Galaxy mocks (HOD)",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Simulation-based inference",
+   "Normalizing flows"
+  ],
+  "uncertain": [
+   "Latin hypercube"
+  ]
+ },
+ "2404.02278": {
+  "title": "Neural network reconstruction of density and velocity fields from the 2MASS Redshift Survey",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Galaxy mocks (HOD)",
+   "Redshift space"
+  ],
+  "method": [
+   "CNN"
+  ],
+  "uncertain": [
+   "Galaxy mocks (HOD)"
+  ]
+ },
+ "2403.17657": {
+  "title": "Constraining Primordial Non-Gaussianity from Large Scale Structure with the Wavelet Scattering Transform",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "2403.13985": {
+  "title": "Cosmology with Persistent Homology: a Fisher Forecast",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Quijote-PNG"
+  ]
+ },
+ "2403.11951": {
+  "title": "Displacement Field Analysis via Optimal Transport: Multi-Tracer Approach to Cosmological Reconstruction",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs",
+   "Redshift space"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2403.00490": {
+  "title": "Quijote-PNG: Optimizing the summary statistics to measure Primordial non-Gaussianity",
+  "suite": [
+   "Fiducial",
+   "Latin hypercube",
+   "Fisher derivatives",
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Simulation-based inference",
+   "Fisher forecasts"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Latin hypercube"
+  ]
+ },
+ "2402.17492": {
+  "title": "syren-halofit: A fast, interpretable, high-precision formula for the $Λ$CDM nonlinear matter power spectrum",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Power spectra"
+  ],
+  "method": [
+   "Symbolic regression"
+  ],
+  "uncertain": []
+ },
+ "2402.07694": {
+  "title": "Cosmology at the Field Level with Probabilistic Machine Learning",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields",
+   "Weak lensing & 2D maps"
+  ],
+  "method": [
+   "Simulation-based inference",
+   "Normalizing flows",
+   "Generative models"
+  ],
+  "uncertain": [
+   "Simulation-based inference"
+  ]
+ },
+ "2402.05137": {
+  "title": "LtU-ILI: An All-in-One Framework for Implicit Inference in Astrophysics and Cosmology",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra"
+  ],
+  "method": [
+   "Simulation-based inference",
+   "Normalizing flows"
+  ],
+  "uncertain": [
+   "Normalizing flows"
+  ]
+ },
+ "2401.15074": {
+  "title": "${\\rm S{\\scriptsize IM}BIG}$: Cosmological Constraints from the Redshift-Space Galaxy Skew Spectra",
+  "suite": [
+   "Latin hypercube",
+   "Molino / HOD galaxy mocks"
+  ],
+  "data": [
+   "Galaxy mocks (HOD)",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Simulation-based inference",
+   "Normalizing flows"
+  ],
+  "uncertain": [
+   "Latin hypercube"
+  ]
+ },
+ "2312.09271": {
+  "title": "Bayesian Inference of Initial Conditions from Non-Linear Cosmic Structures using Field-Level Emulators",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "CNN",
+   "Emulators & regression ML"
+  ],
+  "uncertain": []
+ },
+ "2311.17141": {
+  "title": "A point cloud approach to generative modeling for galaxy surveys at the field level",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Halo catalogs"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": []
+ },
+ "2311.16439": {
+  "title": "Constraining Neutrino Cosmologies with Nonlinear Reconstruction",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ]
+ },
+ "2311.14210": {
+  "title": "Self-calibrating BAO measurements in the presence of Small Displacement Interlopers",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Halo catalogs",
+   "Power spectra",
+   "Redshift space",
+   "Perturbation theory & analytic models"
+  ]
+ },
+ "2311.13520": {
+  "title": "Imprint of massive neutrinos on Persistent Homology of large-scale structure",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Fisher forecasts"
+  ]
+ },
+ "2311.10088": {
+  "title": "Taming assembly bias for primordial non-Gaussianity",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Halo catalogs",
+   "Power spectra",
+   "Fisher forecasts",
+   "Perturbation theory & analytic models"
+  ]
+ },
+ "2311.09531": {
+  "title": "Analysis of an iterative reconstruction method in comparison of the standard reconstruction method",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs",
+   "Power spectra",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Halo catalogs"
+  ]
+ },
+ "2311.07650": {
+  "title": "Elucidating the impact of massive neutrinos on halo assembly bias",
+  "suite": [
+   "Fiducial",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Halo catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Massive neutrinos",
+   "Fiducial",
+   "Particle snapshots"
+  ]
+ },
+ "2311.04608": {
+  "title": "On the range of validity of perturbative models for galaxy clustering and its uncertainty",
+  "suite": [
+   "Fiducial"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Halo catalogs"
+  ]
+ },
+ "2310.20672": {
+  "title": "Evaluating the variance of individual halo properties in constrained cosmological simulations",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Halo catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2310.15256": {
+  "title": "SimBIG: Field-level Simulation-Based Inference of Galaxy Clustering",
+  "suite": [
+   "Latin hypercube",
+   "Molino / HOD galaxy mocks",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields",
+   "Galaxy mocks (HOD)",
+   "Redshift space"
+  ],
+  "method": [
+   "CNN",
+   "Simulation-based inference",
+   "Normalizing flows"
+  ],
+  "uncertain": [
+   "Latin hypercube",
+   "Non-Quijote simulations",
+   "Density fields",
+   "Redshift space"
+  ]
+ },
+ "2310.15250": {
+  "title": "Galaxy Clustering Analysis with SimBIG and the Wavelet Scattering Transform",
+  "suite": [
+   "Latin hypercube",
+   "Molino / HOD galaxy mocks",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Galaxy mocks (HOD)",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Simulation-based inference",
+   "Normalizing flows"
+  ],
+  "uncertain": [
+   "Latin hypercube",
+   "Non-Quijote simulations"
+  ]
+ },
+ "2310.15246": {
+  "title": "${\\rm S{\\scriptsize IM}BIG}$: The First Cosmological Constraints from Non-Gaussian and Non-Linear Galaxy Clustering",
+  "suite": [
+   "Latin hypercube",
+   "Molino / HOD galaxy mocks"
+  ],
+  "data": [
+   "Galaxy mocks (HOD)",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "CNN",
+   "Simulation-based inference",
+   "Normalizing flows"
+  ],
+  "uncertain": [
+   "Latin hypercube",
+   "Power spectra",
+   "Redshift space",
+   "Normalizing flows"
+  ]
+ },
+ "2310.15243": {
+  "title": "${\\rm S{\\scriptsize IM}BIG}$: The First Cosmological Constraints from the Non-Linear Galaxy Bispectrum",
+  "suite": [
+   "Latin hypercube",
+   "Molino / HOD galaxy mocks"
+  ],
+  "data": [
+   "Galaxy mocks (HOD)",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Simulation-based inference",
+   "Normalizing flows"
+  ],
+  "uncertain": [
+   "Latin hypercube"
+  ]
+ },
+ "2310.03548": {
+  "title": "A theoretical view of the T-web statistical description of the cosmic web",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2310.02349": {
+  "title": "Primordial non-Gaussianities with weak lensing: Information on non-linear scales in the Ulagam full-sky simulations",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Higher-order statistics",
+   "Weak lensing & 2D maps"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2309.15151": {
+  "title": "Small-scale signatures of primordial non-Gaussianity in k-Nearest Neighbour cumulative distribution functions",
+  "suite": [
+   "Quijote-PNG",
+   "Molino / HOD galaxy mocks"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Galaxy mocks (HOD)",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2309.15071": {
+  "title": "Sensitivity Analysis of Simulation-Based Inference for Galaxy Clustering",
+  "suite": [
+   "Latin hypercube",
+   "Molino / HOD galaxy mocks",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Galaxy mocks (HOD)",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Simulation-based inference"
+  ],
+  "uncertain": [
+   "Latin hypercube",
+   "Non-Quijote simulations",
+   "Redshift space"
+  ]
+ },
+ "title:towardsanoptimalcosmologicaldetectionofneutrinomasswithbayesianinference": {
+  "title": "Towards an Optimal Cosmological Detection of Neutrino Mass with Bayesian Inference",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Simulation-based inference",
+   "Fisher forecasts"
+  ],
+  "uncertain": [
+   "Massive neutrinos",
+   "Fiducial",
+   "Fisher derivatives",
+   "Power spectra",
+   "Higher-order statistics",
+   "Fisher forecasts",
+   "Simulation-based inference"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2309.14457": {
+  "title": "The effects of non-linearity on the growth rate constraint from velocity correlation functions",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Halo catalogs",
+   "Power spectra"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Particle snapshots",
+   "Halo catalogs",
+   "Power spectra"
+  ]
+ },
+ "2309.10270": {
+  "title": "Hybrid SBI or How I Learned to Stop Worrying and Learn the Likelihood",
+  "suite": [
+   "Latin hypercube"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Simulation-based inference",
+   "Perturbation theory & analytic models"
+  ],
+  "uncertain": [
+   "Latin hypercube"
+  ]
+ },
+ "2309.05850": {
+  "title": "Predicting Interloper Fraction with Graph Neural Networks",
+  "suite": [
+   "Latin hypercube"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Redshift space"
+  ],
+  "method": [
+   "Graph neural networks"
+  ],
+  "uncertain": [
+   "Latin hypercube",
+   "Redshift space"
+  ]
+ },
+ "2308.07379": {
+  "title": "The two-loop power spectrum in redshift space",
+  "suite": [
+   "Fiducial"
+  ],
+  "data": [
+   "Power spectra",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial"
+  ]
+ },
+ "2308.03863": {
+  "title": "Beyond the 3rd moment: A practical study of using lensing convergence CDFs for cosmology with DES Y3",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Higher-order statistics",
+   "Weak lensing & 2D maps"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fisher forecasts"
+  ]
+ },
+ "title:precisioncosmologyusingvoids": {
+  "title": "Precision cosmology using voids",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives"
+  ],
+  "data": [
+   "Void catalogs"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Void catalogs",
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2308.03086": {
+  "title": "Probing the Anisotropy and Non-Gaussianity in the Redshift Space through the Conditional Moments of the First Derivative",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "2307.09134": {
+  "title": "Hybrid-bias and displacement emulators for field-level modelling of galaxy clustering in real and redshift space",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Particle snapshots",
+   "Power spectra",
+   "Redshift space"
+  ],
+  "method": [
+   "CNN",
+   "Emulators & regression ML",
+   "Perturbation theory & analytic models"
+  ],
+  "uncertain": [
+   "CNN"
+  ]
+ },
+ "2307.07555": {
+  "title": "Neutrino mass constraint from an Implicit Likelihood Analysis of BOSS voids",
+  "suite": [
+   "Molino / HOD galaxy mocks",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Galaxy mocks (HOD)",
+   "Void catalogs",
+   "Power spectra",
+   "Redshift space"
+  ],
+  "method": [
+   "Simulation-based inference"
+  ],
+  "uncertain": [
+   "Non-Quijote simulations",
+   "Redshift space"
+  ]
+ },
+ "2307.03671": {
+  "title": "Optimal Transport Reconstruction of Biased Tracers in Redshift Space",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "title:numericalstudiesinrarefiedgasdynamicscosmologicalsummarystatisticsandscalarfield": {
+  "title": "Numerical Studies in Rarefied Gas Dynamics, Cosmological Summary Statistics, and Scalar Field Dark Matter",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Quijote (set not stated)",
+   "Power spectra",
+   "Higher-order statistics",
+   "No ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2306.17210": {
+  "title": "Scattering Spectra Models for Physics",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": [
+   "Density fields",
+   "Generative models"
+  ]
+ },
+ "2306.15012": {
+  "title": "Statistical Component Separation for Targeted Signal Recovery in Noisy Mixtures",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "CNN",
+   "Other ML"
+  ],
+  "uncertain": [
+   "Density fields",
+   "Other ML"
+  ]
+ },
+ "title:whispersfromthebigbangcosmologicalconstraintsfromgalaxypowerspectra": {
+  "title": "Whispers from the Big Bang: cosmological constraints from galaxy power spectra",
+  "suite": [
+   "Fiducial"
+  ],
+  "data": [
+   "Power spectra"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Power spectra",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2306.11782": {
+  "title": "Signatures of a Parity-Violating Universe",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Particle snapshots",
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Perturbation theory & analytic models"
+  ]
+ },
+ "2306.10538": {
+  "title": "Effective cosmic density field reconstruction with convolutional neural network",
+  "suite": [
+   "Latin hypercube"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Redshift space"
+  ],
+  "method": [
+   "CNN"
+  ],
+  "uncertain": [
+   "Latin hypercube",
+   "Power spectra"
+  ]
+ },
+ "2306.03137": {
+  "title": "On approximations of the redshift-space bispectrum and power spectrum multipoles covariance matrix",
+  "suite": [
+   "Fiducial",
+   "Molino / HOD galaxy mocks"
+  ],
+  "data": [
+   "Density fields",
+   "Galaxy mocks (HOD)",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Molino / HOD galaxy mocks",
+   "Galaxy mocks (HOD)",
+   "Density fields",
+   "Perturbation theory & analytic models"
+  ]
+ },
+ "2305.18003": {
+  "title": "Clustering of binary black hole mergers: a detailed analysis of the EAGLE+MOBSE simulation",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Galaxy mocks (HOD)",
+   "Power spectra"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": []
+ },
+ "2305.12812": {
+  "title": "Non-Linearity-Free prediction of the growth-rate $fσ_8$ using Convolutional Neural Networks",
+  "suite": [
+   "Latin hypercube"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Redshift space"
+  ],
+  "method": [
+   "CNN"
+  ],
+  "uncertain": [
+   "Latin hypercube",
+   "Redshift space"
+  ]
+ },
+ "2305.10597": {
+  "title": "Quijote-PNG: The Information Content of the Halo Mass Function",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Graph neural networks",
+   "Fisher forecasts"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "2305.08994": {
+  "title": "How to estimate Fisher information matrices from simulations",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives"
+  ],
+  "data": [
+   "Power spectra"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Power spectra"
+  ]
+ },
+ "2305.07018": {
+  "title": "Improving constraints on primordial non-Gaussianity using neural network based reconstruction",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "CNN",
+   "Fisher forecasts"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "2305.03070": {
+  "title": "Constraining $f_{NL}$ using the Large-Scale Modulation of Small-Scale Statistics",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Quijote-PNG",
+   "Fiducial",
+   "Fisher derivatives",
+   "Fisher forecasts"
+  ]
+ },
+ "2304.03788": {
+  "title": "Posterior Sampling of the Initial Conditions of the Universe from Non-linear Large Scale Structures using Score-Based Generative Models",
+  "suite": [
+   "Latin hypercube"
+  ],
+  "data": [
+   "Density fields"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": [
+   "Latin hypercube"
+  ]
+ },
+ "2303.17341": {
+  "title": "On the impact of $f(Q)$ gravity on the Large Scale Structure",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2303.15510": {
+  "title": "GEO-FPT: a model of the galaxy bispectrum at mildly non-linear scales",
+  "suite": [
+   "Fiducial"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial"
+  ]
+ },
+ "2303.13056": {
+  "title": "Predicting the Initial Conditions of the Universe using a Deterministic Neural Network",
+  "suite": [
+   "Latin hypercube"
+  ],
+  "data": [
+   "Particle snapshots"
+  ],
+  "method": [
+   "CNN",
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "Latin hypercube"
+  ]
+ },
+ "2302.08162": {
+  "title": "Probing massive neutrinos with the Minkowski functionals of the galaxy distribution",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos",
+   "Molino / HOD galaxy mocks"
+  ],
+  "data": [
+   "Galaxy mocks (HOD)",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "title:cosmologicalpropertiesofthecosmicweb": {
+  "title": "Cosmological Properties of the Cosmic Web",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos",
+   "Density fields",
+   "Power spectra",
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2301.09655": {
+  "title": "Perturbation-theory informed integrators for cosmological simulations",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Particle snapshots",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "title:signatureofmassiveneutrinosfromtheclusteringofcriticalpointsidensitythresholdbas": {
+  "title": "Signature of Massive Neutrinos from the Clustering of Critical Points. I. Density-threshold-based Analysis in Configuration Space",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Massive neutrinos",
+   "Fiducial",
+   "Fisher derivatives",
+   "Density fields",
+   "Higher-order statistics",
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2301.03991": {
+  "title": "Constraining cosmological parameters from N-body simulations with Variational Bayesian Neural Networks",
+  "suite": [
+   "Latin hypercube"
+  ],
+  "data": [
+   "Density fields"
+  ],
+  "method": [
+   "CNN",
+   "Normalizing flows",
+   "Other ML"
+  ],
+  "uncertain": [
+   "Latin hypercube",
+   "Density fields",
+   "CNN"
+  ]
+ },
+ "2212.09742": {
+  "title": "Window function convolution with deep neural network models",
+  "suite": [
+   "Latin hypercube"
+  ],
+  "data": [
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "Latin hypercube"
+  ]
+ },
+ "2212.06860": {
+  "title": "Machine-learning cosmology from void properties",
+  "suite": [
+   "Latin hypercube"
+  ],
+  "data": [
+   "Void catalogs"
+  ],
+  "method": [
+   "Simulation-based inference",
+   "Other ML"
+  ],
+  "uncertain": [
+   "Latin hypercube"
+  ]
+ },
+ "2212.06838": {
+  "title": "Cosmology with cosmic web environments II. Redshift-space auto and cross power spectra",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Redshift space"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "2211.07565": {
+  "title": "Quijote-PNG: Quasi-maximum likelihood estimation of Primordial Non-Gaussianity in the non-linear halo density field",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "2211.00723": {
+  "title": "${\\rm S{\\scriptsize IM}BIG}$: A Forward Modeling Approach To Analyzing Galaxy Clustering",
+  "suite": [
+   "Latin hypercube",
+   "Molino / HOD galaxy mocks"
+  ],
+  "data": [
+   "Galaxy mocks (HOD)",
+   "Power spectra",
+   "Redshift space"
+  ],
+  "method": [
+   "Simulation-based inference",
+   "Normalizing flows"
+  ],
+  "uncertain": [
+   "Latin hypercube"
+  ]
+ },
+ "2211.00660": {
+  "title": "${\\rm S{\\scriptsize IM}BIG}$: Mock Challenge for a Forward Modeling Approach to Galaxy Clustering",
+  "suite": [
+   "Latin hypercube",
+   "Molino / HOD galaxy mocks",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Galaxy mocks (HOD)",
+   "Power spectra",
+   "Redshift space"
+  ],
+  "method": [
+   "Simulation-based inference"
+  ],
+  "uncertain": [
+   "Latin hypercube",
+   "Redshift space"
+  ]
+ },
+ "2210.12743": {
+  "title": "Cosmological Information in Skew Spectra of Biased Tracers in Redshift Space",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos",
+   "Molino / HOD galaxy mocks"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Galaxy mocks (HOD)",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "2210.11487": {
+  "title": "New applications of Graph Neural Networks in Cosmology",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Halo catalogs"
+  ],
+  "method": [
+   "Graph neural networks"
+  ],
+  "uncertain": []
+ },
+ "2210.05140": {
+  "title": "Tracer-Field Cross-Correlations with $k$-Nearest Neighbor Distributions",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2209.06228": {
+  "title": "Squeezing $f_{\\rm NL}$ out of the matter bispectrum with consistency relations",
+  "suite": [
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Quijote-PNG"
+  ]
+ },
+ "2209.04310": {
+  "title": "Constraining νΛCDM with density-split clustering",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Power spectra"
+  ]
+ },
+ "2209.00668": {
+  "title": "Bayesian evidence comparison for distance scale estimates",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Power spectra"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Power spectra",
+   "Perturbation theory & analytic models"
+  ]
+ },
+ "2208.10164": {
+  "title": "Minkowski Tensors in Redshift Space -- Beyond the Plane Parallel Approximation",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2208.05001": {
+  "title": "Correcting for small-displacement interlopers in BAO analyses",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Halo catalogs",
+   "Power spectra"
+  ]
+ },
+ "2208.02791": {
+  "title": "Fast computation of non-linear power spectrum in cosmologies with massive neutrinos",
+  "suite": [
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Massive neutrinos"
+  ]
+ },
+ "2208.00134": {
+  "title": "Estimating Cosmological Constraints from Galaxy Cluster Abundance using Simulation-Based Inference",
+  "suite": [
+   "Latin hypercube"
+  ],
+  "data": [
+   "Halo catalogs"
+  ],
+  "method": [
+   "Simulation-based inference"
+  ],
+  "uncertain": [
+   "Latin hypercube",
+   "Halo catalogs"
+  ]
+ },
+ "2207.05202": {
+  "title": "The Cosmic Graph: Optimal Information Extraction from Large-Scale Structure using Catalogues",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives"
+  ],
+  "data": [
+   "Halo catalogs"
+  ],
+  "method": [
+   "Graph neural networks",
+   "Simulation-based inference",
+   "Other ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "2207.00519": {
+  "title": "The Disordered Heterogeneous Universe: Galaxy Distribution and Clustering Across Length Scales",
+  "suite": [
+   "Molino / HOD galaxy mocks"
+  ],
+  "data": [
+   "Galaxy mocks (HOD)",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Simulation-based inference"
+  ],
+  "uncertain": [
+   "Molino / HOD galaxy mocks"
+  ]
+ },
+ "2206.15450": {
+  "title": "Quijote PNG: The information content of the halo power spectrum and bispectrum",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "2206.14120": {
+  "title": "Velocity profiles of matter and biased tracers around voids",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Halo catalogs",
+   "Void catalogs",
+   "Redshift space"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Particle snapshots"
+  ]
+ },
+ "2206.10458": {
+  "title": "Primordial non-Gaussianity and non-Gaussian Covariance",
+  "suite": [
+   "Fiducial"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Perturbation theory & analytic models"
+  ]
+ },
+ "2206.04594": {
+  "title": "Field Level Neural Network Emulator for Cosmological N-body Simulations",
+  "suite": [
+   "Latin hypercube",
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "CNN",
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "Latin hypercube",
+   "Quijote-PNG"
+  ]
+ },
+ "2206.04573": {
+  "title": "Simple lessons from complex learning: what a neural network model learns about cosmic structure formation",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Power spectra"
+  ],
+  "method": [
+   "CNN",
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "CNN"
+  ]
+ },
+ "2206.01709": {
+  "title": "Cosmological Information in the Marked Power Spectrum of the Galaxy Field",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos",
+   "Molino / HOD galaxy mocks"
+  ],
+  "data": [
+   "Galaxy mocks (HOD)",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "2206.01624": {
+  "title": "Quijote-PNG: Quasi-maximum likelihood estimation of Primordial Non-Gaussianity in the non-linear dark matter density field",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "2206.01619": {
+  "title": "Quijote-PNG: Simulations of primordial non-Gaussianity and the information content of the matter field power spectrum and bispectrum",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "2205.15327": {
+  "title": "Accurate predictions from small boxes: variance suppression via the Zel'dovich approximation",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Particle snapshots",
+   "Power spectra"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Density fields",
+   "Particle snapshots"
+  ]
+ },
+ "2205.12964": {
+  "title": "Robust Neural Network-Enhanced Estimation of Local Primordial Non-Gaussianity",
+  "suite": [
+   "Quijote-PNG"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs"
+  ],
+  "method": [
+   "CNN"
+  ],
+  "uncertain": [
+   "Quijote-PNG",
+   "CNN",
+   "Halo catalogs"
+  ]
+ },
+ "2205.11533": {
+  "title": "Two-loop power spectrum with full time- and scale-dependence and EFT corrections: impact of massive neutrinos and going beyond EdS",
+  "suite": [
+   "Fiducial",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Power spectra"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial"
+  ]
+ },
+ "2205.10881": {
+  "title": "Improving cosmological covariance matrices with machine learning",
+  "suite": [
+   "Fiducial"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra"
+  ],
+  "method": [
+   "CNN"
+  ],
+  "uncertain": []
+ },
+ "2205.07898": {
+  "title": "Fast and realistic large-scale structure from machine-learning-augmented random field simulations",
+  "suite": [
+   "Fiducial",
+   "Latin hypercube"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics",
+   "Weak lensing & 2D maps"
+  ],
+  "method": [
+   "CNN",
+   "Generative models"
+  ],
+  "uncertain": [
+   "Latin hypercube",
+   "Weak lensing & 2D maps"
+  ]
+ },
+ "2205.00808": {
+  "title": "Distinguishing Dirac vs. Majorana Neutrinos: a Cosmological Probe",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Void catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Halo catalogs",
+   "Void catalogs"
+  ]
+ },
+ "2204.13131": {
+  "title": "Accurate Model of the Projected Velocity Distribution of Galaxies in Dark Matter Halos",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Galaxy mocks (HOD)",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Galaxy mocks (HOD)"
+  ]
+ },
+ "2204.07646": {
+  "title": "Wavelet Moments for Cosmological Parameter Estimation",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "2204.05435": {
+  "title": "Quantification of high dimensional non-Gaussianities and its implication to Fisher analysis in cosmology",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fisher derivatives",
+   "Density fields"
+  ]
+ },
+ "2204.03070": {
+  "title": "Bayesian Control Variates for optimal covariance estimation with pairs of simulations and surrogates",
+  "suite": [
+   "Fiducial",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Power spectra"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2204.02945": {
+  "title": "Probing massive neutrinos with the Minkowski functionals of large-scale structure",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Fisher forecasts"
+  ]
+ },
+ "2204.00668": {
+  "title": "Spherical Bispectrum: A Novel Visualization Scheme For Facilitating Comparisons",
+  "suite": [
+   "Fiducial"
+  ],
+  "data": [
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial"
+  ]
+ },
+ "2203.14724": {
+  "title": "The effect of local universe constraints on halo abundance and clustering",
+  "suite": [
+   "Fiducial",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Halo catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial"
+  ]
+ },
+ "2202.05248": {
+  "title": "Extracting high-order cosmological information in galaxy surveys with power spectra",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Halo catalogs",
+   "Fisher forecasts"
+  ]
+ },
+ "2112.11865": {
+  "title": "Constraining cosmological parameters from N-body simulations with Bayesian Neural Networks",
+  "suite": [
+   "Latin hypercube"
+  ],
+  "data": [
+   "Density fields"
+  ],
+  "method": [
+   "CNN",
+   "Other ML"
+  ],
+  "uncertain": [
+   "Latin hypercube",
+   "Density fields",
+   "CNN"
+  ]
+ },
+ "2112.04502": {
+  "title": "Detection of spatial clustering in the 1000 richest SDSS DR8 redMaPPer clusters with Nearest Neighbor distributions",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Halo catalogs"
+  ]
+ },
+ "2112.04428": {
+  "title": "One-point statistics matter in extended cosmologies",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Non-Quijote simulations",
+   "Density fields"
+  ]
+ },
+ "2112.03926": {
+  "title": "Cosmology with cosmic web environments I. Real-space power spectra",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "2111.13702": {
+  "title": "The Information Content of Projected Galaxy Fields",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Weak lensing & 2D maps"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Fisher forecasts",
+   "Perturbation theory & analytic models"
+  ]
+ },
+ "2111.12088": {
+  "title": "Cosmology and neutrino mass with the Minimum Spanning Tree",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Fisher forecasts"
+  ]
+ },
+ "2111.05887": {
+  "title": "The Covariance of Squeezed Bispectrum Configurations",
+  "suite": [
+   "Fiducial"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial"
+  ]
+ },
+ "2111.02441": {
+  "title": "NECOLA: Towards a Universal Field-level Cosmological Emulator",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Power spectra"
+  ],
+  "method": [
+   "CNN",
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "Fisher derivatives"
+  ]
+ },
+ "2110.03591": {
+  "title": "The smearing scale in Laguerre reconstructions of the correlation function",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Halo catalogs"
+  ]
+ },
+ "2109.13938": {
+  "title": "Cosmology with the kinetic Sunyaev-Zeldovich effect: Independent of the optical depth and $σ_8$",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Halo catalogs"
+  ]
+ },
+ "2109.07071": {
+  "title": "Creating Jackknife and Bootstrap estimates of the covariance matrix for the two-point correlation function",
+  "suite": [
+   "Fiducial"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Redshift space"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Halo catalogs"
+  ]
+ },
+ "2109.02636": {
+  "title": "The matter density PDF for modified gravity and dark energy with Large Deviations Theory",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Non-Quijote simulations"
+  ]
+ },
+ "2108.07821": {
+  "title": "Towards an Optimal Estimation of Cosmological Parameters with the Wavelet Scattering Transform",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "2108.04215": {
+  "title": "Beware of Fake $ν$s: The Effect of Massive Neutrinos on the Nonlinear Evolution of Cosmic Structure",
+  "suite": [
+   "Massive neutrinos",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields",
+   "Particle snapshots",
+   "Halo catalogs",
+   "Redshift space",
+   "Weak lensing & 2D maps"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Massive neutrinos",
+   "Non-Quijote simulations",
+   "Particle snapshots"
+  ]
+ },
+ "2108.03851": {
+  "title": "The effects of peculiar velocities on the morphological properties of large-scale structure",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Halo catalogs",
+   "Fisher forecasts",
+   "Density fields"
+  ]
+ },
+ "2108.01714": {
+  "title": "Analytic Gaussian Covariance Matrices for Galaxy $N$-Point Correlation Functions",
+  "suite": [
+   "Fiducial",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial"
+  ]
+ },
+ "2107.10287": {
+  "title": "Modeling Nearest Neighbor distributions of biased tracers using Hybrid Effective Field Theory",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2107.08054": {
+  "title": "The reach of next-to-leading-order perturbation theory for the matter bispectrum",
+  "suite": [
+   "Fiducial"
+  ],
+  "data": [
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial"
+  ]
+ },
+ "2107.02304": {
+  "title": "The GIGANTES dataset: precision cosmology from voids in the machine learning era",
+  "suite": [
+   "Fiducial",
+   "Latin hypercube",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Void catalogs",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Simulation-based inference",
+   "Other ML",
+   "Fisher forecasts"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Latin hypercube",
+   "Higher-order statistics"
+  ]
+ },
+ "2107.02300": {
+  "title": "The PDF perspective on the tracer-matter connection: Lagrangian bias and non-Poissonian shot noise",
+  "suite": [
+   "Molino / HOD galaxy mocks",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs",
+   "Galaxy mocks (HOD)",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Molino / HOD galaxy mocks",
+   "Non-Quijote simulations"
+  ]
+ },
+ "2106.13771": {
+  "title": "Clustering in Massive Neutrino Cosmologies via Eulerian Perturbation Theory",
+  "suite": [
+   "Fiducial",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Higher-order statistics"
+  ]
+ },
+ "2106.11718": {
+  "title": "CARPool Covariance: Fast, unbiased covariance estimation for large-scale structure observables",
+  "suite": [
+   "Fiducial",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial"
+  ]
+ },
+ "2106.11061": {
+  "title": "Extracting cosmological parameters from N-body simulations using machine learning techniques",
+  "suite": [
+   "Latin hypercube"
+  ],
+  "data": [
+   "Density fields",
+   "Particle snapshots",
+   "Power spectra"
+  ],
+  "method": [
+   "CNN",
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "Density fields"
+  ]
+ },
+ "2106.09761": {
+  "title": "Unsupervised Resource Allocation with Graph Neural Networks",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Galaxy mocks (HOD)"
+  ],
+  "method": [
+   "Graph neural networks"
+  ],
+  "uncertain": [
+   "Galaxy mocks (HOD)",
+   "Halo catalogs"
+  ]
+ },
+ "2105.12024": {
+  "title": "Normalizing flows for random fields in cosmology",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Normalizing flows",
+   "Generative models"
+  ],
+  "uncertain": []
+ },
+ "2104.03976": {
+  "title": "Joint analysis of anisotropic power spectrum, bispectrum and trispectrum: application to N-body simulations",
+  "suite": [
+   "Fiducial"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Density fields"
+  ]
+ },
+ "title:clusteringandhaloabundancesinearlydarkenergycosmologicalmodels": {
+  "title": "Clustering and halo abundances in early dark energy cosmological models",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations",
+   "Halo catalogs",
+   "Power spectra",
+   "No ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2103.12099": {
+  "title": "Detecting the radiative decay of the cosmic neutrino background with line-intensity mapping",
+  "suite": [
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Symbolic regression"
+  ],
+  "uncertain": [
+   "Massive neutrinos",
+   "Density fields"
+  ]
+ },
+ "2102.06709": {
+  "title": "Information content in mean pairwise velocity and mean relative velocity between pairs in a triplet",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2102.05049": {
+  "title": "Detecting Neutrino Mass by Combining Matter Clustering, Halos, and Voids",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Void catalogs",
+   "Power spectra"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "2102.01696": {
+  "title": "Information Content of Higher-Order Galaxy Correlation Functions",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Fisher forecasts"
+  ]
+ },
+ "2102.01184": {
+  "title": "Cosmological cross-correlations and nearest neighbor distributions",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "2012.05472": {
+  "title": "Learning the Evolution of the Universe in N-body Simulations",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Particle snapshots"
+  ],
+  "method": [
+   "CNN"
+  ],
+  "uncertain": [
+   "CNN"
+  ]
+ },
+ "2012.02200": {
+  "title": "Constraining $M_ν$ with the Bispectrum II: The Total Information Content of the Galaxy Bispectrum",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos",
+   "Molino / HOD galaxy mocks"
+  ],
+  "data": [
+   "Galaxy mocks (HOD)",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "2012.00240": {
+  "title": "Fast and Accurate Non-Linear Predictions of Universes with Deep Learning",
+  "suite": [
+   "Fiducial",
+   "Latin hypercube"
+  ],
+  "data": [
+   "Density fields",
+   "Particle snapshots"
+  ],
+  "method": [
+   "CNN",
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Latin hypercube",
+   "Particle snapshots"
+  ]
+ },
+ "2012.00203": {
+  "title": "Minkowski functionals and the nonlinear perturbation theory in the large-scale structure: second-order effects",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2011.06185": {
+  "title": "The unequal-time matter power spectrum: impact on weak lensing observables",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Power spectra",
+   "Weak lensing & 2D maps"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2010.07193": {
+  "title": "Exploring KSZ velocity reconstruction with $N$-body simulations and the halo model",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Weak lensing & 2D maps"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Weak lensing & 2D maps"
+  ]
+ },
+ "2010.05914": {
+  "title": "Modeling the Marked Spectrum of Matter and Biased Tracers in Real- and Redshift-Space",
+  "suite": [
+   "Fiducial",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Halo catalogs"
+  ]
+ },
+ "2009.08970": {
+  "title": "CARPool: fast, accurate computation of large-scale structure statistics by pairing costly and cheap cosmological simulations",
+  "suite": [
+   "Fiducial",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2009.02290": {
+  "title": "Matter trispectrum: theoretical modelling and comparison to N-body simulations",
+  "suite": [
+   "Fiducial"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Density fields"
+  ]
+ },
+ "2008.12265": {
+  "title": "The impact of massive neutrinos on halo assembly bias",
+  "suite": [
+   "Fiducial",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Halo catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial"
+  ]
+ },
+ "title:capturingthecosmicwebforcosmology": {
+  "title": "Capturing the Cosmic Web for Cosmology",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Quijote (set not stated)",
+   "Density fields",
+   "Higher-order statistics",
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2007.13342": {
+  "title": "Nearest Neighbor distributions: new statistical measures for cosmological clustering",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Fisher forecasts"
+  ]
+ },
+ "2007.10345": {
+  "title": "The effects of massive neutrinos on the linear point of the correlation function",
+  "suite": [
+   "Massive neutrinos",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Halo catalogs",
+   "Power spectra"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Non-Quijote simulations",
+   "Particle snapshots"
+  ]
+ },
+ "2007.06508": {
+  "title": "A Lagrangian Perturbation Theory in the presence of massive neutrinos",
+  "suite": [
+   "Fiducial",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Halo catalogs",
+   "Power spectra",
+   "Redshift space"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial"
+  ]
+ },
+ "2006.11287": {
+  "title": "Discovering Symbolic Models from Deep Learning with Inductive Biases",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Halo catalogs"
+  ],
+  "method": [
+   "Graph neural networks",
+   "Symbolic regression"
+  ],
+  "uncertain": []
+ },
+ "2006.10055": {
+  "title": "What does the Marked Power Spectrum Measure? Insights from Perturbation Theory",
+  "suite": [
+   "Fiducial",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Halo catalogs"
+  ]
+ },
+ "2006.06298": {
+  "title": "New Interpretable Statistics for Large Scale Structure Analysis and Generation",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics",
+   "Weak lensing & 2D maps"
+  ],
+  "method": [
+   "Generative models",
+   "Fisher forecasts"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Generative models"
+  ]
+ },
+ "2005.01739": {
+  "title": "A Faster Fourier Transform? Computing Small-Scale Power Spectra and Bispectra for Cosmological Simulations in $\\mathcal{O}(N^2)$ Time",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Halo catalogs"
+  ]
+ },
+ "2004.09515": {
+  "title": "The Effective Halo Model: Creating a Physical and Accurate Model of the Matter Power Spectrum and Cluster Counts",
+  "suite": [
+   "Quijote (set not stated)",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Non-Quijote simulations"
+  ]
+ },
+ "2002.09904": {
+  "title": "What Can We Learn by Combining the Skew Spectrum and the Power Spectrum?",
+  "suite": [
+   "Fiducial"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial"
+  ]
+ },
+ "2001.11024": {
+  "title": "Using the Marked Power Spectrum to Detect the Signature of Neutrinos in Large-Scale Structure",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2001.05519": {
+  "title": "Super-resolution emulator of cosmological simulations using deep physical models",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Particle snapshots"
+  ],
+  "method": [
+   "CNN",
+   "Generative models"
+  ],
+  "uncertain": [
+   "CNN",
+   "Particle snapshots"
+  ]
+ },
+ "1912.06621": {
+  "title": "Primordial non-Gaussianity without tails -- how to measure fNL with the bulk of the density PDF",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Density fields",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fisher forecasts"
+  ]
+ },
+ "1911.11158": {
+  "title": "Fisher for complements: Extracting cosmology and neutrino mass from the counts-in-cells PDF",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Density fields",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "Perturbation theory & analytic models",
+   "No ML"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "Fisher derivatives"
+  ]
+ },
+ "1910.04255": {
+  "title": "Learning neutrino effects in Cosmology with Convolutional Neural Networks",
+  "suite": [
+   "Fiducial",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Density fields",
+   "Particle snapshots",
+   "Power spectra"
+  ],
+  "method": [
+   "CNN",
+   "Generative models"
+  ],
+  "uncertain": [
+   "Fiducial",
+   "CNN"
+  ]
+ },
+ "1909.11107": {
+  "title": "Constraining $M_ν$ with the Bispectrum I: Breaking Parameter Degeneracies",
+  "suite": [
+   "Fiducial",
+   "Fisher derivatives",
+   "Massive neutrinos",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Higher-order statistics",
+   "Redshift space"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "1907.06598": {
+  "title": "Weighing neutrinos with the halo environment",
+  "suite": [
+   "Massive neutrinos",
+   "Non-Quijote simulations"
+  ],
+  "data": [
+   "Density fields",
+   "Halo catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "Massive neutrinos",
+   "Non-Quijote simulations"
+  ]
+ },
+ "1906.11823": {
+  "title": "Anisotropic halo assembly bias and redshift-space distortions",
+  "suite": [
+   "Quijote (set not stated)"
+  ],
+  "data": [
+   "Halo catalogs",
+   "Power spectra",
+   "Redshift space"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "1909.05273": {
+  "title": "The Quijote simulations",
+  "suite": [
+   "Fiducial",
+   "Latin hypercube",
+   "Fisher derivatives",
+   "Massive neutrinos"
+  ],
+  "data": [
+   "Density fields",
+   "Particle snapshots",
+   "Halo catalogs",
+   "Void catalogs",
+   "Power spectra",
+   "Higher-order statistics"
+  ],
+  "method": [
+   "Fisher forecasts",
+   "No ML"
+  ],
+  "uncertain": [
+   "No ML"
+  ]
+ }
+}

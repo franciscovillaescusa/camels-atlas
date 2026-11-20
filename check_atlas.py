@@ -4,13 +4,17 @@ Smoke test for the built site: opens index.html in a headless browser, exercises
 main controls, and fails if the page throws a JavaScript error or something essential is missing.
 
 Usage
-  python3 check_atlas.py                   # checks ./index.html
-  python3 check_atlas.py --page other.html
-  python3 check_atlas.py --chrome          # use the installed Google Chrome instead of Playwright's Chromium
+  python3 check_atlas.py --project camels            # checks camels/index.html
+  python3 check_atlas.py --project camels --page other.html
+  python3 check_atlas.py --project camels --chrome   # use the installed Google Chrome instead of Playwright's Chromium
+
+The project's config.json ("check") names a paper title, a search word and an author used by the checks.
 
 Requires: pip install playwright   (then, unless using --chrome: python -m playwright install chromium)
 """
 import argparse
+import json
+import os
 import pathlib
 import re
 import sys
@@ -23,9 +27,12 @@ VIEWS = ["topics", "citations", "coauthors", "table", "trends"]
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--page", default="index.html")
+    ap.add_argument("--project", required=True, help="project name: a folder in projects/ (e.g. camels, quijote)")
+    ap.add_argument("--page")
     ap.add_argument("--chrome", action="store_true", help="use the locally installed Google Chrome")
     args = ap.parse_args()
+    CK = json.load(open(os.path.join("projects", args.project, "config.json"), encoding="utf-8"))["check"]
+    args.page = args.page or os.path.join(args.project, "index.html")
     url = pathlib.Path(args.page).resolve().as_uri()
     errors, checks = [], []
 
@@ -83,7 +90,7 @@ def main():
         check("selecting a paper opens its panel", page.locator("#panel h2").count() == 1)
         check("selection is in the address", "paper=" in page.evaluate("location.hash"))
 
-        page.fill("#q", "diffusion")
+        page.fill("#q", CK["search"])
         page.wait_for_timeout(400)
         check("search finds papers", "match" in page.inner_text("#qcount"), page.inner_text("#qcount"))
         # ---- correctness of what the page shows, compared with the embedded data
@@ -92,9 +99,9 @@ def main():
         page.fill("#q", ""); page.click("#reset"); page.wait_for_timeout(200)
 
         # search: an exact title is found and ranked first
-        page.click("#m-table"); page.fill("#q", "Cosmology with one galaxy"); page.wait_for_timeout(400)
+        page.click("#m-table"); page.fill("#q", CK["title"]); page.wait_for_timeout(400)
         first = page.locator("#tablewrap tbody tr td").first.inner_text()
-        check("search ranks the exact title first", first.startswith("Cosmology with one galaxy"), first[:50])
+        check("search ranks the exact title first", first.startswith(CK["title"]), first[:50])
         page.fill("#q", ""); page.wait_for_timeout(300)
 
         # downloads: capture the files the page would save
@@ -135,10 +142,10 @@ def main():
         page.click("#dispbtn"); page.click("#selfc"); page.keyboard.press("Escape")
 
         # shareable link: opening it restores view, selection and filter
-        link = "#coauthors&author=Shy%20Genel&method=CNN"
+        link = "#coauthors&author=" + CK["author"].replace(" ", "%20") + "&method=CNN"
         page.goto(url + link); page.wait_for_timeout(700)
         check("shared link restores view", page.get_attribute("#m-coauthors", "aria-pressed") == "true")
-        check("shared link restores author", "Shy Genel" in page.inner_text("#panel h2"))
+        check("shared link restores author", CK["author"] in page.inner_text("#panel h2"))
         check("shared link restores filter", page.input_value("#f-method") == "CNN")
         browser.close()
 

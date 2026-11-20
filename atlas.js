@@ -1,6 +1,7 @@
 (() => {
 const D = JSON.parse(document.getElementById('atlas-data').textContent);
 const P = D.papers, TOP = D.topics;
+const NAME = D.proj.name, PUBS = D.proj.pubs;   // the project (e.g. CAMELS, Quijote)
 const tex = s => s.replace(/\$([^$]*)\$/g, (m, x) => x
   .replace(/\\text\{([^}]*)\}/g, '$1').replace(/\\rm\s*/g, '').replace(/\\Omega/g, 'Ω').replace(/\\sigma/g, 'σ')
   .replace(/\\alpha/g, 'α').replace(/\\phi/g, 'φ').replace(/\\mu/g, 'μ').replace(/\\sim/g, '~').replace(/\\times/g, '×')
@@ -11,7 +12,7 @@ P.forEach(p => p.r.forEach(j => P[j].citers.push(p.i)));
 const shares = (i, j) => P[i].au.some(a => P[j].au.includes(a));
 P.forEach(p => { p.citersInd = p.citers.filter(i => !shares(i, p.i)); });
 const citeCount = p => S.selfc ? p.citers.length : p.citersInd.length;
-const citeNote = () => S.selfc ? `${P.reduce((s, p) => s + p.r.length, 0)} citation links between CAMELS papers · drag to rotate`
+const citeNote = () => S.selfc ? `${P.reduce((s, p) => s + p.r.length, 0)} citation links between ${NAME} papers · drag to rotate`
   : `${P.reduce((s, p) => s + p.citersInd.length, 0)} of ${P.reduce((s, p) => s + p.r.length, 0)} citation links shown (papers without shared authors) · drag to rotate`;
 const AU = D.authors.map((name, i) => ({ i, name, papers: [] }));
 P.forEach(p => p.au.forEach(a => AU[a].papers.push(p.i)));
@@ -107,7 +108,7 @@ function colorKey() {
   const k = $('cbkey'), by = S.colorBy;
   if (by === 'topic' || FLAT[S.view]) { k.hidden = true; return; }
   if (by === 'year') {
-    k.innerHTML = `<div class="ramp"></div><div class="ends"><span>${yMin}</span><span>${yMax}</span></div><div class="hint">${S.view === 'coauthors' ? 'Year of first CAMELS paper' : 'Year of first appearance'}</div>`;
+    k.innerHTML = `<div class="ramp"></div><div class="ends"><span>${yMin}</span><span>${yMax}</span></div><div class="hint">${S.view === 'coauthors' ? `Year of first ${NAME} paper` : 'Year of first appearance'}</div>`;
   } else {
     const s = CB[by];
     k.innerHTML = s.names.map(tg => `<div class="row"><i style="background:var(--t${s.slot(tg)})"></i>${esc(tg)}</div>`).join('') +
@@ -500,8 +501,8 @@ const tip = $('tip');
 function hideTip() { tip.hidden = true; }
 function showTip(h, mx, my) {
   if (h.kind === 'p') { const p = P[h.i], a = p.au.map(x => AU[x].name);
-    tip.innerHTML = `${esc(p.t)}${p.nw ? ' <span class="newb">New</span>' : ''}<small>${esc(TOP[p.k])}</small><small>${p.y} · ${esc(a[0] || '')}${a.length > 1 ? ' et al.' : ''} · ${p.cs === 2 ? 'citations unknown' : p.c + ' citations'}${S.view === 'citations' ? ` · cited by ${p.citers.length} CAMELS papers, ${p.citersInd.length} without shared authors` : ''}</small>`; }
-  else { const a = AU[h.i]; tip.innerHTML = `${esc(a.name)}<small>${a.papers.length} CAMELS paper${a.papers.length > 1 ? 's' : ''}</small>`; }
+    tip.innerHTML = `${esc(p.t)}${p.nw ? ' <span class="newb">New</span>' : ''}<small>${esc(TOP[p.k])}</small><small>${p.y} · ${esc(a[0] || '')}${a.length > 1 ? ' et al.' : ''} · ${p.cs === 2 ? 'citations unknown' : p.c + ' citations'}${S.view === 'citations' ? ` · cited by ${p.citers.length} ${NAME} papers, ${p.citersInd.length} without shared authors` : ''}</small>`; }
+  else { const a = AU[h.i]; tip.innerHTML = `${esc(a.name)}<small>${a.papers.length} ${NAME} paper${a.papers.length > 1 ? 's' : ''}</small>`; }
   tip.hidden = false; const tw = tip.offsetWidth, th = tip.offsetHeight;
   tip.style.left = Math.min(W - tw - 8, mx + 14) + 'px'; tip.style.top = (my + th + 20 > H ? my - th - 12 : my + 14) + 'px';
 }
@@ -552,17 +553,17 @@ const dot = k => `<i style="background:var(--t${k})"></i>`;
 const pItem = (j, sh) => `<li><button data-p="${j}">${dot(P[j].k)}<span class="tt">${esc(P[j].t)}${P[j].nw ? ' <span class="newb">New</span>' : ''}</span><span class="num">${P[j].y}${sh ? ' · shared author' : ''}</span></button></li>`;
 const VIEWINFO = {
   topics: ['Each dot is a paper, laid out in 3D. Papers with similar abstracts sit close together. Nearer papers look larger and brighter.', (D.nads ? 'Total citations (NASA ADS), on a log scale' : 'Total citations (Semantic Scholar), on a log scale'), 'Topic cluster'],
-  citations: ['Each dot is a paper, laid out in 3D. A line means one CAMELS paper cites another. Select a paper to see arrows pointing to the work it cites. Nearer papers look larger and brighter.', 'Citations from other CAMELS papers, on a log scale', 'Topic cluster'],
+  citations: [`Each dot is a paper, laid out in 3D. A line means one ${NAME} paper cites another. Select a paper to see arrows pointing to the work it cites. Nearer papers look larger and brighter.`, `Citations from other ${NAME} papers, on a log scale`, 'Topic cluster'],
   trends: ['Papers per year, split by topic, method or suite. Hover a bar segment for its count; click it to list those papers in the table. The search box and filters apply here too.', 'Bar height: number of papers (a paper with several methods or suites counts once in each)', 'Topic, method or suite: see the chart legend'],
   table: ['Every paper as a row of a table. Click a column header to sort; click a row (or select it with Tab and press Enter) to see its details. The search box and filters apply here too.', 'Not used', 'Topic shown by the colored dot'],
-  coauthors: ['Each dot is an author, laid out in 3D. A line joins people who wrote a CAMELS paper together. Darker lines mean a closer collaboration: each shared paper counts more when it has fewer authors, so links from 40-author papers stay faint. Nearer authors look larger and brighter.', 'Number of CAMELS papers, on a log scale', 'Author’s most frequent topic'],
+  coauthors: [`Each dot is an author, laid out in 3D. A line joins people who wrote a ${NAME} paper together. Darker lines mean a closer collaboration: each shared paper counts more when it has fewer authors, so links from 40-author papers stay faint. Nearer authors look larger and brighter.`, `Number of ${NAME} papers, on a log scale`, 'Author’s most frequent topic'],
 };
 const USE_TXT = 'Drag to rotate (or use the arrow keys), scroll or pinch to zoom. Rotation pauses while you hover. Click a dot for details; your selection stays highlighted when you switch views.';
 const USE2 = 'Drag to pan (or use the arrow keys), scroll or pinch to zoom. Click a dot for details; your selection stays highlighted when you switch views.';
 // one-line summary per view; the full explanation opens under "How to read"
 const SHORT = {
   topics: 'Each dot is a paper; papers with similar abstracts sit close together.',
-  citations: 'Each dot is a paper; lines show which CAMELS papers cite which.',
+  citations: `Each dot is a paper; lines show which ${NAME} papers cite which.`,
   coauthors: 'Each dot is an author; lines join people who wrote a paper together.',
   table: 'All papers in a sortable table.',
   trends: 'Papers per year, by topic, method or suite.',
@@ -571,7 +572,7 @@ const USE_TR = 'Hover a segment for its count; click it to see those papers in t
 const USE = { topics: USE_TXT, citations: USE_TXT, coauthors: USE_TXT, trends: USE_TR };
 function overview() {
   let [what, size, color] = VIEWINFO[S.view];
-  if (!FLAT[S.view] && S.colorBy !== 'topic') color = { year: S.view === 'coauthors' ? 'Year of first CAMELS paper' : 'Year of first appearance (light = early, dark = recent)', method: S.view === 'coauthors' ? 'Most frequent method' : 'Method tag (ring: a second method)', suite: S.view === 'coauthors' ? 'Most frequent suite' : 'Suite tag (ring: a second suite)' }[S.colorBy];
+  if (!FLAT[S.view] && S.colorBy !== 'topic') color = { year: S.view === 'coauthors' ? `Year of first ${NAME} paper` : 'Year of first appearance (light = early, dark = recent)', method: S.view === 'coauthors' ? 'Most frequent method' : 'Method tag (ring: a second method)', suite: S.view === 'coauthors' ? 'Most frequent suite' : 'Suite tag (ring: a second suite)' }[S.colorBy];
   if (S.dim === 2) what = what.replace(', laid out in 3D', '').replace(/ Nearer (papers|authors) look larger and brighter\./, '');
   if (S.view === 'citations' && !S.selfc) size += ', not counting papers that share an author (self-citations hidden)';
   let list = '';
@@ -589,7 +590,7 @@ function overview() {
     const key = S.view === 'citations' ? citeCount : p => p.c;
     const all = P.filter(p => pOn[p.i]).sort((a, b) => key(b) - key(a) || b.d.localeCompare(a.d));
     const top = all.slice(0, S.nTop[S.view]), left = all.length - top.length;
-    list = `<div><h3>${S.view === 'citations' ? (S.selfc ? 'Most cited within CAMELS' : 'Most cited within CAMELS, no self-citations') : (D.nads ? 'Most cited overall (ADS)' : 'Most cited overall')} <span style="text-transform:none;letter-spacing:0;font-weight:400">· ${top.length} of ${all.length}</span></h3><ul class="list">${top.map((p, r) =>
+    list = `<div><h3>${S.view === 'citations' ? (S.selfc ? `Most cited within ${NAME}` : `Most cited within ${NAME}, no self-citations`) : (D.nads ? 'Most cited overall (ADS)' : 'Most cited overall')} <span style="text-transform:none;letter-spacing:0;font-weight:400">· ${top.length} of ${all.length}</span></h3><ul class="list">${top.map((p, r) =>
       `<li><button data-p="${p.i}">${dot(p.k)}<span class="tt">${r + 1}. ${esc(p.t)}</span><span class="num">${key(p)}</span></button></li>`).join('')}</ul>
       ${left > 0 ? `<div style="display:flex;gap:8px;margin-top:8px"><button class="ghost" data-more="25">Show ${Math.min(25, left)} more</button><button class="ghost" data-more="all">Show all ${all.length}</button></div>` : ''}</div>`;
   }
@@ -607,14 +608,14 @@ function tagBlock(p) {
 }
 const panelBar = () => `<div class="panelbar"><button class="ghost back" data-back>← Overview</button><button class="ghost" data-copy title="Copy a link to this paper or author">Copy link</button></div>`;
 // pre-filled GitHub issues for corrections and missing papers
-const REPO = 'https://github.com/franciscovillaescusa/camels-atlas';
+const REPO = D.proj.repo;
 const newIssue = (title, body) => `${REPO}/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
 function issueUrl(p) {
   const tg = p.tg ? `suite: ${p.tg.s.join(', ') || '–'}; data: ${p.tg.d.join(', ') || '–'}; method: ${p.tg.m.join(', ') || '–'}` : 'none';
   return newIssue(`Correction: ${p.t.slice(0, 80)}`, `**Paper:** ${p.t}\n**ID:** ${p.id}${p.url ? ` (${p.url})` : ''}\n**Current topic:** ${TOP[p.k]}\n**Current tags:** ${tg}\n\n` +
     `What is wrong?\n- [ ] Wrong topic\n- [ ] Wrong or missing tags\n- [ ] Missing or wrong citation links\n- [ ] Wrong date, authors or link\n- [ ] Other\n\nDetails (what should it be?):\n\n`);
 }
-const missingUrl = () => newIssue('Missing paper: ', `**Title:**\n**arXiv ID or DOI:**\n\nNote: the atlas lists the papers on the CAMELS publications page (https://camels.readthedocs.io/en/latest/publications.html). If the paper is missing there too, it may need to be added to that page first.\n`);
+const missingUrl = () => newIssue('Missing paper: ', `**Title:**\n**arXiv ID or DOI:**\n\nNote: the atlas lists the papers on the ${NAME} publications page (${PUBS}). If the paper is missing there too, it may need to be added to that page first.\n`);
 function paperPanel(i) {
   const p = P[i];
   const venue = p.v && p.v !== p.lk ? `<span>${esc(p.v)}</span>` : '';
@@ -627,8 +628,8 @@ function paperPanel(i) {
     <div><h3>Abstract</h3>${p.ab && p.abx ? `<p class="abstract">${esc(p.ab)} … <a href="https://ui.adsabs.harvard.edu/abs/${encodeURIComponent(p.bib)}/abstract" target="_blank" rel="noopener">Read the full abstract on ADS</a></p>` : p.ab ? `<p class="abstract">${esc(p.ab)}</p>` : '<p>No abstract available. Use the link above to read the full text.</p>'}</div>
     ${p.sim && p.sim.l.length ? `<div><h3>Most similar papers <span style="text-transform:none;letter-spacing:0;font-weight:400">· by ${p.sim.k === 'e' ? 'abstract embedding (1 = identical)' : 'shared words (no embedding available)'}</span></h3><ul class="list">${p.sim.l.map(([j, s]) =>
       `<li><button data-p="${j}">${dot(P[j].k)}<span class="tt">${esc(P[j].t)}</span><span class="num">${s.toFixed(3)}</span></button></li>`).join('')}</ul></div>` : ''}
-    <div><h3>${p.rm && !p.r.length ? 'Cites' : `Cites ${p.r.length} CAMELS paper${p.r.length === 1 ? '' : 's'}`}</h3>${p.rm ? `<p class="tagnote">${p.r.length ? 'This list may be incomplete: ' : ''}The reference list of this ${p.lk && /thesis|project/i.test(p.lk) ? 'work' : 'paper'} is not yet available from ADS or Semantic Scholar${p.r.length ? '.' : ', so the CAMELS papers it cites are unknown.'}</p>` : ''}${p.r.length ? `<ul class="list">${p.r.slice().sort((a, b) => P[b].d.localeCompare(P[a].d)).map(j => pItem(j, shares(j, p.i))).join('')}</ul>` : (p.rm ? '' : '<p>None found.</p>')}</div>
-    <div><h3>Cited by ${p.citers.length} CAMELS paper${p.citers.length === 1 ? '' : 's'}${p.citers.length ? `, ${p.citersInd.length} without shared authors` : ''}</h3>${p.citers.length ? `<ul class="list">${p.citers.slice().sort((a, b) => P[b].d.localeCompare(P[a].d)).map(j => pItem(j, shares(j, p.i))).join('')}</ul>` : '<p>None yet.</p>'}</div>
+    <div><h3>${p.rm && !p.r.length ? 'Cites' : `Cites ${p.r.length} ${NAME} paper${p.r.length === 1 ? '' : 's'}`}</h3>${p.rm ? `<p class="tagnote">${p.r.length ? 'This list may be incomplete: ' : ''}The reference list of this ${p.lk && /thesis|project/i.test(p.lk) ? 'work' : 'paper'} is not yet available from ADS or Semantic Scholar${p.r.length ? '.' : `, so the ${NAME} papers it cites are unknown.`}</p>` : ''}${p.r.length ? `<ul class="list">${p.r.slice().sort((a, b) => P[b].d.localeCompare(P[a].d)).map(j => pItem(j, shares(j, p.i))).join('')}</ul>` : (p.rm ? '' : '<p>None found.</p>')}</div>
+    <div><h3>Cited by ${p.citers.length} ${NAME} paper${p.citers.length === 1 ? '' : 's'}${p.citers.length ? `, ${p.citersInd.length} without shared authors` : ''}</h3>${p.citers.length ? `<ul class="list">${p.citers.slice().sort((a, b) => P[b].d.localeCompare(P[a].d)).map(j => pItem(j, shares(j, p.i))).join('')}</ul>` : '<p>None yet.</p>'}</div>
     <p class="reportlink"><a href="${issueUrl(p)}" target="_blank" rel="noopener">Report a problem with this paper</a></p>`;
 }
 function authorPanel(i) {
@@ -639,7 +640,7 @@ function authorPanel(i) {
   const tl = a.tc.map((c, k) => c ? `<span>${dot(k)} ${esc(TOP[k])} <span class="num">${c}</span></span>` : '').filter(Boolean);
   panel.innerHTML = `${panelBar()}
     <div class="eyebrow">Author</div><h2>${esc(a.name)}</h2>
-    <div class="meta"><span>${a.papers.length} CAMELS paper${a.papers.length > 1 ? 's' : ''}</span><span>${co.size} co-authors</span></div>
+    <div class="meta"><span>${a.papers.length} ${NAME} paper${a.papers.length > 1 ? 's' : ''}</span><span>${co.size} co-authors</span></div>
     <div><h3>Topics</h3><div class="bars">${bars}</div><div class="how" style="margin-top:8px">${tl.map(t => `<div style="grid-template-columns:1fr;gap:0" class="eyebrow">${t}</div>`).join('')}</div></div>
     ${top.length ? `<div><h3>Frequent co-authors</h3><div class="names">${top.map(([b, n]) => `<button data-a="${b}">${esc(AU[b].name)} · ${n}</button>`).join('')}</div></div>` : ''}
     <div><h3>Papers</h3><ul class="list">${a.papers.slice().sort((x, y) => P[y].d.localeCompare(P[x].d)).map(pItem).join('')}</ul></div>`;
@@ -682,12 +683,12 @@ const COLS = [
   { k: 'm', label: 'Methods', v: p => p.tg ? p.tg.m.join(', ') : '', show: p => { const m = p.tg ? p.tg.m.join(', ') : '';
       return `<span title="${esc(m)}">${esc(m)}</span>`; }, cls: 'sm one', html: true },
   { k: 'c', label: 'Citations', v: p => p.cs === 2 ? -1 : p.c, show: p => p.cs === 2 ? '–' : p.c, cls: 'num', num: true },
-  { k: 'ci', label: 'In CAMELS', v: p => citeCount(p), cls: 'num', num: true },
+  { k: 'ci', label: `In ${NAME}`, v: p => citeCount(p), cls: 'num', num: true },
 ];
 S.sort = { k: 'c', dir: -1 };
 function renderTable() {
   const nRows = P.filter(p => pOn[p.i]).length;
-  $('tcap').textContent = `${nRows} of ${P.length} papers${S.sort.k === 'rel' ? ', best search matches first' : ''} · click a header to sort · “In CAMELS” = citations from other CAMELS papers; * year estimated`;
+  $('tcap').textContent = `${nRows} of ${P.length} papers${S.sort.k === 'rel' ? ', best search matches first' : ''} · click a header to sort · “In ${NAME}” = citations from other ${NAME} papers; * year estimated`;
   const rel = S.sort.k === 'rel';
   const col = rel ? { v: p => S.score[p.i] || 0 } : COLS.find(c => c.k === S.sort.k);
   const rows = P.filter(p => pOn[p.i]).sort((a, b) => {
@@ -806,15 +807,15 @@ function updateStats() {
 }
 function refresh() { applyFilters(); updateStats(); renderActive(); if (!S.sel) overview(); if (S.view === 'table') renderTable(); if (S.view === 'trends') renderTrends(); draw(); writeHash(false); }
 const nSelf = CE.filter(e => e.self).length;
-$('foot').innerHTML = `Data as of ${D.fetched} · <button class="linkbtn" id="aboutbtn" type="button">About &amp; data sources</button> · <a href="${missingUrl()}" target="_blank" rel="noopener">Suggest a missing paper</a> · <a href="https://github.com/franciscovillaescusa/camels-atlas" target="_blank" rel="noopener">Source on GitHub</a>`;
+$('foot').innerHTML = `Data as of ${D.fetched} · <button class="linkbtn" id="aboutbtn" type="button">About &amp; data sources</button> · <a href="${missingUrl()}" target="_blank" rel="noopener">Suggest a missing paper</a> · <a href="${REPO}" target="_blank" rel="noopener">Source on GitHub</a>`;
 $('about-body').innerHTML = `
   <h3>What this is</h3>
-  <p>Every entry on the <a href="https://camels.readthedocs.io/en/latest/publications.html" target="_blank" rel="noopener">CAMELS publications page</a> (${P.length} papers and theses), shown as a topic map, a citation network, a co-author network and a table. The site is rebuilt automatically twice a month.</p>
+  <p>Every entry on the <a href="${PUBS}" target="_blank" rel="noopener">${NAME} publications page</a> (${P.length} papers and theses), shown as a topic map, a citation network, a co-author network and a table. The site is rebuilt automatically twice a month.</p>
   <h3>Data sources</h3>
   <ul>
     <li><b>Titles, abstracts, authors, dates:</b> arXiv; for entries without an arXiv ID, NASA ADS or the publications page itself. Theses without a known date get a year estimated from their position in the list (marked as estimated).</li>
     <li><b>Citation counts:</b> ${D.nads ? 'NASA ADS (Semantic Scholar where ADS has no record)' : 'Semantic Scholar'}.</li>
-    <li><b>Citation links between CAMELS papers:</b> ${D.refsrc && D.refsrc.ads ? `Semantic Scholar and NASA ADS reference lists combined; a link counts if either has it (${D.refsrc.both} in both, ${D.refsrc.s2} only in Semantic Scholar, ${D.refsrc.ads} only in ADS)` : 'Semantic Scholar reference lists'}. Papers whose reference lists are in neither database say so in their panel.</li>
+    <li><b>Citation links between ${NAME} papers:</b> ${D.refsrc && D.refsrc.ads ? `Semantic Scholar and NASA ADS reference lists combined; a link counts if either has it (${D.refsrc.both} in both, ${D.refsrc.s2} only in Semantic Scholar, ${D.refsrc.ads} only in ADS)` : 'Semantic Scholar reference lists'}. Papers whose reference lists are in neither database say so in their panel.</li>
     <li><b>Abstract embeddings:</b> SPECTER2, from Semantic Scholar.</li>
   </ul>
   <h3>How it is made</h3>
@@ -826,7 +827,7 @@ $('about-body').innerHTML = `
     <li><b>Self-citations:</b> a citation between papers that share at least one author (${nSelf} of ${CE.length} links); they can be hidden in the citation view.</li>
     <li><b>Co-author links:</b> darker for closer collaborations; each shared paper counts 1/(number of authors − 1).</li>
   </ul>
-  <p>Corrections are welcome: see the <a href="https://github.com/franciscovillaescusa/camels-atlas" target="_blank" rel="noopener">GitHub repository</a>.</p>`;
+  <p>Corrections are welcome: see the <a href="${REPO}" target="_blank" rel="noopener">GitHub repository</a>.</p>`;
 const about = $('about');
 $('aboutbtn').addEventListener('click', () => { if (about.showModal) about.showModal(); else about.setAttribute('open', ''); });
 $('about-x').addEventListener('click', () => about.close ? about.close() : about.removeAttribute('open'));
@@ -946,7 +947,7 @@ function bibtex(list) {
 }
 function csv(list) {
   const q = v => { const s = String(v ?? ''); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-  const head = ['title', 'authors', 'year', 'date', 'topic', 'suites', 'data', 'methods', 'citations', 'citation_source', 'cited_in_camels', 'arxiv', 'doi', 'ads_bibcode', 'url'];
+  const head = ['title', 'authors', 'year', 'date', 'topic', 'suites', 'data', 'methods', 'citations', 'citation_source', `cited_in_${NAME.toLowerCase()}`, 'arxiv', 'doi', 'ads_bibcode', 'url'];
   const rows = list.map(p => [p.t, p.au.map(a => AU[a].name).join('; '), p.y, p.d, TOP[p.k], p.tg ? p.tg.s.join('; ') : '', p.tg ? p.tg.d.join('; ') : '',
     p.tg ? p.tg.m.join('; ') : '', p.cs === 2 ? '' : p.c, ['ADS', 'Semantic Scholar', 'unknown'][p.cs], p.citers.length,
     /^\d{4}\.\d{4,5}$/.test(p.id) ? p.id : '', p.doi || '', p.bib || '', p.url || '']);
@@ -967,8 +968,8 @@ $('dlmenu').addEventListener('click', e => {
   const b = e.target.closest('button[data-dl]'); if (!b) return;
   const list = shownPapers(), stamp = String(D.fetched);
   track('atlas_download', { format: b.dataset.dl, papers: list.length });
-  if (b.dataset.dl === 'bib') download(`camels-papers-${stamp}.bib`, bibtex(list), 'application/x-bibtex');
-  else download(`camels-papers-${stamp}.csv`, '﻿' + csv(list), 'text/csv');
+  if (b.dataset.dl === 'bib') download(`${NAME.toLowerCase()}-papers-${stamp}.bib`, bibtex(list), 'application/x-bibtex');
+  else download(`${NAME.toLowerCase()}-papers-${stamp}.csv`, '﻿' + csv(list), 'text/csv');
   dlMenu(false);
 });
 
