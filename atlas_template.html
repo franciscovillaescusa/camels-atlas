@@ -86,9 +86,8 @@ select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; ba
 .frow select { max-width: 220px; }
 .ftitle { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
 .ftitle span { text-transform: none; letter-spacing: 0; font-weight: 400; }
-#dlwrap { margin-left: auto; position: relative; }
-#dlwrap:not([hidden]) + #reset, #reset { margin-left: 0; }
-#dlwrap[hidden] + #reset { margin-left: auto; }
+#dlwrap { position: relative; flex: none; }
+#reset { margin-left: auto; }
 .dlmenu { position: absolute; right: 0; top: calc(100% + 4px); z-index: 5; display: flex; flex-direction: column; min-width: 170px;
   background: var(--surface); border: 1px solid var(--line); border-radius: 9px; box-shadow: 0 8px 24px rgba(0,0,0,.14); padding: 4px; }
 .dlmenu button { all: unset; padding: 7px 10px; border-radius: 6px; font-size: 13px; color: var(--ink); cursor: pointer; }
@@ -108,7 +107,11 @@ select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; ba
 .cbkey .ends { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; }
 .cbkey .hint { color: var(--muted); }
 .mapopts .chk { background: color-mix(in srgb, var(--surface) 88%, transparent); border: 1px solid var(--line); border-radius: 8px; padding: 4px 9px; font-size: 12.5px; }
-.tablewrap { position: absolute; inset: 0; overflow: auto; }
+.tablewrap { position: absolute; inset: 44px 0 0 0; overflow: auto; }
+.tablebar { position: absolute; left: 0; right: 0; top: 0; height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 0 12px; border-bottom: 1px solid var(--line); z-index: 2; background: var(--surface); }
+.tcap { font-size: 12px; color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .trendswrap { position: absolute; inset: 0; overflow: auto; padding: 16px 20px; }
 .trhead { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 8px; }
 .trhead .dimtoggle { background: var(--surface); border: 1px solid var(--line); border-radius: 9px; }
@@ -126,7 +129,6 @@ select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; ba
 .tleg .n { color: var(--muted); font-variant-numeric: tabular-nums; }
 .tnote { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
 .ptable { width: 100%; border-collapse: collapse; font-size: 13px; }
-.ptable caption { text-align: left; padding: 10px 12px; color: var(--muted); font-size: 12px; }
 .ptable th { position: sticky; top: 0; background: var(--surface); text-align: left; font-weight: 600; font-size: 12px;
   color: var(--ink-2); border-bottom: 1px solid var(--line); padding: 0; z-index: 1; white-space: nowrap; }
 .ptable th button { all: unset; display: block; padding: 9px 10px; cursor: pointer; }
@@ -284,8 +286,6 @@ footer { font-size: 12px; color: var(--muted); }
   <span class="field"><label for="y0">Years</label> <select id="y0"></select> <span aria-hidden="true">–</span> <select id="y1" aria-label="To year"></select> <button class="ghost playbtn" id="play" type="button" title="Play the history: papers appear one by one in date order" aria-label="Play the history paper by paper">▶ Play</button></span>
   <button class="ghost" id="fbtn" type="button" aria-expanded="false" aria-controls="fpanel">Filters <span class="fcount" id="fcount"></span> ▾</button>
   <span class="active" id="active" aria-label="Active filters"></span>
-  <span class="dlwrap" id="dlwrap" hidden><button class="ghost" id="dlbtn" type="button" aria-haspopup="true" aria-expanded="false" title="Download the papers currently shown">Download ▾</button>
-    <span class="dlmenu" id="dlmenu" hidden><button type="button" data-dl="bib">BibTeX (.bib)</button><button type="button" data-dl="csv">Spreadsheet (.csv)</button></span></span>
   <button class="ghost" id="reset">Clear filters</button>
 </div>
 <div class="fpanel" id="fpanel" hidden>
@@ -315,6 +315,10 @@ footer { font-size: 12px; color: var(--muted); }
     </div>
     <div class="stage-note" id="note"></div>
     <div class="tip" id="tip" hidden></div>
+    <div class="tablebar" id="tablebar" hidden><span class="tcap" id="tcap"></span>
+<span class="dlwrap" id="dlwrap" hidden><button class="ghost" id="dlbtn" type="button" aria-haspopup="true" aria-expanded="false" title="Download the papers currently shown">Download ▾</button>
+    <span class="dlmenu" id="dlmenu" hidden><button type="button" data-dl="bib">BibTeX (.bib)</button><button type="button" data-dl="csv">Spreadsheet (.csv)</button></span></span>
+    </div>
     <div class="tablewrap" id="tablewrap" hidden></div>
     <div class="trendswrap" id="trendswrap" hidden></div>
     <div class="playyear" id="playyear" hidden aria-live="polite"></div>
@@ -962,6 +966,8 @@ const COLS = [
 ];
 S.sort = { k: 'c', dir: -1 };
 function renderTable() {
+  const nRows = P.filter(p => pOn[p.i]).length;
+  $('tcap').textContent = `${nRows} of ${P.length} papers${S.sort.k === 'rel' ? ', best search matches first' : ''} · click a header to sort · “In CAMELS” = citations from other CAMELS papers; * year estimated`;
   const rel = S.sort.k === 'rel';
   const col = rel ? { v: p => S.score[p.i] || 0 } : COLS.find(c => c.k === S.sort.k);
   const rows = P.filter(p => pOn[p.i]).sort((a, b) => {
@@ -972,7 +978,7 @@ function renderTable() {
   const body = rows.map(p => `<tr tabindex="0" data-p="${p.i}" aria-selected="${!!(S.sel && S.sel.kind === 'p' && S.sel.i === p.i)}">${COLS.map(c => {
     const val = c.show ? c.show(p) : c.v(p);
     return `<td class="${c.cls}">${c.html ? val : esc(val)}</td>`; }).join('')}</tr>`).join('');
-  $('tablewrap').innerHTML = `<table class="ptable"><caption>${rows.length} of ${P.length} papers${rel ? ', best search matches first' : ''}. Click a header to sort. “In CAMELS” = citations from other CAMELS papers; * year estimated.</caption><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+  $('tablewrap').innerHTML = `<table class="ptable"><caption class="sr">${rows.length} of ${P.length} papers</caption><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
 }
 function markTableSelection() {
   document.querySelectorAll('#tablewrap tbody tr').forEach(tr => tr.setAttribute('aria-selected', !!(S.sel && S.sel.kind === 'p' && S.sel.i === +tr.dataset.p)));
@@ -997,7 +1003,7 @@ function setView(v, animate) {
   $('selfwrap').hidden = v !== 'citations'; $('cbwrap').hidden = !!FLAT[v]; $('spinrow').hidden = S.dim === 2; spinBtn();
   const flat = !!FLAT[v];
   cv.hidden = flat; $('note').hidden = flat; document.querySelector('.zoom').hidden = flat;
-  $('tablewrap').hidden = v !== 'table'; $('trendswrap').hidden = v !== 'trends';
+  $('tablewrap').hidden = v !== 'table'; $('tablebar').hidden = v !== 'table'; $('trendswrap').hidden = v !== 'trends';
   if (v === 'table') renderTable();
   if (v === 'trends') renderTrends();
   cv.tabIndex = 0;

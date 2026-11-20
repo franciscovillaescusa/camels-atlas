@@ -35,7 +35,7 @@ page first, since the atlas reads its list from there.
 
 ### Downloading papers
 
-**Download ▾** (next to *Clear filters*) saves the papers currently shown, after search and filters, as
+**Download ▾** (at the top of the *Table* view) saves the papers currently shown, after search and filters, as
 BibTeX (`.bib`, with DOI, arXiv ID and ADS link where available) or as a spreadsheet (`.csv`).
 
 ### New papers
