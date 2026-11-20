@@ -10,7 +10,7 @@ The site has three views. A button switches between them:
 | View | Each dot is | Lines | Dot size |
 |---|---|---|---|
 | **Topic map** | a paper, placed by abstract similarity (3D t-SNE of SPECTER2 embeddings) | none | total citations |
-| **Citations** | a paper | one CAMELS paper cites another | citations from other CAMELS papers |
+| **Citations** | a paper | one CAMELS paper cites another | citations from other CAMELS papers (a toggle hides self-citations, i.e. links between papers sharing an author: 68% of all links) |
 | **Co-authors** | an author | the two authors share a paper; darker lines mean closer collaboration | number of CAMELS papers |
 
 Colors show 10 topics, found by k-means clustering of the paper embeddings and named by hand.

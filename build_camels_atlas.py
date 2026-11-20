@@ -1034,6 +1034,7 @@ footer { font-size: 12px; color: var(--muted); }
   <span class="field"><label for="f-suite">Suite</label> <select id="f-suite"></select></span>
   <span class="field"><label for="f-data">Data</label> <select id="f-data"></select></span>
   <span class="field"><label for="f-method">Method</label> <select id="f-method"></select></span>
+  <label class="chk" id="selfwrap" hidden><input type="checkbox" id="selfc" checked> Count self-citations</label>
   <label class="chk" id="minwrap" hidden><input type="checkbox" id="min2" checked> Only authors with 2+ papers</label>
   <button class="ghost" id="reset">Clear filters</button>
 </div>
@@ -1062,6 +1063,12 @@ const tex = s => s.replace(/\$([^$]*)\$/g, (m, x) => x
   .replace(/[{}\\]/g, '').replace(/\^/g, '').replace(/_/g, '')).replace(/\s+/g, ' ').trim();
 P.forEach((p, i) => { p.i = i; p.t = tex(p.t); p.citers = []; });
 P.forEach(p => p.r.forEach(j => P[j].citers.push(p.i)));
+// self-citation: the citing and cited paper share at least one author
+const shares = (i, j) => P[i].au.some(a => P[j].au.includes(a));
+P.forEach(p => { p.citersInd = p.citers.filter(i => !shares(i, p.i)); });
+const citeCount = p => S.selfc ? p.citers.length : p.citersInd.length;
+const citeNote = () => S.selfc ? `${P.reduce((s, p) => s + p.r.length, 0)} citation links between CAMELS papers · drag to rotate`
+  : `${P.reduce((s, p) => s + p.citersInd.length, 0)} of ${P.reduce((s, p) => s + p.r.length, 0)} citation links shown (papers without shared authors) · drag to rotate`;
 const AU = D.authors.map((name, i) => ({ i, name, papers: [] }));
 P.forEach(p => p.au.forEach(a => AU[a].papers.push(p.i)));
 AU.forEach(a => {
@@ -1074,11 +1081,11 @@ P.forEach(p => { for (let x = 0; x < p.au.length; x++) for (let y = x + 1; y < p
   const a = Math.min(p.au[x], p.au[y]), b = Math.max(p.au[x], p.au[y]), key = a * 10000 + b;
   if (!EM.has(key)) EM.set(key, { s: a, t: b, papers: [] }); EM.get(key).papers.push(p.i);
 } });
-const CE = []; P.forEach(p => p.r.forEach(j => CE.push({ s: p.i, t: j })));
+const CE = []; P.forEach(p => p.r.forEach(j => CE.push({ s: p.i, t: j, self: shares(p.i, j) })));
 const years = [...new Set(P.map(p => p.y))].sort();
 
 // ---------- state ----------
-const S = { view: 'topics', sel: null, hover: null, q: '', y0: years[0], y1: years[years.length - 1], on: new Set(TOP.map((_, k) => k)), min2: true, tag: { s: '', d: '', m: '' }, nTop: { topics: 25, citations: 25, coauthors: 25 } };
+const S = { view: 'topics', sel: null, hover: null, q: '', y0: years[0], y1: years[years.length - 1], on: new Set(TOP.map((_, k) => k)), min2: true, selfc: true, tag: { s: '', d: '', m: '' }, nTop: { topics: 25, citations: 25, coauthors: 25 } };
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -1116,8 +1123,8 @@ function topicLayout() {
 }
 // Network positions are computed by the Python build script and shipped with the data.
 function citationLayout() {
-  const nodes = P.map(p => ({ id: p.i, kind: 'p', r: 3 + Math.sqrt(p.citers.length) * 2.2, x3: p.c3[0], y3: p.c3[1], z3: p.c3[2] }));
-  const links = CE.map(e => ({ source: nodes[e.s], target: nodes[e.t], s: e.s, t: e.t, w: 0.45 }));
+  const nodes = P.map(p => ({ id: p.i, kind: 'p', r: 3 + Math.sqrt(citeCount(p)) * 2.2, x3: p.c3[0], y3: p.c3[1], z3: p.c3[2] }));
+  const links = CE.map(e => ({ source: nodes[e.s], target: nodes[e.t], s: e.s, t: e.t, w: 0.45, self: e.self }));
   return { nodes, links, labels: [], R: centre3d(nodes), is3d: true };
 }
 function coauthorLayout(min2) {
@@ -1213,7 +1220,7 @@ function render() {
   if (links.length && lay.is3d) {
     // thin hairlines; opacity/width follow collaboration strength and depth, drawn in 10 buckets
     const NB = 10, paths = Array.from({ length: NB }, () => new Path2D());
-    for (const l of links) { const a = l.source, b = l.target; if (!on(a) || !on(b) || (l.papers && !l.papers.some(j => pOn[j]))) continue;
+    for (const l of links) { const a = l.source, b = l.target; if (!on(a) || !on(b) || (l.papers && !l.papers.some(j => pOn[j])) || (l.self && !S.selfc)) continue;
       const v = (0.05 + 0.55 * Math.min(1, l.w)) * (a.fog + b.fog) / 2, q = Math.min(NB - 1, Math.floor(v / 0.06));
       paths[q].moveTo(sx(a), sy(a)); paths[q].lineTo(sx(b), sy(b)); }
     ctx.strokeStyle = C.edgeHi;
@@ -1232,7 +1239,7 @@ function render() {
       for (const l of links) { const a = l.source, b = l.target;
         const lit = isP ? (F.f.kind === 'p' ? (l.s === F.f.i || l.t === F.f.i) : (F.papers.has(l.s) && F.papers.has(l.t)))
                         : (F.f.kind === 'a' ? (l.s === F.f.i || l.t === F.f.i) : (F.authors.has(l.s) && F.authors.has(l.t)));
-        if (!lit) continue;
+        if (!lit || (l.self && !S.selfc)) continue;
         const x1 = sx(a), y1 = sy(a), x2 = sx(b), y2 = sy(b);
         ctx.lineWidth = isP ? 1.4 : Math.min(4, 0.8 + 0.6 * l.papers.length);
         ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
@@ -1298,7 +1305,7 @@ const tip = $('tip');
 function hideTip() { tip.hidden = true; }
 function showTip(h, mx, my) {
   if (h.kind === 'p') { const p = P[h.i], a = p.au.map(x => AU[x].name);
-    tip.innerHTML = `${esc(p.t)}<small>${esc(TOP[p.k])}</small><small>${p.y} · ${esc(a[0] || '')}${a.length > 1 ? ' et al.' : ''} · ${p.cs === 2 ? 'citations unknown' : p.c + ' citations'}${S.view === 'citations' ? ` · cited by ${p.citers.length} CAMELS papers` : ''}</small>`; }
+    tip.innerHTML = `${esc(p.t)}<small>${esc(TOP[p.k])}</small><small>${p.y} · ${esc(a[0] || '')}${a.length > 1 ? ' et al.' : ''} · ${p.cs === 2 ? 'citations unknown' : p.c + ' citations'}${S.view === 'citations' ? ` · cited by ${p.citers.length} CAMELS papers, ${p.citersInd.length} without shared authors` : ''}</small>`; }
   else { const a = AU[h.i]; tip.innerHTML = `${esc(a.name)}<small>${a.papers.length} CAMELS paper${a.papers.length > 1 ? 's' : ''}</small>`; }
   tip.hidden = false; const tw = tip.offsetWidth, th = tip.offsetHeight;
   tip.style.left = Math.min(W - tw - 8, mx + 14) + 'px'; tip.style.top = (my + th + 20 > H ? my - th - 12 : my + 14) + 'px';
@@ -1336,7 +1343,7 @@ cv.addEventListener('click', e => { if (dragged) { dragged = false; return; } co
 // ---------- panel ----------
 const panel = $('panel');
 const dot = k => `<i style="background:var(--t${k})"></i>`;
-const pItem = j => `<li><button data-p="${j}">${dot(P[j].k)}<span class="tt">${esc(P[j].t)}</span><span class="num">${P[j].y}</span></button></li>`;
+const pItem = (j, sh) => `<li><button data-p="${j}">${dot(P[j].k)}<span class="tt">${esc(P[j].t)}</span><span class="num">${P[j].y}${sh ? ' · shared author' : ''}</span></button></li>`;
 const VIEWINFO = {
   topics: ['Each dot is a paper, laid out in 3D. Papers with similar abstracts sit close together. Nearer papers look larger and brighter.', (D.nads ? 'Total citations (NASA ADS)' : 'Total citations (Semantic Scholar)'), 'Topic cluster'],
   citations: ['Each dot is a paper, laid out in 3D. A line means one CAMELS paper cites another. Select a paper to see arrows pointing to the work it cites. Nearer papers look larger and brighter.', 'Citations from other CAMELS papers', 'Topic cluster'],
@@ -1345,7 +1352,8 @@ const VIEWINFO = {
 const USE_TXT = 'Drag to rotate (or use the arrow keys), scroll or pinch to zoom. Rotation pauses while you hover. Click a dot for details; your selection stays highlighted when you switch views.';
 const USE = { topics: USE_TXT, citations: USE_TXT, coauthors: USE_TXT };
 function overview() {
-  const [what, size, color] = VIEWINFO[S.view];
+  let [what, size, color] = VIEWINFO[S.view];
+  if (S.view === 'citations' && !S.selfc) size += ', not counting papers that share an author (self-citations hidden)';
   let list;
   if (S.view === 'coauthors') {
     const all = AU.filter(a => aOn[a.i]).sort((a, b) => b.papers.length - a.papers.length || a.name.localeCompare(b.name));
@@ -1353,10 +1361,10 @@ function overview() {
     list = `<div><h3>Most frequent authors <span style="text-transform:none;letter-spacing:0;font-weight:400">· ${top.length} of ${all.length}</span></h3><ul class="list">${top.map((a, r) => `<li><button data-a="${a.i}">${dot(a.topic)}<span class="tt">${r + 1}. ${esc(a.name)}</span><span class="num">${a.papers.length} paper${a.papers.length > 1 ? 's' : ''}</span></button></li>`).join('')}</ul>
       ${left > 0 ? `<div style="display:flex;gap:8px;margin-top:8px"><button class="ghost" data-more="25">Show ${Math.min(25, left)} more</button><button class="ghost" data-more="all">Show all ${all.length}</button></div>` : ''}</div>`;
   } else {
-    const key = S.view === 'citations' ? p => p.citers.length : p => p.c;
+    const key = S.view === 'citations' ? citeCount : p => p.c;
     const all = P.filter(p => pOn[p.i]).sort((a, b) => key(b) - key(a) || b.d.localeCompare(a.d));
     const top = all.slice(0, S.nTop[S.view]), left = all.length - top.length;
-    list = `<div><h3>${S.view === 'citations' ? 'Most cited within CAMELS' : (D.nads ? 'Most cited overall (ADS)' : 'Most cited overall')} <span style="text-transform:none;letter-spacing:0;font-weight:400">· ${top.length} of ${all.length}</span></h3><ul class="list">${top.map((p, r) =>
+    list = `<div><h3>${S.view === 'citations' ? (S.selfc ? 'Most cited within CAMELS' : 'Most cited within CAMELS, no self-citations') : (D.nads ? 'Most cited overall (ADS)' : 'Most cited overall')} <span style="text-transform:none;letter-spacing:0;font-weight:400">· ${top.length} of ${all.length}</span></h3><ul class="list">${top.map((p, r) =>
       `<li><button data-p="${p.i}">${dot(p.k)}<span class="tt">${r + 1}. ${esc(p.t)}</span><span class="num">${key(p)}</span></button></li>`).join('')}</ul>
       ${left > 0 ? `<div style="display:flex;gap:8px;margin-top:8px"><button class="ghost" data-more="25">Show ${Math.min(25, left)} more</button><button class="ghost" data-more="all">Show all ${all.length}</button></div>` : ''}</div>`;
   }
@@ -1380,8 +1388,8 @@ function paperPanel(i) {
     ${tagBlock(p)}
     <div><h3>${p.au.length} author${p.au.length > 1 ? 's' : ''}</h3><div class="names">${p.au.map(a => `<button data-a="${a}">${esc(AU[a].name)}</button>`).join('')}</div></div>
     <div><h3>Abstract</h3>${p.ab ? `<p class="abstract">${esc(p.ab)}</p>` : '<p>No abstract available. Use the link above to read the full text.</p>'}</div>
-    <div><h3>Cites ${p.r.length} CAMELS paper${p.r.length === 1 ? '' : 's'}</h3>${p.r.length ? `<ul class="list">${p.r.slice().sort((a, b) => P[b].d.localeCompare(P[a].d)).map(pItem).join('')}</ul>` : '<p>None found.</p>'}</div>
-    <div><h3>Cited by ${p.citers.length} CAMELS paper${p.citers.length === 1 ? '' : 's'}</h3>${p.citers.length ? `<ul class="list">${p.citers.slice().sort((a, b) => P[b].d.localeCompare(P[a].d)).map(pItem).join('')}</ul>` : '<p>None yet.</p>'}</div>`;
+    <div><h3>Cites ${p.r.length} CAMELS paper${p.r.length === 1 ? '' : 's'}</h3>${p.r.length ? `<ul class="list">${p.r.slice().sort((a, b) => P[b].d.localeCompare(P[a].d)).map(j => pItem(j, shares(j, p.i))).join('')}</ul>` : '<p>None found.</p>'}</div>
+    <div><h3>Cited by ${p.citers.length} CAMELS paper${p.citers.length === 1 ? '' : 's'}${p.citers.length ? `, ${p.citersInd.length} without shared authors` : ''}</h3>${p.citers.length ? `<ul class="list">${p.citers.slice().sort((a, b) => P[b].d.localeCompare(P[a].d)).map(j => pItem(j, shares(j, p.i))).join('')}</ul>` : '<p>None yet.</p>'}</div>`;
 }
 function authorPanel(i) {
   const a = AU[i], co = new Map();
@@ -1409,10 +1417,10 @@ function select(s) { S.sel = s; renderPanel(); draw(); }
 // ---------- controls ----------
 function setView(v, animate) {
   S.view = v; CAM.snap = true; ['topics', 'citations', 'coauthors'].forEach(x => $('m-' + x).setAttribute('aria-pressed', x === v));
-  $('minwrap').hidden = v !== 'coauthors'; $('zspin').hidden = false; spinBtn();
+  $('minwrap').hidden = v !== 'coauthors'; $('selfwrap').hidden = v !== 'citations'; $('zspin').hidden = false; spinBtn();
   cv.tabIndex = 0;
   $('note').textContent = v === 'topics' ? 'Layout: 3D t-SNE of SPECTER2 abstract embeddings · axes have no units · drag to rotate'
-    : v === 'citations' ? `${CE.length} citation links between CAMELS papers · drag to rotate` : `${AU.length} authors · ${EM.size} co-author pairs · drag to rotate`;
+    : v === 'citations' ? citeNote() : `${AU.length} authors · ${EM.size} co-author pairs · drag to rotate`;
   try { if (location.hash !== '#' + v) history.replaceState(null, '', '#' + v); } catch (e) {}
   S.hover = null; hideTip(); fit(animate); if (!S.sel) overview(); draw(); updateStats();
 }
@@ -1429,6 +1437,11 @@ legend.addEventListener('click', e => { const b = e.target.closest('.chip'); if 
   sel.addEventListener('change', () => { S.y0 = +$('y0').value; S.y1 = +$('y1').value; if (S.y0 > S.y1) { [S.y0, S.y1] = [S.y1, S.y0]; $('y0').value = S.y0; $('y1').value = S.y1; } refresh(); }); });
 let qt; $('q').addEventListener('input', e => { clearTimeout(qt); qt = setTimeout(() => { S.q = e.target.value; refresh(); }, 120); });
 $('min2').addEventListener('change', e => { S.min2 = e.target.checked; fit(false); draw(); });
+$('selfc').addEventListener('change', e => {
+  S.selfc = e.target.checked;
+  if (L.citations) L.citations.nodes.forEach(n => { n.r = 3 + Math.sqrt(citeCount(P[n.id])) * 2.2; });
+  $('note').textContent = citeNote(); refresh(); if (S.sel) renderPanel();
+});
 $('reset').addEventListener('click', () => { S.q = ''; $('q').value = ''; S.y0 = years[0]; S.y1 = years[years.length - 1]; $('y0').value = S.y0; $('y1').value = S.y1;
   S.on = new Set(TOP.map((_, k) => k)); S.tag = { s: '', d: '', m: '' }; ['suite', 'data', 'method'].forEach(a => { $('f-' + a).value = ''; });
   renderLegend(); refresh(); });
