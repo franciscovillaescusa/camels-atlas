@@ -67,7 +67,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.manifold import TSNE
 
 PUBS_URL = "https://camels.readthedocs.io/en/latest/publications.html"
-SITE_URL = "https://franciscovillaescusa.github.io/camels-atlas/"   # public address, used for link previews
+SITE_URL = "https://franciscovillaescusa.github.io/camels-atlas/"
+NEW_DAYS = 30   # papers added to the site within this many days are marked "New"   # public address, used for link previews
 UA = {"User-Agent": "camels-atlas-builder/1.0"}
 N_TOPICS = 10
 SEED = 0
@@ -867,6 +868,16 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
         "coauthors2_2d": {authors[a]: rd(v) for a, v in co2["2"].items()},
         "coauthors1_2d": {authors[a]: rd(v) for a, v in co2["1"].items()},
     }
+    # when each paper first appeared on the site ("launch" = already there at the first recorded build);
+    # papers that appeared in the last NEW_DAYS days are marked "New"
+    old_seen = store.get("first_seen", {})
+    new_store["first_seen"] = {u: old_seen.get(u, fetched if old_seen else "launch") for u in uids}
+    def is_new(u):
+        s = new_store["first_seen"][u]
+        return s != "launch" and (date.fromisoformat(fetched) - date.fromisoformat(s)).days <= NEW_DAYS
+    n_new = sum(is_new(u) for u in uids)
+    if n_new:
+        log(f"{n_new} paper(s) marked New (added to the site in the last {NEW_DAYS} days)")
 
     papers = []
     for n, r in enumerate(recs):
@@ -877,7 +888,7 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
                 au.append(k)
         papers.append({
             "id": r["uid"], "t": r["title"], "ab": first_sentence(r["abstract"]) if r.get("excerpt") else r["abstract"],
-            "abx": int(bool(r.get("excerpt"))), "d": r["date"], "dq": int(r["dq"]),
+            "abx": int(bool(r.get("excerpt"))), "nw": int(is_new(r["uid"])), "d": r["date"], "dq": int(r["dq"]),
             "y": int(r["date"][:4]), "au": au, "c": r["c"], "cs": r["cs"], "bib": r["bib"], "v": r["venue"],
             "lk": r["link"], "url": r["url"], "tg": tags[n],
             "x": round(float(pos2[n][0]), 4), "yy": round(float(pos2[n][1]), 4),
@@ -990,8 +1001,10 @@ def main():
             json.dump(d, f)
 
     store = {}
-    if not args.relayout and os.path.exists(args.positions):
+    if os.path.exists(args.positions):
         store = json.load(open(args.positions))
+        if args.relayout:   # recompute layouts, but keep the record of when papers first appeared
+            store = {"first_seen": store.get("first_seen", {})}
     overrides = json.load(open(args.overrides)) if os.path.exists(args.overrides) else {}
     data, new_store = build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, args.tags, overrides,
                                  recluster=args.recluster)

@@ -34,6 +34,7 @@ button, input, select { font: inherit; color: inherit; }
 header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
 .brand { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 h1 { font-family: var(--f-display); font-weight: 700; font-size: 22px; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+.newb { display: inline-block; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--surface); background: var(--accent); border-radius: 4px; padding: 1px 5px; margin-left: 4px; vertical-align: 1px; }
 .panelbar { display: flex; justify-content: space-between; gap: 8px; }
 .linkbtn { all: unset; color: var(--accent); cursor: pointer; }
 .linkbtn:hover { text-decoration: underline; }
@@ -293,7 +294,7 @@ const CE = []; P.forEach(p => p.r.forEach(j => CE.push({ s: p.i, t: j, self: sha
 const years = [...new Set(P.map(p => p.y))].sort();
 
 // ---------- state ----------
-const S = { view: 'topics', sel: null, hover: null, q: '', y0: years[0], y1: years[years.length - 1], on: new Set(TOP.map((_, k) => k)), selfc: true, dim: 2, tag: { s: '', d: '', m: '' }, nTop: { topics: 25, citations: 25, coauthors: 25 } };
+const S = { view: 'topics', sel: null, hover: null, q: '', y0: years[0], y1: years[years.length - 1], on: new Set(TOP.map((_, k) => k)), selfc: true, newOnly: false, dim: 2, tag: { s: '', d: '', m: '' }, nTop: { topics: 25, citations: 25, coauthors: 25 } };
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -305,7 +306,7 @@ let pOn = [], aOn = [], nShown = 0;
 function applyFilters() {
   const q = S.q.trim().toLowerCase();
   const tagOk = p => ['s', 'd', 'm'].every(ax => !S.tag[ax] || (p.tg && p.tg[ax].includes(S.tag[ax])));
-  pOn = P.map(p => p.y >= S.y0 && p.y <= S.y1 && S.on.has(p.k) && (!q || p.hay.includes(q)) && tagOk(p));
+  pOn = P.map(p => p.y >= S.y0 && p.y <= S.y1 && S.on.has(p.k) && (!q || p.hay.includes(q)) && tagOk(p) && (!S.newOnly || p.nw));
   const nameHit = q ? AU.filter(a => a.lc.includes(q)) : [];
   aOn = AU.map(a => nameHit.length ? a.lc.includes(q) : a.papers.some(j => pOn[j]));
   nShown = pOn.filter(Boolean).length;
@@ -612,7 +613,7 @@ const tip = $('tip');
 function hideTip() { tip.hidden = true; }
 function showTip(h, mx, my) {
   if (h.kind === 'p') { const p = P[h.i], a = p.au.map(x => AU[x].name);
-    tip.innerHTML = `${esc(p.t)}<small>${esc(TOP[p.k])}</small><small>${p.y} · ${esc(a[0] || '')}${a.length > 1 ? ' et al.' : ''} · ${p.cs === 2 ? 'citations unknown' : p.c + ' citations'}${S.view === 'citations' ? ` · cited by ${p.citers.length} CAMELS papers, ${p.citersInd.length} without shared authors` : ''}</small>`; }
+    tip.innerHTML = `${esc(p.t)}${p.nw ? ' <span class="newb">New</span>' : ''}<small>${esc(TOP[p.k])}</small><small>${p.y} · ${esc(a[0] || '')}${a.length > 1 ? ' et al.' : ''} · ${p.cs === 2 ? 'citations unknown' : p.c + ' citations'}${S.view === 'citations' ? ` · cited by ${p.citers.length} CAMELS papers, ${p.citersInd.length} without shared authors` : ''}</small>`; }
   else { const a = AU[h.i]; tip.innerHTML = `${esc(a.name)}<small>${a.papers.length} CAMELS paper${a.papers.length > 1 ? 's' : ''}</small>`; }
   tip.hidden = false; const tw = tip.offsetWidth, th = tip.offsetHeight;
   tip.style.left = Math.min(W - tw - 8, mx + 14) + 'px'; tip.style.top = (my + th + 20 > H ? my - th - 12 : my + 14) + 'px';
@@ -661,7 +662,7 @@ cv.addEventListener('click', e => { if (dragged) { dragged = false; return; } co
 // ---------- panel ----------
 const panel = $('panel');
 const dot = k => `<i style="background:var(--t${k})"></i>`;
-const pItem = (j, sh) => `<li><button data-p="${j}">${dot(P[j].k)}<span class="tt">${esc(P[j].t)}</span><span class="num">${P[j].y}${sh ? ' · shared author' : ''}</span></button></li>`;
+const pItem = (j, sh) => `<li><button data-p="${j}">${dot(P[j].k)}<span class="tt">${esc(P[j].t)}${P[j].nw ? ' <span class="newb">New</span>' : ''}</span><span class="num">${P[j].y}${sh ? ' · shared author' : ''}</span></button></li>`;
 const VIEWINFO = {
   topics: ['Each dot is a paper, laid out in 3D. Papers with similar abstracts sit close together. Nearer papers look larger and brighter.', (D.nads ? 'Total citations (NASA ADS), on a log scale' : 'Total citations (Semantic Scholar), on a log scale'), 'Topic cluster'],
   citations: ['Each dot is a paper, laid out in 3D. A line means one CAMELS paper cites another. Select a paper to see arrows pointing to the work it cites. Nearer papers look larger and brighter.', 'Citations from other CAMELS papers, on a log scale', 'Topic cluster'],
@@ -710,7 +711,7 @@ function paperPanel(i) {
   const p = P[i];
   const venue = p.v && p.v !== p.lk ? `<span>${esc(p.v)}</span>` : '';
   panel.innerHTML = `${panelBar()}
-    <div class="eyebrow">${dot(p.k)}${esc(TOP[p.k])}</div>
+    <div class="eyebrow">${dot(p.k)}${esc(TOP[p.k])}${p.nw ? ' <span class="newb">New</span>' : ''}</div>
     <h2>${esc(p.t)}</h2>
     <div class="meta">${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.lk)}</a>` : `<span>${esc(p.lk)}</span>`}<span>${p.dq ? p.y + ' (estimated from list position)' : p.d}</span>${venue}${p.bib ? `<a href="https://ui.adsabs.harvard.edu/abs/${encodeURIComponent(p.bib)}/abstract" target="_blank" rel="noopener">${p.c} citations (ADS)</a>` : `<span>${p.cs === 2 ? 'Citations unknown' : p.c + ' citations (Semantic Scholar)'}</span>`}</div>
     ${tagBlock(p)}
@@ -763,7 +764,7 @@ $('tapcard-x').addEventListener('click', () => { $('tapcard').hidden = true; });
 
 // ---------- table view (accessible alternative to the canvas views)
 const COLS = [
-  { k: 't', label: 'Title', v: p => p.t, cls: 'tt' },
+  { k: 't', label: 'Title', v: p => p.t, show: p => esc(p.t) + (p.nw ? ' <span class="newb">New</span>' : ''), cls: 'tt', html: true },
   { k: 'a', label: 'First author', v: p => p.au.length ? AU[p.au[0]].name : '', show: p => { const n = p.au.length ? AU[p.au[0]].name : '';
       return `<span title="${esc(n)}${p.au.length > 1 ? ` + ${p.au.length - 1} more` : ''}">${esc(n)}</span>`; }, cls: 'sm one', html: true },
   { k: 'y', label: 'Year', v: p => p.d, show: p => p.dq ? p.y + '*' : p.y, cls: 'num' },
@@ -821,8 +822,11 @@ window.addEventListener('popstate', applyHash);
 const legend = $('legend');
 function renderLegend() {
   legend.innerHTML = TOP.map((t, k) => !P.some(p => p.k === k) ? '' : `<button class="chip" data-k="${k}" aria-pressed="${S.on.has(k)}"><i style="background:var(--t${k})"></i>${esc(t)} <span class="n">${P.filter(p => p.k === k).length}</span></button>`).join('');
+  const nNew = P.filter(p => p.nw).length;
+  if (nNew) legend.insertAdjacentHTML('afterbegin', `<button class="chip" data-new aria-pressed="${S.newOnly}" title="Papers added to the site in the last 30 days"><i style="background:var(--accent)"></i>New <span class="n">${nNew}</span></button>`);
 }
-legend.addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; const k = +b.dataset.k;
+legend.addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return;
+  if (b.dataset.new !== undefined) { S.newOnly = !S.newOnly; renderLegend(); refresh(); return; } const k = +b.dataset.k;
   if (e.altKey || e.metaKey) { S.on = new Set([k]); } else if (S.on.has(k)) S.on.delete(k); else S.on.add(k);
   renderLegend(); refresh(); });
 [$('y0'), $('y1')].forEach((sel, n) => { sel.innerHTML = years.map(y => `<option ${y === (n ? S.y1 : S.y0) ? 'selected' : ''}>${y}</option>`).join('');
@@ -848,7 +852,7 @@ $('selfc').addEventListener('change', e => {
   $('note').textContent = noteText('citations'); refresh(); if (S.sel) renderPanel();
 });
 $('reset').addEventListener('click', () => { S.q = ''; $('q').value = ''; S.y0 = years[0]; S.y1 = years[years.length - 1]; $('y0').value = S.y0; $('y1').value = S.y1;
-  S.on = new Set(TOP.map((_, k) => k)); S.tag = { s: '', d: '', m: '' }; ['suite', 'data', 'method'].forEach(a => { $('f-' + a).value = ''; });
+  S.on = new Set(TOP.map((_, k) => k)); S.tag = { s: '', d: '', m: '' }; S.newOnly = false; ['suite', 'data', 'method'].forEach(a => { $('f-' + a).value = ''; });
   renderLegend(); refresh(); });
 // tag filters: one dropdown per axis, with paper counts
 [['suite', 's'], ['data', 'd'], ['method', 'm']].forEach(([axis, ax]) => {
@@ -976,6 +980,7 @@ function stateHash() {
   if (S.tag.m) q.set('method', S.tag.m);
   if (S.dim === 3) q.set('dim', '3');
   if (!S.selfc) q.set('self', '0');
+  if (S.newOnly) q.set('new', '1');
   const s = q.toString();
   return '#' + S.view + (s ? '&' + s : '');
 }
@@ -997,6 +1002,7 @@ function applyHash() {
       S.y0 = years.includes(yr[0]) ? yr[0] : years[0];
       S.y1 = years.includes(yr[1]) ? yr[1] : years[years.length - 1];
       $('y0').value = S.y0; $('y1').value = S.y1;
+      S.newOnly = q.get('new') === '1';
       S.on = q.get('topics') ? new Set(q.get('topics').split('.').map(Number).filter(k => k >= 0 && k < TOP.length)) : new Set(TOP.map((_, k) => k));
       renderLegend();
       [['suite', 's'], ['data', 'd'], ['method', 'm']].forEach(([a, ax]) => {

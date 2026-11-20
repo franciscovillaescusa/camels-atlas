@@ -21,6 +21,11 @@ the topic map highlights them. Search, the year range and the topic buttons filt
 stays highlighted when you switch views. The maps open in 2D (drag to pan, scroll or pinch to zoom); a
 2D/3D button next to the zoom controls switches them to rotatable 3D layouts (drag to rotate).
 
+### New papers
+
+The build records when each paper first appeared on the site (in `atlas_positions.json`). Papers added in
+the last 30 days get a **New** badge, and a **New** chip in the topic legend filters to them.
+
 ### Sharing a view
 
 The address bar keeps the current view, the selected paper or author, the filters and 2D/3D, so you can
