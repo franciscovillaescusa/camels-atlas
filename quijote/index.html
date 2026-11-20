@@ -646,7 +646,13 @@ let W = 0, H = 0, raf = 0;
 const T = { k: 1, x: 0, y: 0, applyX(v) { return this.x + this.k * v; }, applyY(v) { return this.y + this.k * v; } };
 const ZMIN = 0.05, ZMAX = 40;
 let zAnim = 0, zTarget = null, userMoved = false, fitK = 1;   // userMoved: stop auto-fitting once the user zooms or pans   // zTarget: where a running zoom animation will end
-function setView2(k, x, y) { T.k = k; T.x = x; T.y = y; hideTip(); draw(); }
+// every zoom/pan goes through here: note the time, so the islands are scaled from their cached image while
+// moving and redrawn sharply once the movement stops (see drawIslands)
+let islMoved = 0, islTimer = 0;
+function setView2(k, x, y) {
+  T.k = k; T.x = x; T.y = y; hideTip(); draw();
+  islMoved = performance.now(); clearTimeout(islTimer); islTimer = setTimeout(draw, ISL_SETTLE + 30);
+}
 function animateTo(k, x, y, ms) {
   cancelAnimationFrame(zAnim);
   zTarget = null;
@@ -718,16 +724,24 @@ function focusSets() {
 const FLAT = { table: 1, trends: 1 };   // views without the map canvas
 // ---------- atlas islands: per-topic density regions, drawn at half resolution and cached ----------
 // The image covers the view plus a margin, so panning only shifts it; zoom or filter changes redraw it.
-const ISL = { key: '', img: null, tx: 0, ty: 0, m: 0 };
+// Redrawing is a pixel loop over the whole image per topic, too slow for every frame: while zooming or
+// panning (and ISL_SETTLE ms after) the cached image is scaled instead, and redrawn at most every ISL_PLAY ms,
+// as during the history animation.
+const ISL = { key: '', content: '', img: null, tx: 0, ty: 0, k: 1, m: 0, t: 0 }, ISL_SETTLE = 150, ISL_PLAY = 300;
 const smooth = (e0, e1, v) => { const x = Math.min(1, Math.max(0, (v - e0) / (e1 - e0))); return x * x * (3 - 2 * x); };
 function drawIslands(nodes, on, sx, sy, dim) {
   const sc = 2, m = 240;                                   // half resolution; margin (screen px) around the view
   const w = Math.ceil((W + 2 * m) / sc), h = Math.ceil((H + 2 * m) / sc);
   const sig = Math.max(9, Math.min(40, 17 * Math.sqrt(T.k / Math.max(fitK, 1e-6))));   // kernel size follows zoom
-  const key = [w, h, T.k.toFixed(4), pOn.join(''), C.t.join(), sig.toFixed(1)].join('|');
+  const size = w + 'x' + h, content = [size, pOn.join(''), C.t.join()].join('|');
+  const key = [content, T.k.toFixed(4), sig.toFixed(1)].join('|');
   const panned = Math.abs(T.x - ISL.tx) > m * 0.8 || Math.abs(T.y - ISL.ty) > m * 0.8;
-  if (ISL.key !== key || panned) {
-    ISL.key = key; ISL.tx = T.x; ISL.ty = T.y; ISL.m = m;
+  const now = performance.now(), cached = ISL.img && ISL.content.startsWith(size + '|');
+  // zooming or panning: scale the cached image, but refresh it every ISL_PLAY ms during a long zoom
+  const moving = cached && ISL.content === content && now - islMoved < ISL_SETTLE && now - ISL.t < ISL_PLAY;
+  const playing = cached && PLAY.on && now - ISL.t < ISL_PLAY;                      // history animation
+  if ((ISL.key !== key || panned) && !moving && !playing) {
+    ISL.key = key; ISL.content = content; ISL.tx = T.x; ISL.ty = T.y; ISL.k = T.k; ISL.m = m; ISL.t = now;
     const off = document.createElement('canvas'); off.width = w; off.height = h;
     const oc = off.getContext('2d');
     const out = oc.createImageData(w, h), od = out.data;
@@ -760,8 +774,11 @@ function drawIslands(nodes, on, sx, sy, dim) {
     oc.putImageData(out, 0, 0);
     ISL.img = off;
   }
+  // the image was drawn at zoom ISL.k with offset (ISL.tx, ISL.ty); map it to the current zoom and offset
+  const r = T.k / ISL.k;
   ctx.save(); ctx.globalAlpha = dim ? 0.45 : 1; ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(ISL.img, T.x - ISL.tx - ISL.m, T.y - ISL.ty - ISL.m, w * sc, h * sc); ctx.restore();
+  ctx.translate(T.x - r * ISL.tx, T.y - r * ISL.ty); ctx.scale(r, r);
+  ctx.drawImage(ISL.img, -ISL.m, -ISL.m, ISL.img.width * sc, ISL.img.height * sc); ctx.restore();
 }
 function render() {
   if (FLAT[S.view]) return;
