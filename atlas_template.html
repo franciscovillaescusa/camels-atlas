@@ -93,7 +93,7 @@ select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; ba
 .dlmenu button { all: unset; padding: 7px 10px; border-radius: 6px; font-size: 13px; color: var(--ink); cursor: pointer; }
 .dlmenu button:hover, .dlmenu button:focus-visible { background: var(--wash); }
 .mapopts { position: absolute; left: 10px; top: 10px; z-index: 2; display: flex; flex-direction: column; gap: 4px; }
-.playbtn { padding: 5px 9px; }
+.playbtn { padding: 5px 0; width: 32px; text-align: center; font-size: 12px; }
 .playbtn[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
 .playyear { position: absolute; right: 64px; bottom: 26px; font-family: var(--f-display); font-size: 48px; font-weight: 700; text-align: right;
   color: var(--ink); opacity: .22; pointer-events: none; font-variant-numeric: tabular-nums; line-height: 1; }
@@ -283,7 +283,7 @@ footer { font-size: 12px; color: var(--muted); }
 <div class="toolbar">
   <label class="search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3.5 3.5"/></svg>
     <input id="q" type="search" placeholder="Search  ( / )" aria-label="Search papers, authors, abstracts and tags"><span class="qcount" id="qcount" aria-live="polite"></span></label>
-  <span class="field"><label for="y0">Years</label> <select id="y0"></select> <span aria-hidden="true">–</span> <select id="y1" aria-label="To year"></select> <button class="ghost playbtn" id="play" type="button" title="Play the history: papers appear one by one in date order" aria-label="Play the history paper by paper">▶ Play</button></span>
+  <span class="field"><label for="y0">Years</label> <select id="y0"></select> <span aria-hidden="true">–</span> <select id="y1" aria-label="To year"></select> <button class="ghost playbtn" id="play" type="button" title="Play the history: papers appear one by one in date order" aria-label="Play the history paper by paper">▶</button></span>
   <button class="ghost" id="fbtn" type="button" aria-expanded="false" aria-controls="fpanel">Filters <span class="fcount" id="fcount"></span> ▾</button>
   <span class="active" id="active" aria-label="Active filters"></span>
   <button class="ghost" id="reset">Clear filters</button>
@@ -1261,13 +1261,13 @@ playOrder.forEach((p, r) => { p.rank = r; });
 function stopPlay() {
   if (!PLAY.on) return;
   PLAY.on = false; clearTimeout(PLAY.timer); PLAY.upto = null; PLAY.flash = null;
-  $('play').setAttribute('aria-pressed', 'false'); $('play').textContent = '▶ Play'; $('playyear').hidden = true;
+  $('play').setAttribute('aria-pressed', 'false'); $('play').textContent = '▶'; $('play').title = 'Play the history: papers appear one by one in date order'; $('playyear').hidden = true;
   refresh();
 }
 function startPlay() {
   if (FLAT[S.view]) setView('topics', false);
   PLAY.on = true;
-  $('play').setAttribute('aria-pressed', 'true'); $('play').textContent = '■ Stop';
+  $('play').setAttribute('aria-pressed', 'true'); $('play').textContent = '■'; $('play').title = 'Stop';
   // only the papers that pass the current filters take part, in date order
   PLAY.upto = Infinity; applyFilters();
   const seq = playOrder.filter(p => pOn[p.i]);

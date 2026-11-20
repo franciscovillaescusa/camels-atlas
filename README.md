@@ -16,7 +16,7 @@ The site has five views. A button switches between them:
 | **Trends** | papers per year | — | stacked bars split by topic, method or suite; click a segment to list those papers |
 
 Colors show 10 topics, found by k-means clustering of the paper embeddings and named by hand.
-**▶ Play** (next to the years) animates the maps: papers appear one by one in date order (about 20 s in all).
+The **▶** button (next to the years) animates the maps: papers appear one by one in date order (about 20 s in all).
 The **Display** menu in the map corner holds the 2D/3D layout, *Color by* (topic, year, method or suite), the
 self-citation switch and the 3D rotation; its button shows the current settings.
 Each paper's panel lists its 5 most similar papers by embedding similarity, and selecting a paper on
