@@ -85,6 +85,12 @@ def run():
     N = len(P)
     E = C["entries"]
     hidden = {k for k, v in OV.items() if not k.startswith("_") and v.get("hide")}
+    # papers that keep an earlier ID through an "id" override (key: their ID from the source, or their title)
+    alias = {}
+    for key, v in OV.items():
+        if not key.startswith("_") and "id" in v:
+            alias[key] = alias["title:" + norm_title(key)[:80]] = str(v["id"])
+    site_uid = lambda e: (lambda u: alias.get(u, u))(e["arxiv"] or e["bibcode"] or "title:" + norm_title(e["title"])[:80])
 
     # ------------------------------------------------------------------ 1. completeness vs the source list
     titles_src = Counter(norm_title(e["title"]) for e in E)
@@ -148,7 +154,7 @@ def run():
                 by.setdefault(ident, i)
     s2_by_id = {}
     for e, s in zip(E, C["s2"]):
-        uid = e["arxiv"] or e["bibcode"] or "title:" + norm_title(e["title"])[:80]   # same IDs as the build
+        uid = site_uid(e)   # same IDs as the build
         if s and uid in by:
             s2_by_id[by[uid]] = s
     pid = {s["paperId"]: i for i, s in s2_by_id.items() if s.get("paperId")}
@@ -224,6 +230,11 @@ def run():
             ovt[p["id"]] = TOP.index(v["topic"])
     bad = [p["id"] for p in P if p["id"] in seed and p["id"] not in ovt and p["k"] != seed[p["id"]]]
     check("hand-checked topics are kept (TOPIC_SEED)", not bad, f"{len(seed)} seeded, {len(bad)} changed {bad[:3]}")
+    ids = {p["id"] for p in P}
+    check("ID overrides are applied", all(a in ids for a in alias.values()), f"{sorted(set(alias.values()) - ids)[:3]}")
+    orphans = sorted(k for k in TAGS if k not in ids)
+    if orphans:   # renamed or removed papers: the build log suggests the overrides.json line that keeps their tags
+        WARNINGS.append(f"{len(orphans)} tags.json entr{'y' if len(orphans) == 1 else 'ies'} match no paper: {orphans[:3]}")
     check("topic overrides are applied", all(next(q for q in P if q["id"] == i)["k"] == k for i, k in ovt.items()),
           f"{len(ovt)} overrides")
     check("tag vocabulary on the page = config", D["tagaxes"] == CFG["tag_axes"])
@@ -239,7 +250,7 @@ def run():
     # ------------------------------------------------------------------ 7. similar papers (recomputed from embeddings)
     emb = {}
     for e, s in zip(E, C["s2"]):
-        uid = e["arxiv"] or e["bibcode"] or "title:" + norm_title(e["title"])[:80]   # same IDs as the build
+        uid = site_uid(e)   # same IDs as the build
         if s and s.get("embedding") and uid in by:
             v = np.array(s["embedding"]["vector"], float)
             emb[by[uid]] = v / np.linalg.norm(v)
@@ -272,7 +283,8 @@ def run():
     # ------------------------------------------------------------------ 9. "New" badges
     fs = POS.get("first_seen", {})
     fetched = date.fromisoformat(D["fetched"])
-    exp_new = {u for u, s in fs.items() if s != "launch" and (fetched - date.fromisoformat(s)).days <= 30}
+    on_site = {p["id"] for p in P}   # first_seen also keeps papers that left the site (or changed ID)
+    exp_new = {u for u, s in fs.items() if u in on_site and s != "launch" and (fetched - date.fromisoformat(s)).days <= 30}
     check("'New' badges match first-seen dates", {p["id"] for p in P if p["nw"]} == exp_new, f"{len(exp_new)} new")
 
     # ------------------------------------------------------------------ 10. page-level facts

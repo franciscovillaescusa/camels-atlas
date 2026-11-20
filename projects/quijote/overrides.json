@@ -4,7 +4,8 @@
   "ADS bibcode, or the paper's title as it appears on the Quijote publications page.",
   "Fields (all optional): topic (exact topic name, or 'Unassigned (new papers)'), date ('2025', '2025-06'",
   "or '2025-06-30'), abstract, url, link (label of the link), title, authors (list of names),",
-  "hide (true leaves the entry out of the site), comment (free text, ignored).",
+  "hide (true leaves the entry out of the site), comment (free text, ignored), and id (keep the paper's",
+  "earlier ID after its title or link changed on the publications page; the build suggests the line).",
   "Keys starting with '_' are ignored. The build reports every correction it applies."
  ],
  "https://www.teses.usp.br/teses/disponiveis/43/43134/tde-15072024-101341/publico/tesenatalisolermatubarodesanti.pdf": {

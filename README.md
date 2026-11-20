@@ -149,8 +149,14 @@ To use ADS citation counts there, add the token as a repository secret named `AD
 
 `projects/<name>/overrides.json` corrects individual entries without touching the code. Key an entry by
 arXiv ID, ADS bibcode or title, and set any of: `topic`, `date`, `abstract`, `url`, `link`, `title`,
-`authors`, `hide` (leave the entry out) or `comment`. The build reports each correction it applies and
+`authors`, `hide` (leave the entry out), `comment` or `id`. The build reports each correction it applies and
 warns about keys that match no paper, unknown fields and unknown topic names.
+
+Papers without an arXiv ID (mostly theses) are known by their title. If the publications page edits such a
+title, or changes a paper's link, the paper gets a new ID and would lose its tags, topic and map position.
+The build then lists the tags, topics and positions that match no paper and, when a current paper has a
+very similar title, prints the line that keeps the old ID, e.g. `"title:newtitle…": {"id": "title:oldtitle…"}`.
+The "New papers need tags" issue shows the same suggestion.
 
 ### Tags
 

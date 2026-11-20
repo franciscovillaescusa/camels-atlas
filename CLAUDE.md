@@ -18,6 +18,9 @@ or run step 3 for every project.
 2. `python3 build_atlas.py --project <name> --offline` (refreshes the site from the cache if needed; if
    `atlas_cache/<name>/` is missing, run without `--offline`).
 3. `python3 tagging.py <name> list` — shows each untagged paper (title, abstract) and the allowed tag names.
+   If it lists **possibly renamed** papers (an already-tagged paper whose title or link changed on the
+   publications page), confirm with the user, then add the suggested `{"id": ...}` line to
+   `projects/<name>/overrides.json` and rebuild instead of tagging the paper again.
 4. Read each abstract and add an entry to `projects/<name>/tags.json`, keyed by the paper ID:
    `{"title": ..., "suite": [...], "data": [...], "method": [...], "uncertain": [...]}`.
    Use only the allowed names (`tag_axes` in the project's `config.json`). Put a tag in `"uncertain"` when the

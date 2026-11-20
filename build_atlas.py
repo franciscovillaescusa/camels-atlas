@@ -52,6 +52,7 @@ without an embedding, the topic most common among the papers with the most simil
 project with an empty "topic_seed" (a new project) is clustered from scratch automatically.
 """
 import argparse
+import difflib
 import html as html_mod
 import json
 import os
@@ -421,18 +422,35 @@ def ads_author(a):
 
 
 # ----------------------------------------------------------------------------- hand corrections
-OVERRIDE_FIELDS = {"topic", "date", "abstract", "url", "link", "authors", "title", "hide", "comment"}
+OVERRIDE_FIELDS = {"id", "topic", "date", "abstract", "url", "link", "authors", "title", "hide", "comment"}
 
 
 def apply_overrides(recs, overrides):
     """Apply hand corrections. Keys are an arXiv ID, an ADS bibcode or the paper title; values may set
     topic (a topic name), date ("YYYY", "YYYY-MM" or "YYYY-MM-DD"), abstract, url, link (label),
-    authors (list), title, hide (true leaves the entry out) and comment (ignored).
-    Returns the remaining records and {record index: topic index} for topic overrides."""
+    authors (list), title, hide (true leaves the entry out), comment (ignored) and id: the paper's ID on
+    the site. Papers without an arXiv ID are known by their title, so a title edited on the publications
+    page gives a new ID; "id" keeps the old one, and with it the paper's tags, topic and map position.
+    Returns the remaining records, {record index: topic index} for topic overrides and {ID from the
+    source: kept ID} for ID overrides."""
     by_key = {}
     for n, r in enumerate(recs):
         by_key[r["uid"]] = n
         by_key["title:" + norm_title(r["title"])] = n
+    # first pass: ID changes, so that the other fields can also be keyed by the paper's kept ID
+    kept = {}
+    for key, ov in overrides.items():
+        n = by_key.get(key, by_key.get("title:" + norm_title(key)))
+        if key.startswith("_") or n is None or "id" not in ov:
+            continue
+        new = str(ov["id"])
+        if any(r["uid"] == new for m, r in enumerate(recs) if m != n):
+            log(f"overrides: id {new!r} for {key!r} is already the ID of another paper; ignored")
+            continue
+        log(f"overrides: paper {recs[n]['uid'][:60]!r} keeps the ID {new[:60]!r}")
+        kept[recs[n]["uid"]] = new
+        recs[n]["uid"] = new
+        by_key[new] = n
     hidden, topic_of, used = set(), {}, 0
     for key, ov in overrides.items():
         if key.startswith("_"):
@@ -469,13 +487,49 @@ def apply_overrides(recs, overrides):
         if done:
             log(f"overrides: applied {done} to {r['title'][:60]}")
     keep = [r for n, r in enumerate(recs) if n not in hidden]
-    return keep, {n: topic_of[r["uid"]] for n, r in enumerate(keep) if r["uid"] in topic_of}
+    return keep, {n: topic_of[r["uid"]] for n, r in enumerate(keep) if r["uid"] in topic_of}, kept
 
 
 # ----------------------------------------------------------------------------- tags
 # Tags on three axes, assigned by reading each abstract and stored in projects/<name>/tags.json (--tags),
 # which you can edit by hand: {id: {"title", "suite": [...], "data": [...], "method": [...], "uncertain": [...]}}.
 # The allowed names per axis are "tag_axes" in the project's config.json.
+
+def similar_title(a, b):
+    """How alike two titles are (0..1), ignoring case, accents and punctuation."""
+    return difflib.SequenceMatcher(None, norm_title(a), norm_title(b)).ratio()
+
+
+def report_orphans(uids, titles, tags_path, store):
+    """Warn about tags, hand-checked topics and map positions whose paper ID matches no paper. This happens
+    when the publications page edits the title of a paper without an arXiv ID (its ID is its title) or
+    changes its link; the paper then shows up untagged with a new ID. For each such ID, suggest the
+    current paper with the most similar title and the overrides.json line that keeps the old ID."""
+    tags = json.load(open(tags_path)) if os.path.exists(tags_path) else {}
+    known = set(uids)
+    old = {}   # orphaned ID -> (where it is used, its title if known)
+    for uid, t in tags.items():
+        if uid not in known:
+            old.setdefault(uid, [set(), t.get("title", "")])[0].add("tags")
+    for uid in TOPIC_SEED:
+        if uid not in known:
+            old.setdefault(uid, [set(), ""])[0].add("topic_seed")
+    for uid in store.get("topics2d", {}):
+        if uid not in known:
+            old.setdefault(uid, [set(), ""])[0].add("positions")
+    if not old:
+        return
+    log(f"{len(old)} paper ID(s) in the tags, topic_seed or positions match no paper (renamed or removed?):")
+    for uid, (where, title) in sorted(old.items()):
+        title = title or (uid[6:] if uid.startswith("title:") else "")
+        best = max(((similar_title(title, t), u, t) for u, t in zip(uids, titles)
+                    if u not in tags and u not in TOPIC_SEED), default=None) if title else None
+        log(f"      - {uid[:70]}  (in {', '.join(sorted(where))})")
+        if best and best[0] >= 0.8:
+            log(f"        probably renamed to: {best[2][:70]}\n"
+                f"        to keep its tags, topic and position, add to overrides.json: "
+                f"{json.dumps(best[1])}: {{\"id\": {json.dumps(uid)}}}")
+
 
 def load_tags(path, uids, titles):
     """Tags per paper from the tags file; warns about unknown tag names and untagged papers."""
@@ -726,7 +780,7 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
                      "excerpt": bool(rec) and not (ax and ax in arx)})
 
     # ---- hand corrections from the overrides file (applied before anything is derived from them)
-    recs, topic_override = apply_overrides(recs, overrides)
+    recs, topic_override, kept_ids = apply_overrides(recs, overrides)
 
     # ---- entries with no date: estimate from neighbours (the list is newest first)
     years = [int(r["date"][:4]) if r["date"] else None for r in recs]
@@ -842,6 +896,18 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
 
     # ---- layouts (stored positions are kept; only new items are placed)
     uids = [r["uid"] for r in recs]
+    # a paper that keeps an earlier ID through an override may have been stored under its new ID by a build
+    # made before the override was added: forget that ID, so it is not kept or reported as an orphan
+    for key in ("topics2d", "topics3d_graph", "citations", "citations2d", "first_seen"):
+        for u in kept_ids:
+            store.get(key, {}).pop(u, None)
+            store.get("retired", {}).get(key, {}).pop(u, None)
+    report_orphans(uids, [r["title"] for r in recs], tags_path, store)
+    # positions of papers whose ID no longer matches any paper are kept under "retired", so that an "id"
+    # override added later (see apply_overrides) puts the paper back where it was
+    for key, old in store.get("retired", {}).items():
+        for u, v in old.items():
+            store.setdefault(key, {}).setdefault(u, v)
     tags = load_tags(tags_path, uids, [r["title"] for r in recs])
     pos2 = topic_positions(X, T, emb, uids, [r["title"] for r in recs], store)
     sim, kind = similarity(X, T, emb, N)
@@ -881,10 +947,16 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
         "citations2d": {uids[n]: rd(cit2[n]) for n in range(N)},
         "coauthors1_2d": {authors[a]: rd(v) for a, v in co2["1"].items()},
     }
+    uidset = set(uids)
+    retired = {key: {u: v for u, v in store.get(key, {}).items() if u not in uidset}
+               for key in ("topics2d", "topics3d_graph", "citations", "citations2d")}
+    if any(retired.values()):
+        new_store["retired"] = {k: v for k, v in retired.items() if v}
     # when each paper first appeared on the site ("launch" = already there at the first recorded build);
     # papers that appeared in the last NEW_DAYS days are marked "New"
     old_seen = store.get("first_seen", {})
-    new_store["first_seen"] = {u: old_seen.get(u, fetched if old_seen else "launch") for u in uids}
+    new_store["first_seen"] = {**{u: s for u, s in old_seen.items() if u not in uidset},   # kept, like "retired"
+                               **{u: old_seen.get(u, fetched if old_seen else "launch") for u in uids}}
     def is_new(u):
         s = new_store["first_seen"][u]
         return s != "launch" and (date.fromisoformat(fetched) - date.fromisoformat(s)).days <= NEW_DAYS
