@@ -790,7 +790,18 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
         n_s2 += len(s2_set - ads_set)
         n_ads += len(ads_set - s2_set)
         refs.append(sorted(s2_set | ads_set))
+        # reference data missing: neither source knows 10 or more of this paper's references (e.g. ADS has
+        # not processed a new preprint yet, or a thesis is in neither database)
+        n_ads_refs = len((ads_refs.get(r["bib"]) or {}).get("refs", [])) if r["bib"] else 0
+        n_s2_refs = sum(1 for ref in (r["s2"].get("references") or []) if ref.get("paperId"))
+        r["refmissing"] = n_ads_refs < 10 and n_s2_refs < 10
     log(f"citation links: {n_both} in both sources, {n_s2} Semantic Scholar only, {n_ads} ADS only")
+    missing = [r["title"] for r in recs if r["refmissing"]]
+    if missing:
+        log(f"{len(missing)} paper(s) without a usable reference list in ADS or Semantic Scholar "
+            "(their 'Cites' list may be empty or incomplete):")
+        for title in missing:
+            log(f"      - {title[:90]}")
 
     canon = canonical_authors([nm for r in recs for nm in r["authors"]])
     authors = sorted(set(canon.values()))
@@ -862,7 +873,7 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
             "lk": r["link"], "url": r["url"], "tg": tags[n],
             "x": round(float(pos2[n][0]), 4), "yy": round(float(pos2[n][1]), 4),
             "p3": [round(float(v) / 420, 4) for v in graph3[n]], "sim": similar[n], "c3": new_store["citations"][uids[n]], "c2": new_store["citations2d"][uids[n]],
-            "k": topic[n], "r": refs[n],
+            "k": topic[n], "r": refs[n], "rm": int(r["refmissing"]),
         })
 
     log(f"\n{len(papers)} papers, {len(authors)} authors, {sum(len(p['r']) for p in papers)} citation links")
