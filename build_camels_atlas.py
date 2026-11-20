@@ -271,14 +271,25 @@ def load_or_fetch(cache, name, fn, offline):
     return data
 
 
-def previous_paper_count(path):
-    """Number of papers in an earlier build of the page at `path` (None if there is none)."""
+def previous_data(path):
+    """The data embedded in an earlier build of the page at `path` (None if there is none)."""
     try:
         h = open(path, encoding="utf-8").read()
         blob = h.split('id="atlas-data">', 1)[1].split("</script>", 1)[0].replace("<\\/", "</")
-        return len(json.loads(blob)["papers"])
+        return json.loads(blob)
     except (OSError, IndexError, ValueError, KeyError):
         return None
+
+
+def fetch_date(cache, offline):
+    """Date of the downloads: today for a fresh fetch (saved with the cache), else the saved date."""
+    path = os.path.join(cache, "meta.json")
+    if not offline:
+        PENDING_CACHE[path] = {"fetched": date.today().isoformat()}
+        return date.today().isoformat()
+    if os.path.exists(path):
+        return json.load(open(path))["fetched"]
+    return date.fromtimestamp(os.path.getmtime(os.path.join(cache, "entries.json"))).isoformat()
 
 
 def sanity_check(entries, arx, s2, prev_n):
@@ -470,7 +481,7 @@ def recluster_topics(X, T, tv, emb):
     return {n: lab2topic[L[j]] for j, n in enumerate(emb)}
 
 
-def build_data(entries, arx, s2, ads_rec, ads_cit, store, recluster=False):
+def build_data(entries, arx, s2, ads_rec, ads_cit, store, fetched, recluster=False):
     # ---- one record per entry on the publications page
     recs = []
     for e, p in zip(entries, s2):
@@ -631,7 +642,7 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, store, recluster=False):
             log(f"      - {p['t'][:90]}")
     data = {"topics": [n for n, _ in TOPICS], "authors": authors, "papers": papers,
             "co": {m: [new_store["coauthors" + m].get(a) for a in authors] for m in ("1", "2")},
-            "fetched": date.today().isoformat(), "nads": sum(1 for p in papers if p["cs"] == 0)}
+            "fetched": fetched, "nads": sum(1 for p in papers if p["cs"] == 0)}
     return data, new_store
 
 
@@ -662,7 +673,9 @@ def main():
     s2 = load_or_fetch(args.cache, "s2.json", lambda: fetch_semantic_scholar(entries, ads_rec), args.offline)
     ads_cit = load_or_fetch(args.cache, "ads.json", lambda: fetch_ads_citations(ax_ids), args.offline)
 
-    problems = sanity_check(entries, arx, s2, previous_paper_count(args.out))
+    fetched = fetch_date(args.cache, args.offline)
+    prev = previous_data(args.out)
+    problems = sanity_check(entries, arx, s2, len(prev["papers"]) if prev else None)
     if problems:
         msg = "\n  - ".join(["sanity checks failed:"] + problems)
         if not args.force:
@@ -675,7 +688,11 @@ def main():
     store = {}
     if not args.relayout and os.path.exists(args.positions):
         store = json.load(open(args.positions))
-    data, new_store = build_data(entries, arx, s2, ads_rec, ads_cit, store, recluster=args.recluster)
+    data, new_store = build_data(entries, arx, s2, ads_rec, ads_cit, store, fetched, recluster=args.recluster)
+    # same papers, citations and positions as the current page: keep its date, so nothing changes
+    strip = lambda d: json.dumps({k: v for k, v in d.items() if k != "fetched"}, sort_keys=True)
+    if prev and strip(prev) == strip(data):
+        data["fetched"] = prev["fetched"]
     blob = json.dumps(data, separators=(",", ":"), ensure_ascii=False).replace("</", "<\\/")
     html = TEMPLATE.replace("__DATA__", blob)
     if not args.artifact:  # a complete document that opens directly in a browser or on GitHub Pages
@@ -690,11 +707,15 @@ def main():
                 f'<meta property="og:description" content="{desc}">\n'
                 '<meta property="og:type" content="website">\n'
                 + head.strip() + '\n<style>body{margin:0}</style>\n</head>\n<body>\n<header>' + body + '\n</body>\n</html>\n')
-    with open(args.out, "w", encoding="utf-8") as f:
-        f.write(html)
     with open(args.positions, "w") as f:
         json.dump(new_store, f, separators=(",", ":"), sort_keys=True)
-    log(f"\nwrote {args.out} ({len(html) / 1e3:.0f} kB) and {args.positions}.")
+    old = open(args.out, encoding="utf-8").read() if os.path.exists(args.out) else None
+    if old == html:
+        log(f"\nno changes: {args.out} left as it was (data as of {data['fetched']}).")
+        return
+    with open(args.out, "w", encoding="utf-8") as f:
+        f.write(html)
+    log(f"\nwrote {args.out} ({len(html) / 1e3:.0f} kB, data as of {data['fetched']}) and {args.positions}.")
 
 
 # ----------------------------------------------------------------------------- page template
@@ -1234,7 +1255,7 @@ function updateStats() {
   $('stats').innerHTML = `<b>${filtered ? nShown + ' of ' : ''}${P.length}</b> papers · <b>${AU.length}</b> authors · <b>${CE.length}</b> citation links · ${years[0]}–${years[years.length - 1]}`;
 }
 function refresh() { applyFilters(); updateStats(); if (!S.sel) overview(); draw(); }
-$('foot').innerHTML = `Papers listed on the <a href="https://camels.readthedocs.io/en/latest/publications.html" target="_blank" rel="noopener">CAMELS publications page</a> (all ${P.length} entries). Abstracts and authors from arXiv, or from ADS and the publications page for entries without an arXiv ID; ${D.nads ? 'citation counts from NASA ADS (Semantic Scholar where ADS has no record)' : 'citation counts from Semantic Scholar'}; SPECTER2 embeddings and the citation links between papers from Semantic Scholar, fetched ${D.fetched}. Topics are k-means clusters of the embeddings, named by hand.`;
+$('foot').innerHTML = `Papers listed on the <a href="https://camels.readthedocs.io/en/latest/publications.html" target="_blank" rel="noopener">CAMELS publications page</a> (all ${P.length} entries). Abstracts and authors from arXiv, or from ADS and the publications page for entries without an arXiv ID; ${D.nads ? 'citation counts from NASA ADS (Semantic Scholar where ADS has no record)' : 'citation counts from Semantic Scholar'}; SPECTER2 embeddings and the citation links between papers from Semantic Scholar; data as of ${D.fetched}. Topics are k-means clusters of the embeddings, named by hand.`;
 
 // ---------- boot ----------
 renderLegend(); applyFilters(); renderPanel();

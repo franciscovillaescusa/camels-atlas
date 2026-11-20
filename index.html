@@ -544,7 +544,7 @@ function updateStats() {
   $('stats').innerHTML = `<b>${filtered ? nShown + ' of ' : ''}${P.length}</b> papers · <b>${AU.length}</b> authors · <b>${CE.length}</b> citation links · ${years[0]}–${years[years.length - 1]}`;
 }
 function refresh() { applyFilters(); updateStats(); if (!S.sel) overview(); draw(); }
-$('foot').innerHTML = `Papers listed on the <a href="https://camels.readthedocs.io/en/latest/publications.html" target="_blank" rel="noopener">CAMELS publications page</a> (all ${P.length} entries). Abstracts and authors from arXiv, or from ADS and the publications page for entries without an arXiv ID; ${D.nads ? 'citation counts from NASA ADS (Semantic Scholar where ADS has no record)' : 'citation counts from Semantic Scholar'}; SPECTER2 embeddings and the citation links between papers from Semantic Scholar, fetched ${D.fetched}. Topics are k-means clusters of the embeddings, named by hand.`;
+$('foot').innerHTML = `Papers listed on the <a href="https://camels.readthedocs.io/en/latest/publications.html" target="_blank" rel="noopener">CAMELS publications page</a> (all ${P.length} entries). Abstracts and authors from arXiv, or from ADS and the publications page for entries without an arXiv ID; ${D.nads ? 'citation counts from NASA ADS (Semantic Scholar where ADS has no record)' : 'citation counts from Semantic Scholar'}; SPECTER2 embeddings and the citation links between papers from Semantic Scholar; data as of ${D.fetched}. Topics are k-means clusters of the embeddings, named by hand.`;
 
 // ---------- boot ----------
 renderLegend(); applyFilters(); renderPanel();
