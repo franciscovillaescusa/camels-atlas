@@ -296,21 +296,36 @@ function centre3d(nodes) {
   return Math.max(1, ds[Math.floor(0.9 * (N - 1))]);
 }
 const med = a => { const s = a.slice().sort((u, v) => u - v); return s[s.length >> 1]; };
+// label each topic at its densest spot (the member with the most same-topic papers nearby),
+// not at the median, which can fall inside another topic; "Unassigned" gets no label
+function topicLabels(nodes, keys) {
+  const xs = nodes.map(n => keys.map(k => n[k]));
+  const span = Math.max(...keys.map((_, d) => Math.max(...xs.map(v => v[d])) - Math.min(...xs.map(v => v[d]))));
+  const s2 = 2 * Math.pow(0.07 * span, 2);
+  return TOP.map((name, k) => {
+    if (/^Unassigned/.test(name)) return null;
+    const mem = nodes.map((n, i) => i).filter(i => P[nodes[i].id].k === k);
+    if (!mem.length) return null;
+    let best = mem[0], bs = -1;
+    for (const i of mem) {
+      let s = 0;
+      for (const j of mem) { let d2 = 0; keys.forEach((_, d) => { d2 += (xs[i][d] - xs[j][d]) ** 2; }); s += Math.exp(-d2 / s2); }
+      if (s > bs) { bs = s; best = i; }
+    }
+    const l = { k, name }; keys.forEach((key, d) => { l[key] = xs[best][d]; });
+    return l;
+  }).filter(Boolean);
+}
 function topicLayout() {
   if (S.dim === 2) {
     const nodes = P.map(p => ({ id: p.i, kind: 'p', x: p.x * 420, y: -p.yy * 420, r: Math.min(16, 3 + Math.sqrt(p.c) * 0.9) }));
-    const labels = TOP.map((name, k) => { const pts = nodes.filter(n => P[n.id].k === k);
-      return { k, name, x: med(pts.map(n => n.x)), y: med(pts.map(n => n.y)) }; }).filter(l => l.x !== undefined);
-    return { nodes, links: [], labels, is3d: false };
+    return { nodes, links: [], labels: topicLabels(nodes, ['x', 'y']), is3d: false, glow: true };
   }
   const nodes = P.map(p => ({ id: p.i, kind: 'p', x3: p.p3[0] * 420, y3: -p.p3[1] * 420, z3: p.p3[2] * 420, r: Math.min(16, 3 + Math.sqrt(p.c) * 0.9) }));
   const R = centre3d(nodes);
-  const labels = TOP.map((name, k) => {
-    const pts = nodes.filter(n => P[n.id].k === k);
-    return { k, name, x3: med(pts.map(n => n.x3)), y3: med(pts.map(n => n.y3)), z3: med(pts.map(n => n.z3)) };
-  }).filter(l => l.x3 !== undefined);
-  return { nodes, links: [], labels, R, is3d: true };
+  return { nodes, links: [], labels: topicLabels(nodes, ['x3', 'y3', 'z3']), R, is3d: true, glow: true };
 }
+
 // Network positions are computed by the Python build script and shipped with the data.
 function citationLayout() {
   const d2 = S.dim === 2;
@@ -481,6 +496,19 @@ function render() {
           ctx.lineTo(ax - 7 * Math.cos(ang + 0.4), ay - 7 * Math.sin(ang + 0.4)); ctx.closePath(); ctx.fill(); }
       }
     }
+  }
+  // topic map: faint colored glow behind each paper so topic areas show at a glance
+  if (lay.glow) {
+    const gr = Math.max(18, Math.min(60, 26 * Math.sqrt(T.k)));
+    for (const n of nodes) {
+      if (!on(n)) continue;
+      const x = sx(n), y = sy(n); if (x < -gr || y < -gr || x > W + gr || y > H + gr) continue;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, gr);
+      g.addColorStop(0, C.t[P[n.id].k]); g.addColorStop(1, 'transparent');
+      ctx.globalAlpha = (F ? 0.05 : 0.15) * (lay.is3d ? n.fog : 1); ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(x, y, gr, 0, 6.2832); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
   }
   // nodes: dimmed first, then emphasised on top
   const order = nodes.slice().sort(lay.is3d
