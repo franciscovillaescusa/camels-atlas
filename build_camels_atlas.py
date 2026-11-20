@@ -999,6 +999,7 @@ def main():
     strip = lambda d: json.dumps({k: v for k, v in d.items() if k != "fetched"}, sort_keys=True)
     if prev and strip(prev) == strip(data):
         data["fetched"] = prev["fetched"]
+    data["urlstate"] = 0 if args.artifact else 1   # shareable links only on the public site
     blob = json.dumps(data, separators=(",", ":"), ensure_ascii=False).replace("</", "<\\/")
     with open(args.template, encoding="utf-8") as f:
         template = f.read()

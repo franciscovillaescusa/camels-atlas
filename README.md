@@ -20,6 +20,14 @@ the topic map highlights them. Search, the year range and the topic buttons filt
 stays highlighted when you switch views. The maps open in 2D (drag to pan, scroll or pinch to zoom); a
 2D/3D button next to the zoom controls switches them to rotatable 3D layouts (drag to rotate).
 
+### Sharing a view
+
+The address bar keeps the current view, the selected paper or author, the filters and 2D/3D, so you can
+share exactly what you see, e.g.
+`https://franciscovillaescusa.github.io/camels-atlas/#citations&paper=2201.02202` or
+`#coauthors&author=Shy Genel`. Paper and author panels have a **Copy link** button, and the browser's
+back button steps through your selections.
+
 ## Data sources
 
 - Paper list: every entry on the [CAMELS publications page](https://camels.readthedocs.io/en/latest/publications.html)

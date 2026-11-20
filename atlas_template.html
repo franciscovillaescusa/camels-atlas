@@ -34,6 +34,7 @@ button, input, select { font: inherit; color: inherit; }
 header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
 .brand { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 h1 { font-family: var(--f-display); font-weight: 700; font-size: 22px; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+.panelbar { display: flex; justify-content: space-between; gap: 8px; }
 .linkbtn { all: unset; color: var(--accent); cursor: pointer; }
 .linkbtn:hover { text-decoration: underline; }
 .linkbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -681,10 +682,11 @@ function tagBlock(p) {
     `<span class="tag${p.tg.u.includes(t) ? ' unsure' : ''}"${p.tg.u.includes(t) ? ' title="Uncertain: not clearly stated in the abstract"' : ''}>${esc(t)}${p.tg.u.includes(t) ? ' ?' : ''}</span>`).join('')}</span></div>` : '';
   return `<div><h3>Tags</h3>${row('Suite', 's')}${row('Data', 'd')}${row('Method', 'm')}${p.tg.n ? `<p class="tagnote">${esc(p.tg.n)}</p>` : ''}</div>`;
 }
+const panelBar = () => `<div class="panelbar"><button class="ghost back" data-back>← Overview</button>${URLSTATE ? '<button class="ghost" data-copy title="Copy a link to this paper or author">Copy link</button>' : ''}</div>`;
 function paperPanel(i) {
   const p = P[i];
   const venue = p.v && p.v !== p.lk ? `<span>${esc(p.v)}</span>` : '';
-  panel.innerHTML = `<button class="ghost back" data-back>← Overview</button>
+  panel.innerHTML = `${panelBar()}
     <div class="eyebrow">${dot(p.k)}${esc(TOP[p.k])}</div>
     <h2>${esc(p.t)}</h2>
     <div class="meta">${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.lk)}</a>` : `<span>${esc(p.lk)}</span>`}<span>${p.dq ? p.y + ' (estimated from list position)' : p.d}</span>${venue}${p.bib ? `<a href="https://ui.adsabs.harvard.edu/abs/${encodeURIComponent(p.bib)}/abstract" target="_blank" rel="noopener">${p.c} citations (ADS)</a>` : `<span>${p.cs === 2 ? 'Citations unknown' : p.c + ' citations (Semantic Scholar)'}</span>`}</div>
@@ -702,7 +704,7 @@ function authorPanel(i) {
   const top = [...co].sort((x, y) => y[1] - x[1] || AU[x[0]].name.localeCompare(AU[y[0]].name)).slice(0, 12);
   const bars = a.tc.map((c, k) => c ? `<i title="${esc(TOP[k])}: ${c}" style="flex:${c};background:var(--t${k})"></i>` : '').join('');
   const tl = a.tc.map((c, k) => c ? `<span>${dot(k)} ${esc(TOP[k])} <span class="num">${c}</span></span>` : '').filter(Boolean);
-  panel.innerHTML = `<button class="ghost back" data-back>← Overview</button>
+  panel.innerHTML = `${panelBar()}
     <div class="eyebrow">Author</div><h2>${esc(a.name)}</h2>
     <div class="meta"><span>${a.papers.length} CAMELS paper${a.papers.length > 1 ? 's' : ''}</span><span>${co.size} co-authors</span></div>
     <div><h3>Topics</h3><div class="bars">${bars}</div><div class="how" style="margin-top:8px">${tl.map(t => `<div style="grid-template-columns:1fr;gap:0" class="eyebrow">${t}</div>`).join('')}</div></div>
@@ -712,12 +714,19 @@ function authorPanel(i) {
 function renderPanel() { if (!S.sel) overview(); else if (S.sel.kind === 'p') paperPanel(S.sel.i); else authorPanel(S.sel.i); panel.scrollTop = 0; }
 panel.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.copy !== undefined) {
+    const done = ok => { b.textContent = ok ? 'Copied ✓' : 'Copy failed'; setTimeout(() => { b.textContent = 'Copy link'; }, 1600); };
+    const url = location.href;
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(() => done(true), () => done(false));
+    else done(false);
+    return;
+  }
   if (b.dataset.more) { const y = panel.scrollTop; S.nTop[S.view] = b.dataset.more === 'all' ? 1e9 : S.nTop[S.view] + 25; overview(); panel.scrollTop = y; }
   else if (b.dataset.back !== undefined) select(null);
   else if (b.dataset.p) select({ kind: 'p', i: +b.dataset.p });
   else if (b.dataset.a) select({ kind: 'a', i: +b.dataset.a });
 });
-function select(s) { S.sel = s; renderPanel(); draw(); if (S.view === 'table') markTableSelection(); tapCard(); }
+function select(s) { S.sel = s; renderPanel(); draw(); if (S.view === 'table') markTableSelection(); tapCard(); writeHash(true); }
 // narrow screens: the details panel is below the map, so show a small card on the map after a tap
 const narrow = () => matchMedia('(max-width: 880px)').matches;
 function tapCard() {
@@ -778,11 +787,12 @@ function setView(v, animate) {
   if (tbl) renderTable();
   cv.tabIndex = 0;
   $('note').textContent = noteText(v);
-  try { if (location.hash !== '#' + v) history.replaceState(null, '', '#' + v); } catch (e) {}
+  writeHash(false);
   S.hover = null; hideTip(); userMoved = false; fit(animate); if (!S.sel) overview(); draw(); updateStats(); tapCard();
 }
 document.querySelectorAll('.modes button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view, true)));
-window.addEventListener('hashchange', () => { const v = location.hash.slice(1); if (VIEWINFO[v] && v !== S.view) setView(v, true); });
+window.addEventListener('hashchange', applyHash);
+window.addEventListener('popstate', applyHash);
 const legend = $('legend');
 function renderLegend() {
   legend.innerHTML = TOP.map((t, k) => !P.some(p => p.k === k) ? '' : `<button class="chip" data-k="${k}" aria-pressed="${S.on.has(k)}"><i style="background:var(--t${k})"></i>${esc(t)} <span class="n">${P.filter(p => p.k === k).length}</span></button>`).join('');
@@ -803,6 +813,7 @@ function setDim(d) {
   $('d2').setAttribute('aria-pressed', d === 2); $('d3').setAttribute('aria-pressed', d === 3);
   $('zspin').hidden = d === 2; CAM.snap = true;
   $('note').textContent = noteText(S.view); S.hover = null; hideTip(); userMoved = false; fit(false); if (!S.sel) overview(); draw();
+  writeHash(false);
 }
 $('d2').addEventListener('click', () => setDim(2));
 $('d3').addEventListener('click', () => setDim(3));
@@ -831,7 +842,7 @@ function updateStats() {
   const filtered = nShown < P.length;
   $('stats').innerHTML = `<b>${filtered ? nShown + ' of ' : ''}${P.length}</b> papers · <b>${AU.length}</b> authors · <b>${CE.length}</b> citation links · ${years[0]}–${years[years.length - 1]}`;
 }
-function refresh() { applyFilters(); updateStats(); if (!S.sel) overview(); if (S.view === 'table') renderTable(); draw(); }
+function refresh() { applyFilters(); updateStats(); if (!S.sel) overview(); if (S.view === 'table') renderTable(); draw(); writeHash(false); }
 const nSelf = CE.filter(e => e.self).length;
 $('foot').innerHTML = `Data as of ${D.fetched} · ${P.length} papers · <button class="linkbtn" id="aboutbtn" type="button">About &amp; data sources</button> · <a href="https://github.com/franciscovillaescusa/camels-atlas" target="_blank" rel="noopener">Source on GitHub</a>`;
 $('about-body').innerHTML = `
@@ -859,12 +870,70 @@ $('aboutbtn').addEventListener('click', () => { if (about.showModal) about.showM
 $('about-x').addEventListener('click', () => about.close ? about.close() : about.removeAttribute('open'));
 about.addEventListener('click', e => { if (e.target === about) about.close(); });
 
+// ---------- shareable links ----------
+// On the public site the address holds the view, the selected paper/author, the filters and 2D/3D,
+// e.g. #citations&paper=2201.02202&years=2022-2024. (The claude.ai page keeps only #view.)
+const URLSTATE = !!D.urlstate;
+let applying = false, viewInit = false;
+function stateHash() {
+  const q = new URLSearchParams();
+  if (S.sel) { if (S.sel.kind === 'p') q.set('paper', P[S.sel.i].id); else q.set('author', AU[S.sel.i].name); }
+  if (S.q.trim()) q.set('q', S.q.trim());
+  if (S.y0 !== years[0] || S.y1 !== years[years.length - 1]) q.set('years', S.y0 + '-' + S.y1);
+  if (S.on.size !== TOP.length) q.set('topics', [...S.on].sort((a, b) => a - b).join('.'));
+  if (S.tag.s) q.set('suite', S.tag.s);
+  if (S.tag.d) q.set('data', S.tag.d);
+  if (S.tag.m) q.set('method', S.tag.m);
+  if (S.dim === 3) q.set('dim', '3');
+  if (!S.selfc) q.set('self', '0');
+  const s = q.toString();
+  return '#' + S.view + (s ? '&' + s : '');
+}
+function writeHash(push) {   // push: add a history entry (selections), else replace (filters, view)
+  if (applying) return;
+  const h = URLSTATE ? stateHash() : '#' + S.view;
+  if (location.hash === h) return;
+  try { if (push) history.pushState(null, '', h); else history.replaceState(null, '', h); } catch (e) {}
+}
+function applyHash() {
+  const amp = location.hash.indexOf('&');
+  const v = (amp < 0 ? location.hash.slice(1) : location.hash.slice(1, amp)) || 'topics';
+  const q = new URLSearchParams(amp < 0 ? '' : location.hash.slice(amp + 1));
+  applying = true;
+  try {
+    if (URLSTATE) {
+      S.q = q.get('q') || ''; $('q').value = S.q;
+      const yr = (q.get('years') || '').split('-').map(Number);
+      S.y0 = years.includes(yr[0]) ? yr[0] : years[0];
+      S.y1 = years.includes(yr[1]) ? yr[1] : years[years.length - 1];
+      $('y0').value = S.y0; $('y1').value = S.y1;
+      S.on = q.get('topics') ? new Set(q.get('topics').split('.').map(Number).filter(k => k >= 0 && k < TOP.length)) : new Set(TOP.map((_, k) => k));
+      renderLegend();
+      [['suite', 's'], ['data', 'd'], ['method', 'm']].forEach(([a, ax]) => {
+        const sel = $('f-' + a); sel.value = q.get(a) || ''; S.tag[ax] = sel.value;   // unknown values fall back to "All"
+      });
+      const sc = q.get('self') !== '0';
+      if (sc !== S.selfc) { $('selfc').checked = sc; $('selfc').dispatchEvent(new Event('change')); }
+      setDim(q.get('dim') === '3' ? 3 : 2);
+    }
+    if (!viewInit || (VIEWINFO[v] && v !== S.view)) { viewInit = true; setView(VIEWINFO[v] ? v : 'topics', false); }
+    applyFilters(); updateStats();
+    let sel = null;
+    if (URLSTATE && q.get('paper')) { const p = P.find(x => x.id === q.get('paper')); if (p) sel = { kind: 'p', i: p.i }; }
+    if (URLSTATE && q.get('author')) { const a = AU.find(x => x.name === q.get('author')); if (a) sel = { kind: 'a', i: a.i }; }
+    select(sel);
+    if (S.view === 'table') renderTable();
+    if (!S.sel) overview();
+    draw();
+  } finally { applying = false; }
+}
+
 // ---------- boot ----------
 renderLegend(); applyFilters(); renderPanel();
 new ResizeObserver(() => { resize(); if (!userMoved) fit(false); }).observe(stage);
 const mq = matchMedia('(prefers-color-scheme: dark)'); mq.addEventListener && mq.addEventListener('change', draw);
 new MutationObserver(draw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-const h = location.hash.slice(1); setView(VIEWINFO[h] ? h : 'topics', false);
+applyHash();
 document.fonts && document.fonts.ready.then(draw);
 })();
 </script>
