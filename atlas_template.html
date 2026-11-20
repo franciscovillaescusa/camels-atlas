@@ -73,6 +73,7 @@ dialog#about::backdrop { background: rgba(10,12,16,.45); }
 .search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--muted); }
 select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-variant-numeric: tabular-nums; }
 .toolbar select { max-width: 175px; }
+@media (max-width: 1360px) { .toolbar select[id^="f-"] { max-width: 128px; } .search { flex-basis: 150px; } .toolbar { gap: 8px 9px; } }
 #dlwrap { margin-left: auto; position: relative; }
 #dlwrap:not([hidden]) + #reset, #reset { margin-left: 0; }
 #dlwrap[hidden] + #reset { margin-left: auto; }
@@ -139,7 +140,10 @@ select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; ba
 .ghost { border: 1px solid var(--line); background: var(--surface); padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--ink-2); }
 .ghost:hover { color: var(--ink); border-color: var(--muted); }
 
-.legend { display: flex; flex-wrap: wrap; gap: 4px 5px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 5px; align-items: center; }
+.legtoggle { all: unset; font-size: 12px; font-weight: 600; color: var(--ink-2); cursor: pointer; padding: 2px 6px 2px 0; }
+.legtoggle:hover { color: var(--ink); }
+.legtoggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 .chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px 2px 7px; border-radius: 999px; border: 1px solid var(--line);
   background: var(--surface); cursor: pointer; font-size: 12px; color: var(--ink); }
 .chip i { width: 10px; height: 10px; border-radius: 50%; flex: none; }
@@ -947,12 +951,24 @@ document.querySelectorAll('.modes button').forEach(b => b.addEventListener('clic
 window.addEventListener('hashchange', applyHash);
 window.addEventListener('popstate', applyHash);
 const legend = $('legend');
+// topic legend: compact (short names, one row) or full; the choice is remembered in this browser
+const LEG = { collapsed: true };
+try { const v = localStorage.getItem('atlas-legend'); if (v) LEG.collapsed = v !== 'full'; } catch (e) {}
 function renderLegend() {
-  legend.innerHTML = TOP.map((t, k) => !P.some(p => p.k === k) ? '' : `<button class="chip" data-k="${k}" aria-pressed="${S.on.has(k)}"><i style="background:var(--t${k})"></i>${esc(t)} <span class="n">${P.filter(p => p.k === k).length}</span></button>`).join('');
+  const short = D.topicsShort || TOP;
+  legend.classList.toggle('collapsed', LEG.collapsed);
+  legend.innerHTML = `<button class="legtoggle" data-legtoggle aria-expanded="${!LEG.collapsed}" title="${LEG.collapsed ? 'Show full topic names' : 'Show compact topic list'}">Topics ${LEG.collapsed ? '▸' : '▾'}</button>` +
+    TOP.map((t, k) => !P.some(p => p.k === k) ? '' : `<button class="chip" data-k="${k}" aria-pressed="${S.on.has(k)}" title="${esc(t)} — click to show or hide"><i style="background:var(--t${k})"></i>${esc(LEG.collapsed ? short[k] : t)} <span class="n">${P.filter(p => p.k === k).length}</span></button>`).join('');
   const nNew = P.filter(p => p.nw).length;
-  if (nNew) legend.insertAdjacentHTML('afterbegin', `<button class="chip" data-new aria-pressed="${S.newOnly}" title="Papers added to the site in the last 30 days"><i style="background:var(--accent)"></i>New <span class="n">${nNew}</span></button>`);
+  if (nNew) legend.querySelector('[data-legtoggle]').insertAdjacentHTML('afterend', `<button class="chip" data-new aria-pressed="${S.newOnly}" title="Papers added to the site in the last 30 days"><i style="background:var(--accent)"></i>New <span class="n">${nNew}</span></button>`);
 }
-legend.addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return;
+legend.addEventListener('click', e => {
+  if (e.target.closest('[data-legtoggle]')) {
+    LEG.collapsed = !LEG.collapsed;
+    try { localStorage.setItem('atlas-legend', LEG.collapsed ? 'compact' : 'full'); } catch (err) {}
+    renderLegend(); return;
+  }
+  const b = e.target.closest('.chip'); if (!b) return;
   if (b.dataset.new !== undefined) { S.newOnly = !S.newOnly; renderLegend(); refresh(); return; } const k = +b.dataset.k;
   if (e.altKey || e.metaKey) { S.on = new Set([k]); } else if (S.on.has(k)) S.on.delete(k); else S.on.add(k);
   renderLegend(); refresh(); });
