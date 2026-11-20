@@ -24,7 +24,7 @@ Pipeline
                          Fonts is loaded from outside.
 
 Usage
-  python3 build_camels_atlas.py                 # fetch everything fresh, write camels_atlas.html
+  python3 build_camels_atlas.py                 # fetch everything fresh, write index.html
   python3 build_camels_atlas.py --offline       # reuse the cached downloads in ./atlas_cache
   python3 build_camels_atlas.py --out page.html --cache mycache
   python3 build_camels_atlas.py --artifact      # body-only HTML, for publishing as a claude.ai artifact
@@ -838,7 +838,7 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
 # ----------------------------------------------------------------------------- main
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--out", default="camels_atlas.html", help="output HTML file (default: camels_atlas.html)")
+    ap.add_argument("--out", default="index.html", help="output HTML file (default: index.html, the GitHub Pages site)")
     ap.add_argument("--cache", default="atlas_cache", help="folder for downloaded data (default: atlas_cache)")
     ap.add_argument("--offline", action="store_true", help="rebuild from the cached downloads, no network")
     ap.add_argument("--recluster", action="store_true",

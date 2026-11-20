@@ -44,8 +44,8 @@ Everything is produced by one script:
 
 ```bash
 pip install -r requirements.txt
-python build_camels_atlas.py --out index.html      # fetch fresh data and rebuild
-python build_camels_atlas.py --offline --out index.html   # rebuild from ./atlas_cache, no network
+python build_camels_atlas.py                 # fetch fresh data and rebuild index.html
+python build_camels_atlas.py --offline       # rebuild from ./atlas_cache, no network
 ```
 
 Layouts are computed once and stored in `atlas_positions.json`. Later builds keep every known paper
