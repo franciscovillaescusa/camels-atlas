@@ -547,9 +547,10 @@ function render() {
   // a name on the map; skipped if it would overlap one already drawn (unless forced: the selected item).
   // pill: on a translucent rounded background, readable over dense dots and lines (networks); otherwise a
   // thin halo (the topic-map region names)
-  const label = (txt, x, y, font, align, tries, force, pill) => {
+  const label = (txt, x, y, font, align, tries, force, pill, inside) => {
     ctx.font = font; ctx.textAlign = align || 'center';
     const w = ctx.measureText(txt).width, h = 15;
+    if (inside && align !== 'left') x = Math.min(W - 6 - w / 2, Math.max(6 + w / 2, x));   // keep the whole name on screen
     for (const dy of tries || [0]) {
       const x0 = align === 'left' ? x : x - w / 2, b = { x0: x0 - 3, x1: x0 + w + 3, y0: y + dy - h / 2, y1: y + dy + h / 2 };
       if (!force && hits(b)) continue;
@@ -562,11 +563,12 @@ function render() {
     }
   };
   const fB = css('--f-body');
-  if (S.view === 'topics' && !F) {
+  // on phones the topic names only fit once zoomed in a little
+  if (S.view === 'topics' && !F && !(W < 600 && T.k < 2.5 * fitK)) {
     const regionStyle = !lay.is3d && S.colorBy === 'topic';   // atlas islands: names styled like map regions
     if (regionStyle) ctx.letterSpacing = '0.06em';
-    labels.forEach(l => { if (S.on.has(l.k)) label(regionStyle ? l.name.toUpperCase() : l.name, T.applyX(l.x), T.applyY(l.y) - 24,
-      (regionStyle ? '700 11px ' : '600 13px ') + fB, 'center', [0, -16, 16, -32, 32, -48, 48, -64, 64]); });
+    labels.forEach(l => { if (S.on.has(l.k) && !(W < 600 && (T.applyX(l.x) < 0 || T.applyX(l.x) > W))) label(regionStyle ? l.name.toUpperCase() : l.name, T.applyX(l.x), T.applyY(l.y) - 24,
+      (regionStyle ? '700 11px ' : '600 13px ') + fB, 'center', [0, -16, 16, -32, 32, -48, 48, -64, 64], false, false, W < 600); });
     ctx.letterSpacing = '0px';
   }
   if (S.view === 'coauthors') {
@@ -1036,6 +1038,7 @@ function renderActive() {
   $('active').innerHTML = chips.map(([k, l]) => `<button class="achip" data-clear="${k}" title="Remove this filter">${esc(l)} <span aria-hidden="true">×</span></button>`).join('');
   const n = chips.filter(c => c[0] !== 'years').length;
   $('fcount').textContent = n ? `· ${n}` : '';
+  document.body.classList.toggle('nofilter', !chips.length && !S.q.trim());   // phones hide "Clear filters" then
 }
 $('active').addEventListener('click', e => {
   const b = e.target.closest('[data-clear]'); if (!b) return;
