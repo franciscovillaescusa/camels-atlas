@@ -7,11 +7,16 @@ Rebuilds the interactive "CAMELS Literature Atlas" web page (topic map, citation
 network and co-author network, all in rotatable 3D) from scratch.
 
 Pipeline
-  1. Publications list   https://camels.readthedocs.io/en/latest/publications.html  (arXiv IDs)
-  2. arXiv API           titles, abstracts, authors, dates
-  3. Semantic Scholar    SPECTER2 embeddings + references (citation links between CAMELS papers)
-  4. NASA ADS            total citation counts (token read from ~/.ads/dev_key or $ADS_TOKEN);
-                         falls back to Semantic Scholar counts if no token is found
+  1. Publications list   https://camels.readthedocs.io/en/latest/publications.html  (every entry)
+  2. arXiv API           titles, abstracts, authors, dates for entries with an arXiv link
+  3. NASA ADS            full records for entries that link to ADS instead of arXiv, and total
+                         citation counts (token read from ~/.ads/dev_key or $ADS_TOKEN; without a
+                         token, citation counts come from Semantic Scholar)
+  4. Semantic Scholar    SPECTER2 embeddings + references (citation links between CAMELS papers),
+                         matched by arXiv ID, DOI or exact title
+  Entries with no arXiv or ADS record (e.g. theses) use the title and authors from the
+  publications page; if no date is known, the year is estimated from the entry's position
+  in the list (which is newest first) and marked as estimated on the page.
   5. Analysis            k-means topics (10, hand-named), 3D t-SNE, author-name merging
   6. Output              one self-contained HTML file (loads d3 from cdnjs and Google Fonts)
 
@@ -20,21 +25,25 @@ Usage
   python3 build_camels_atlas.py --offline       # reuse the cached downloads in ./atlas_cache
   python3 build_camels_atlas.py --out page.html --cache mycache
   python3 build_camels_atlas.py --artifact      # body-only HTML, for publishing as a claude.ai artifact
+  python3 build_camels_atlas.py --recluster     # redo the topic clustering (then check/rename topics)
 
 Requirements: Python 3.9+, requests, numpy, scipy, scikit-learn.
 
-Topic names: the 10 names below were written by hand after reading the titles in each
-cluster (Nov 2026). They are matched to the k-means clusters through a few probe keywords each.
-When many new papers are added the clusters can shift; the script prints the top titles of
-each topic so you can check that the names still fit and edit TOPICS if needed.
+Topics: 10 k-means clusters of the SPECTER2 embeddings, named by hand after reading their titles
+(Nov 2026). The topic of every paper checked then is stored in TOPIC_SEED, so the names keep
+matching their papers. New papers join the topic whose centre (mean embedding) is nearest, or,
+without an embedding, the topic most common among the papers with the most similar words.
+--recluster redoes the clustering from scratch (then check the printed titles and edit TOPICS).
 """
 import argparse
+import html as html_mod
 import json
 import os
 import re
 import sys
 import time
 import unicodedata
+import urllib.parse
 import xml.etree.ElementTree as ET
 from collections import Counter, defaultdict
 from datetime import date
@@ -65,20 +74,62 @@ TOPICS = [
     ("Halo concentration & baryonic imprints", ["concentration", "concentration mass", "imprints"]),
 ]
 
+# Hand-checked topic of every paper in the Nov 2026 clustering (arXiv ID -> index into TOPICS).
+# These stay fixed so the hand-written names keep matching their papers. New papers join the topic
+# whose centre (mean embedding) is nearest. Run with --recluster to redo the clustering from scratch.
+TOPIC_SEED = {
+    "2010.00619": 7, "2011.05992": 8, "2109.04484": 6, "2109.07070": 0, "2109.09747": 8, "2109.10360": 8,
+    "2109.10915": 7, "2110.02983": 0, "2111.08683": 8, "2111.14874": 8, "2201.01300": 7, "2201.01305": 3,
+    "2201.01663": 1, "2201.02202": 7, "2201.02708": 1, "2201.04142": 1, "2204.02408": 6, "2204.13713": 8,
+    "2205.02245": 6, "2207.05509": 4, "2208.08927": 0, "2209.00657": 6, "2209.02075": 1, "2209.06843": 8,
+    "2210.02467": 1, "2211.05000": 0, "2211.12444": 5, "2211.12724": 0, "2211.15675": 1, "2211.16461": 7,
+    "2212.05964": 9, "2301.02186": 1, "2301.02231": 1, "2301.02253": 6, "2301.09655": 4, "2302.01363": 6,
+    "2302.14101": 8, "2302.14591": 8, "2303.07473": 7, "2304.02096": 7, "2304.06084": 7, "2305.00992": 9,
+    "2305.07531": 4, "2306.07728": 6, "2306.10943": 2, "2307.06360": 1, "2307.06967": 3, "2307.11832": 1,
+    "2307.14362": 0, "2308.09751": 2, "2308.14822": 6, "2309.07912": 6, "2309.12048": 7, "2310.04499": 6,
+    "2310.08634": 7, "2310.15234": 8, "2311.00799": 0, "2311.00833": 5, "2311.01588": 8, "2311.03491": 9,
+    "2311.08558": 5, "2311.10088": 3, "2311.18007": 0, "2311.18017": 4, "2312.07534": 5, "2401.12318": 6,
+    "2401.15891": 9, "2402.10997": 0, "2403.02313": 1, "2403.08611": 1, "2403.10609": 3, "2403.10648": 5,
+    "2404.04327": 6, "2405.04447": 7, "2405.05255": 5, "2407.18349": 1, "2408.04864": 1, "2410.10942": 6,
+    "2410.16361": 1, "2410.21722": 7, "2411.02496": 8, "2411.08957": 8, "2411.10515": 0, "2411.13960": 1,
+    "2411.17682": 3, "2412.04559": 1, "2412.05131": 5, "2501.16709": 7, "2501.17922": 1, "2502.06954": 3,
+    "2502.13239": 6, "2502.13589": 6, "2502.17568": 7, "2503.21736": 3, "2503.22654": 7, "2504.11794": 5,
+    "2504.17839": 8, "2504.18745": 1, "2505.02920": 3, "2505.13620": 4, "2505.21215": 4, "2505.23904": 8,
+    "2506.06087": 2, "2506.08783": 3, "2507.01820": 6, "2507.03707": 4, "2507.12530": 8, "2507.16816": 1,
+    "2507.21682": 0, "2508.05744": 2, "2508.21152": 1, "2509.01881": 3, "2509.18260": 1, "2510.19224": 4,
+    "2510.26593": 4, "2510.26851": 4, "2511.08438": 5, "2511.21881": 9, "2512.03038": 1, "2512.10222": 8,
+    "2512.17964": 9, "2601.06258": 1, "2601.06290": 6, "2601.14377": 5, "2602.07651": 3, "2602.12357": 3,
+    "2602.15938": 1, "2602.15951": 4, "2603.13011": 7, "2604.21790": 3, "2605.26210": 8, "2605.28516": 2,
+    "2606.10024": 3, "2606.10038": 7, "2607.18229": 3, "2609.00807": 9, "2609.09504": 8, "2609.10709": 8,
+    "2609.10710": 1, "2609.19295": 5, "2609.23982": 7, "2610.00725": 8, "2610.03544": 9, "2610.03946": 9,
+    "2610.10741": 1, "2610.33955": 4, "2610.37825": 5, "2610.40218": 8,
+}
+
 
 def log(*a):
     print(*a, flush=True)
 
 
 # ----------------------------------------------------------------------------- fetching
-def fetch_arxiv_ids():
-    html = requests.get(PUBS_URL, headers=UA, timeout=60).text
-    ids = []
-    for m in re.finditer(r"arxiv\.org/(?:abs|pdf)/([0-9]{4}\.[0-9]{4,5})", html):
-        if m.group(1) not in ids:
-            ids.append(m.group(1))
-    log(f"publications page: {len(ids)} unique arXiv IDs")
-    return ids
+def fetch_entries():
+    """Every numbered entry on the publications page: title, authors, link (arXiv, ADS or other)."""
+    page = requests.get(PUBS_URL, headers=UA, timeout=60).text
+    entries = []
+    for n, item in enumerate(re.findall(r'<li><div class="line-block">(.*?)</div>\s*</li>', page, re.S)):
+        lines = [html_mod.unescape(re.sub(r"<[^>]+>", "", l)).strip()
+                 for l in re.findall(r'<div class="line">(.*?)</div>', item, re.S)]
+        hrefs = [html_mod.unescape(h) for h in re.findall(r'href="([^"]+)"', item)]
+        ax = re.search(r"arxiv\.org/(?:abs|pdf)/([0-9]{4}\.[0-9]{4,5})", item)
+        bib = next((urllib.parse.unquote(m.group(1)) for h in hrefs
+                    for m in [re.search(r"ui\.adsabs\.harvard\.edu/abs/([^/]+)", h)] if m), None)
+        entries.append({
+            "n": n + 1, "title": lines[0] if lines else "",
+            "authors": [a.strip() for a in lines[1].split(",") if a.strip()] if len(lines) > 1 else [],
+            "label": lines[2] if len(lines) > 2 else "", "url": hrefs[0] if hrefs else "",
+            "arxiv": ax.group(1) if ax else None, "bibcode": None if ax else bib,
+        })
+    log(f"publications page: {len(entries)} entries, {sum(1 for e in entries if e['arxiv'])} with arXiv IDs")
+    return entries
 
 
 def fetch_arxiv(ids):
@@ -102,23 +153,47 @@ def fetch_arxiv(ids):
     return out
 
 
-def fetch_semantic_scholar(ids):
+def s2_get(url, method="GET", **kw):
+    """Semantic Scholar request with back-off on rate limiting (HTTP 429)."""
+    for attempt in range(8):
+        r = requests.request(method, url, headers=UA, timeout=120, **kw)
+        if r.status_code in (200, 404):
+            return r
+        time.sleep(5 * (attempt + 1))
+    return r
+
+
+def norm_title(t):
+    return re.sub(r"[^a-z0-9]", "", unicodedata.normalize("NFKD", t).lower())
+
+
+def fetch_semantic_scholar(entries, ads_rec):
+    """One Semantic Scholar record per entry: by arXiv ID, else DOI, else an exact title match."""
+    keys = []
+    for e in entries:
+        doi = ((ads_rec.get(e["bibcode"]) or {}).get("doi") or [None])[0] if e["bibcode"] else None
+        if e["arxiv"]:
+            keys.append(f"ARXIV:{e['arxiv']}")
+        elif doi:
+            keys.append(f"DOI:{doi}")
+        else:
+            r = s2_get("https://api.semanticscholar.org/graph/v1/paper/search/match",
+                       params={"query": e["title"], "fields": "title"})
+            hit = r.json()["data"][0] if r.status_code == 200 and r.json().get("data") else None
+            keys.append(hit["paperId"] if hit and norm_title(hit["title"]) == norm_title(e["title"]) else None)
+            time.sleep(1.5)
     fields = "title,year,venue,citationCount,externalIds,references.externalIds,embedding.specter_v2"
-    papers = []
-    for i in range(0, len(ids), 100):
-        chunk = ids[i:i + 100]
-        for attempt in range(8):
-            r = requests.post("https://api.semanticscholar.org/graph/v1/paper/batch", params={"fields": fields},
-                              json={"ids": [f"ARXIV:{a}" for a in chunk]}, headers=UA, timeout=120)
-            if r.status_code == 200:
-                break
-            log(f"Semantic Scholar HTTP {r.status_code}, retrying...")
-            time.sleep(5 * (attempt + 1))
+    want = [k for k in keys if k]
+    got = {}
+    for i in range(0, len(want), 100):
+        chunk = want[i:i + 100]
+        r = s2_get("https://api.semanticscholar.org/graph/v1/paper/batch", method="POST",
+                   params={"fields": fields}, json={"ids": chunk})
         r.raise_for_status()
-        papers.extend(r.json())
-        log(f"Semantic Scholar: {len(papers)}/{len(ids)}")
+        got.update(zip(chunk, r.json()))
+        log(f"Semantic Scholar: {len(got)}/{len(want)}")
         time.sleep(3)
-    return {"ids": ids, "papers": papers}
+    return [got.get(k) if k else None for k in keys]
 
 
 def ads_token():
@@ -129,31 +204,48 @@ def ads_token():
     return tok or None
 
 
-def fetch_ads(ids):
+def ads_query(q, fl, rows=200):
     tok = ads_token()
-    if not tok:
+    r = requests.get("https://api.adsabs.harvard.edu/v1/search/query", timeout=60,
+                     headers=dict(UA, Authorization=f"Bearer {tok}"), params={"q": q, "fl": fl, "rows": rows})
+    if r.status_code != 200:
+        raise RuntimeError(f"ADS HTTP {r.status_code}: {r.text[:200]}")
+    return r.json()["response"]["docs"]
+
+
+def fetch_ads_records(bibcodes):
+    """Full ADS records for entries that link to ADS instead of arXiv."""
+    if not bibcodes or not ads_token():
+        return {}
+    q = "bibcode:(" + " OR ".join(f'"{b}"' for b in bibcodes) + ")"
+    docs = ads_query(q, "bibcode,title,author,abstract,pubdate,citation_count,doi,identifier,pub")
+    log(f"ADS records for non-arXiv entries: {len(docs)}/{len(bibcodes)}")
+    return {d["bibcode"]: d for d in docs}
+
+
+def fetch_ads_citations(ids):
+    if not ads_token():
         log("ADS: no token in $ADS_TOKEN or ~/.ads/dev_key -> using Semantic Scholar citation counts")
         return {}
-    H = dict(UA, Authorization=f"Bearer {tok}")
     out = {}
-    for i in range(0, len(ids), 40):
-        chunk = ids[i:i + 40]
-        q = "identifier:(" + " OR ".join(f'"arXiv:{a}"' for a in chunk) + ")"
-        r = requests.get("https://api.adsabs.harvard.edu/v1/search/query", headers=H, timeout=60,
-                         params={"q": q, "fl": "bibcode,identifier,citation_count", "rows": 200})
-        if r.status_code != 200:
-            log(f"ADS HTTP {r.status_code}: {r.text[:200]} -> using Semantic Scholar counts")
-            return {}
-        want = set(chunk)
-        for d in r.json()["response"]["docs"]:
-            for ident in d.get("identifier", []):
-                a = ident.split(":", 1)[1] if ident.lower().startswith("arxiv:") else ident
-                if a in want:
-                    c = d.get("citation_count") or 0
-                    if a not in out or c > out[a]["citations"]:
-                        out[a] = {"bibcode": d["bibcode"], "citations": c}
-        time.sleep(1)
-    log(f"ADS: matched {len(out)}/{len(ids)}")
+    try:
+        for i in range(0, len(ids), 40):
+            chunk = ids[i:i + 40]
+            docs = ads_query("identifier:(" + " OR ".join(f'"arXiv:{a}"' for a in chunk) + ")",
+                             "bibcode,identifier,citation_count")
+            want = set(chunk)
+            for d in docs:
+                for ident in d.get("identifier", []):
+                    a = ident.split(":", 1)[1] if ident.lower().startswith("arxiv:") else ident
+                    if a in want:
+                        c = d.get("citation_count") or 0
+                        if a not in out or c > out[a]["citations"]:
+                            out[a] = {"bibcode": d["bibcode"], "citations": c}
+            time.sleep(1)
+    except RuntimeError as err:
+        log(f"{err} -> using Semantic Scholar counts")
+        return {}
+    log(f"ADS citations: matched {len(out)}/{len(ids)}")
     return out
 
 
@@ -203,22 +295,19 @@ def canonical_authors(names):
     return canon
 
 
-def build_data(arx, s2, ads):
-    ids = [i for i in s2["ids"] if i in arx]
-    S = {i: p for i, p in zip(s2["ids"], s2["papers"])}
-    idx = {i: n for n, i in enumerate(ids)}
+def ads_author(a):
+    """'Last, First M.' -> 'First M. Last'"""
+    last, _, first = a.partition(",")
+    return f"{first.strip()} {last.strip()}".strip()
 
-    emb_ids = [i for i in ids if S.get(i) and S[i].get("embedding")]
-    X = np.array([S[i]["embedding"]["vector"] for i in emb_ids])
-    X /= np.linalg.norm(X, axis=1, keepdims=True)
+
+def recluster_topics(X, T, tv, emb):
+    """Fresh k-means clustering. Names are matched to clusters by the probe keywords in TOPICS,
+    so check the printed titles and edit TOPICS (and TOPIC_SEED) if the clusters have changed."""
+    log("re-clustering topics from scratch (--recluster): check that the names still fit!")
     L = KMeans(N_TOPICS, n_init=50, random_state=SEED).fit(X).labels_
-
-    # name clusters: match probe keywords to each cluster's distinctive TF-IDF terms
-    docs = [arx[i]["title"] + " " + arx[i]["abstract"] for i in ids]
-    tv = TfidfVectorizer(stop_words="english", ngram_range=(1, 2), min_df=2, max_df=0.5, sublinear_tf=True)
-    T = tv.fit_transform(docs)
     V = {v: n for n, v in enumerate(tv.get_feature_names_out())}
-    Te = T[[idx[i] for i in emb_ids]]
+    Te = T[emb]
     labs = sorted(set(L))
     score = np.zeros((len(labs), len(TOPICS)))
     for a, lab in enumerate(labs):
@@ -226,9 +315,73 @@ def build_data(arx, s2, ads):
         diff = np.asarray(Te[m].mean(0)).ravel() - np.asarray(Te[~m].mean(0)).ravel()
         for b, (_, probes) in enumerate(TOPICS):
             score[a, b] = sum(diff[V[p]] for p in probes if p in V)
-    r, c = linear_sum_assignment(-score)
-    lab2topic = {labs[a]: int(b) for a, b in zip(r, c)}
-    topic = {i: lab2topic[L[n]] for n, i in enumerate(emb_ids)}
+    r_, c_ = linear_sum_assignment(-score)
+    lab2topic = {labs[a]: int(b) for a, b in zip(r_, c_)}
+    return {n: lab2topic[L[j]] for j, n in enumerate(emb)}
+
+
+def build_data(entries, arx, s2, ads_rec, ads_cit, recluster=False):
+    # ---- one record per entry on the publications page
+    recs = []
+    for e, p in zip(entries, s2):
+        p = p or {}
+        ax, rec = e["arxiv"], ads_rec.get(e["bibcode"] or "")
+        if ax and ax in arx:
+            a = arx[ax]
+            title, abstract, date_, authors = a["title"], a["abstract"], a["published"], a["authors"]
+            link, url = f"arXiv:{ax}", f"https://arxiv.org/abs/{ax}"
+        elif rec:
+            title, abstract = (rec.get("title") or [e["title"]])[0], rec.get("abstract") or ""
+            date_ = rec.get("pubdate", "")[:7].replace("-00", "")
+            authors = e["authors"] or [ads_author(x) for x in rec.get("author", [])]
+            link, url = rec.get("pub") or "ADS", e["url"]
+        else:  # theses and other entries without an arXiv or ADS record
+            title, abstract, authors = e["title"], "", e["authors"]
+            date_ = str(p["year"]) if p.get("year") else ""
+            link, url = e["label"] or "Link", e["url"]
+        if ax in ads_cit:
+            c, cs, bib = ads_cit[ax]["citations"], 0, ads_cit[ax]["bibcode"]
+        elif rec:
+            c, cs, bib = rec.get("citation_count") or 0, 0, rec["bibcode"]
+        elif p.get("citationCount") is not None:
+            c, cs, bib = p["citationCount"], 1, ""
+        else:
+            c, cs, bib = 0, 2, ""  # unknown
+        recs.append({"uid": ax or e["bibcode"] or f"entry-{e['n']}", "title": title, "abstract": abstract,
+                     "date": date_, "authors": authors or ["Unknown"], "link": link, "url": url,
+                     "c": c, "cs": cs, "bib": bib, "venue": p.get("venue") or (rec or {}).get("pub") or "",
+                     "s2": p, "dq": False})
+
+    # ---- entries with no date: estimate from neighbours (the list is newest first)
+    years = [int(r["date"][:4]) if r["date"] else None for r in recs]
+    for n, r in enumerate(recs):
+        if years[n] is None:
+            prev = next((years[j] for j in range(n - 1, -1, -1) if years[j]), None)
+            nxt = next((years[j] for j in range(n + 1, len(recs)) if years[j]), None)
+            known = [y for y in (prev, nxt) if y]
+            r["date"], r["dq"] = str(round(sum(known) / len(known))) if known else "2020", True
+            log(f"date estimated from list position: {r['date']}  {r['title'][:70]}")
+
+    N = len(recs)
+    docs = [r["title"] + " " + r["abstract"] for r in recs]
+    emb = [n for n, r in enumerate(recs) if r["s2"].get("embedding")]
+    X = np.array([recs[n]["s2"]["embedding"]["vector"] for n in emb])
+    X /= np.linalg.norm(X, axis=1, keepdims=True)
+    tv = TfidfVectorizer(stop_words="english", ngram_range=(1, 2), min_df=2, max_df=0.5, sublinear_tf=True)
+    T = tv.fit_transform(docs)
+    if recluster:
+        topic = recluster_topics(X, T, tv, emb)
+    else:
+        # fixed topics: known papers keep their hand-checked topic; new papers join the nearest topic centre
+        seeded = [(j, TOPIC_SEED[recs[n]["uid"]]) for j, n in enumerate(emb) if recs[n]["uid"] in TOPIC_SEED]
+        C = np.array([X[[j for j, k in seeded if k == t]].mean(0) for t in range(N_TOPICS)])
+        C /= np.linalg.norm(C, axis=1, keepdims=True)
+        topic = {}
+        for j, n in enumerate(emb):
+            uid = recs[n]["uid"]
+            topic[n] = TOPIC_SEED[uid] if uid in TOPIC_SEED else int(np.argmax(C @ X[j]))
+            if uid not in TOPIC_SEED:
+                log(f"new paper -> topic '{TOPICS[topic[n]][0]}':  {recs[n]['title'][:60]}")
 
     def tsne(dim):
         Y = TSNE(dim, perplexity=12, metric="cosine", init="pca", random_state=1,
@@ -236,43 +389,57 @@ def build_data(arx, s2, ads):
         Y = Y - Y.mean(0)
         return Y / np.abs(Y).max()
     Y2, Y3 = tsne(2), tsne(3)
-    pos2 = {i: Y2[n] for n, i in enumerate(emb_ids)}
-    pos3 = {i: Y3[n] for n, i in enumerate(emb_ids)}
-    for i in ids:  # papers without an embedding: place by TF-IDF nearest neighbours
-        if i in pos3:
+    pos2 = {n: Y2[j] for j, n in enumerate(emb)}
+    pos3 = {n: Y3[j] for j, n in enumerate(emb)}
+    for n in range(N):  # no embedding: place next to the papers with the most similar title/abstract words
+        if n in pos3:
             continue
-        sims = (T[[idx[j] for j in emb_ids]] @ T[idx[i]].T).toarray().ravel()
+        sims = (T[emb] @ T[n].T).toarray().ravel()
         nn = np.argsort(-sims)[:3]
-        pos2[i] = np.mean([Y2[n] for n in nn], 0) + 0.03
-        pos3[i] = np.mean([Y3[n] for n in nn], 0) + 0.03
-        topic[i] = Counter(topic[emb_ids[n]] for n in nn).most_common(1)[0][0]
-        log(f"no embedding for {i}: placed next to its TF-IDF nearest neighbours")
+        pos2[n] = np.mean([Y2[j] for j in nn], 0) + 0.03
+        pos3[n] = np.mean([Y3[j] for j in nn], 0) + 0.03
+        topic[n] = TOPIC_SEED.get(recs[n]["uid"], Counter(topic[emb[j]] for j in nn).most_common(1)[0][0])
+        log(f"no embedding: placed by word similarity  {recs[n]['title'][:70]}")
 
-    canon = canonical_authors([nm for i in ids for nm in arx[i]["authors"]])
+    # ---- citation links between listed entries (match by Semantic Scholar ID, arXiv ID or DOI)
+    by_pid, by_ax, by_doi = {}, {}, {}
+    for n, r in enumerate(recs):
+        ext = r["s2"].get("externalIds") or {}
+        if r["s2"].get("paperId"):
+            by_pid[r["s2"]["paperId"]] = n
+        if ext.get("ArXiv"):
+            by_ax[ext["ArXiv"]] = n
+        if ext.get("DOI"):
+            by_doi[ext["DOI"].lower()] = n
+    refs = []
+    for n, r in enumerate(recs):
+        out = []
+        for ref in r["s2"].get("references") or []:
+            ext = ref.get("externalIds") or {}
+            j = by_pid.get(ref.get("paperId"))
+            j = j if j is not None else by_ax.get(ext.get("ArXiv"))
+            j = j if j is not None else by_doi.get((ext.get("DOI") or "").lower())
+            if j is not None and j != n and j not in out:
+                out.append(j)
+        refs.append(out)
+
+    canon = canonical_authors([nm for r in recs for nm in r["authors"]])
     authors = sorted(set(canon.values()))
     aidx = {a: n for n, a in enumerate(authors)}
 
     papers = []
-    for i in ids:
-        p = S.get(i) or {}
-        refs = []
-        for ref in p.get("references") or []:
-            x = (ref.get("externalIds") or {}).get("ArXiv")
-            if x in idx and x != i and idx[x] not in refs:
-                refs.append(idx[x])
+    for n, r in enumerate(recs):
         au = []
-        for nm in arx[i]["authors"]:
+        for nm in r["authors"]:
             k = aidx[canon[nm]]
             if k not in au:
                 au.append(k)
         papers.append({
-            "id": i, "t": arx[i]["title"], "ab": arx[i]["abstract"], "d": arx[i]["published"],
-            "y": int(arx[i]["published"][:4]), "au": au,
-            "c": ads[i]["citations"] if i in ads else (p.get("citationCount") or 0), "cs": 0 if i in ads else 1,
-            "bib": ads[i]["bibcode"] if i in ads else "",
-            "v": p.get("venue") or "", "doi": (p.get("externalIds") or {}).get("DOI") or "",
-            "x": round(float(pos2[i][0]), 4), "yy": round(float(pos2[i][1]), 4),
-            "p3": [round(float(v), 4) for v in pos3[i]], "k": topic[i], "r": refs,
+            "id": r["uid"], "t": r["title"], "ab": r["abstract"], "d": r["date"], "dq": int(r["dq"]),
+            "y": int(r["date"][:4]), "au": au, "c": r["c"], "cs": r["cs"], "bib": r["bib"], "v": r["venue"],
+            "lk": r["link"], "url": r["url"],
+            "x": round(float(pos2[n][0]), 4), "yy": round(float(pos2[n][1]), 4),
+            "p3": [round(float(v), 4) for v in pos3[n]], "k": topic[n], "r": refs[n],
         })
 
     log(f"\n{len(papers)} papers, {len(authors)} authors, {sum(len(p['r']) for p in papers)} citation links")
@@ -282,7 +449,7 @@ def build_data(arx, s2, ads):
         for p in mem[:4]:
             log(f"      - {p['t'][:90]}")
     return {"topics": [n for n, _ in TOPICS], "authors": authors, "papers": papers,
-            "fetched": date.today().isoformat(), "nads": len(ads)}
+            "fetched": date.today().isoformat(), "nads": sum(1 for p in papers if p["cs"] == 0)}
 
 
 # ----------------------------------------------------------------------------- main
@@ -291,17 +458,22 @@ def main():
     ap.add_argument("--out", default="camels_atlas.html", help="output HTML file (default: camels_atlas.html)")
     ap.add_argument("--cache", default="atlas_cache", help="folder for downloaded data (default: atlas_cache)")
     ap.add_argument("--offline", action="store_true", help="rebuild from the cached downloads, no network")
+    ap.add_argument("--recluster", action="store_true",
+                    help="redo the k-means topic clustering instead of using the fixed TOPIC_SEED assignments")
     ap.add_argument("--artifact", action="store_true",
                     help="write the page body only (no <html>/<head>), for publishing as a claude.ai artifact")
     args = ap.parse_args()
     os.makedirs(args.cache, exist_ok=True)
 
-    ids = load_or_fetch(args.cache, "ids.json", fetch_arxiv_ids, args.offline)
-    arx = load_or_fetch(args.cache, "arxiv.json", lambda: fetch_arxiv(ids), args.offline)
-    s2 = load_or_fetch(args.cache, "s2.json", lambda: fetch_semantic_scholar(ids), args.offline)
-    ads = load_or_fetch(args.cache, "ads.json", lambda: fetch_ads(ids), args.offline)
+    entries = load_or_fetch(args.cache, "entries.json", fetch_entries, args.offline)
+    ax_ids = [e["arxiv"] for e in entries if e["arxiv"]]
+    bibs = [e["bibcode"] for e in entries if e["bibcode"]]
+    arx = load_or_fetch(args.cache, "arxiv.json", lambda: fetch_arxiv(ax_ids), args.offline)
+    ads_rec = load_or_fetch(args.cache, "ads_records.json", lambda: fetch_ads_records(bibs), args.offline)
+    s2 = load_or_fetch(args.cache, "s2.json", lambda: fetch_semantic_scholar(entries, ads_rec), args.offline)
+    ads_cit = load_or_fetch(args.cache, "ads.json", lambda: fetch_ads_citations(ax_ids), args.offline)
 
-    data = build_data(arx, s2, ads)
+    data = build_data(entries, arx, s2, ads_rec, ads_cit, recluster=args.recluster)
     blob = json.dumps(data, separators=(",", ":"), ensure_ascii=False).replace("</", "<\\/")
     html = TEMPLATE.replace("__DATA__", blob)
     if not args.artifact:  # a complete document that opens directly in a browser or on GitHub Pages
@@ -740,7 +912,7 @@ const tip = $('tip');
 function hideTip() { tip.hidden = true; }
 function showTip(h, mx, my) {
   if (h.kind === 'p') { const p = P[h.i], a = p.au.map(x => AU[x].name);
-    tip.innerHTML = `${esc(p.t)}<small>${esc(TOP[p.k])}</small><small>${p.y} · ${esc(a[0] || '')}${a.length > 1 ? ' et al.' : ''} · ${p.c} citations${S.view === 'citations' ? ` · cited by ${p.citers.length} CAMELS papers` : ''}</small>`; }
+    tip.innerHTML = `${esc(p.t)}<small>${esc(TOP[p.k])}</small><small>${p.y} · ${esc(a[0] || '')}${a.length > 1 ? ' et al.' : ''} · ${p.cs === 2 ? 'citations unknown' : p.c + ' citations'}${S.view === 'citations' ? ` · cited by ${p.citers.length} CAMELS papers` : ''}</small>`; }
   else { const a = AU[h.i]; tip.innerHTML = `${esc(a.name)}<small>${a.papers.length} CAMELS paper${a.papers.length > 1 ? 's' : ''}</small>`; }
   tip.hidden = false; const tw = tip.offsetWidth, th = tip.offsetHeight;
   tip.style.left = Math.min(W - tw - 8, mx + 14) + 'px'; tip.style.top = (my + th + 20 > H ? my - th - 12 : my + 14) + 'px';
@@ -808,13 +980,13 @@ function overview() {
 }
 function paperPanel(i) {
   const p = P[i];
-  const venue = p.v ? `<span>${esc(p.v)}</span>` : '';
+  const venue = p.v && p.v !== p.lk ? `<span>${esc(p.v)}</span>` : '';
   panel.innerHTML = `<button class="ghost back" data-back>← Overview</button>
     <div class="eyebrow">${dot(p.k)}${esc(TOP[p.k])}</div>
     <h2>${esc(p.t)}</h2>
-    <div class="meta"><a href="https://arxiv.org/abs/${p.id}" target="_blank" rel="noopener">arXiv:${p.id}</a><span>${p.d}</span>${venue}${p.bib ? `<a href="https://ui.adsabs.harvard.edu/abs/${encodeURIComponent(p.bib)}/abstract" target="_blank" rel="noopener">${p.c} citations (ADS)</a>` : `<span>${p.c} citations (Semantic Scholar)</span>`}</div>
+    <div class="meta">${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.lk)}</a>` : `<span>${esc(p.lk)}</span>`}<span>${p.dq ? p.y + ' (estimated from list position)' : p.d}</span>${venue}${p.bib ? `<a href="https://ui.adsabs.harvard.edu/abs/${encodeURIComponent(p.bib)}/abstract" target="_blank" rel="noopener">${p.c} citations (ADS)</a>` : `<span>${p.cs === 2 ? 'Citations unknown' : p.c + ' citations (Semantic Scholar)'}</span>`}</div>
     <div><h3>${p.au.length} author${p.au.length > 1 ? 's' : ''}</h3><div class="names">${p.au.map(a => `<button data-a="${a}">${esc(AU[a].name)}</button>`).join('')}</div></div>
-    <div><h3>Abstract</h3><p class="abstract">${esc(p.ab)}</p></div>
+    <div><h3>Abstract</h3>${p.ab ? `<p class="abstract">${esc(p.ab)}</p>` : '<p>No abstract available. Use the link above to read the full text.</p>'}</div>
     <div><h3>Cites ${p.r.length} CAMELS paper${p.r.length === 1 ? '' : 's'}</h3>${p.r.length ? `<ul class="list">${p.r.slice().sort((a, b) => P[b].d.localeCompare(P[a].d)).map(pItem).join('')}</ul>` : '<p>None found.</p>'}</div>
     <div><h3>Cited by ${p.citers.length} CAMELS paper${p.citers.length === 1 ? '' : 's'}</h3>${p.citers.length ? `<ul class="list">${p.citers.slice().sort((a, b) => P[b].d.localeCompare(P[a].d)).map(pItem).join('')}</ul>` : '<p>None yet.</p>'}</div>`;
 }
@@ -876,7 +1048,7 @@ function updateStats() {
   $('stats').innerHTML = `<b>${filtered ? nShown + ' of ' : ''}${P.length}</b> papers · <b>${AU.length}</b> authors · <b>${CE.length}</b> citation links · ${years[0]}–${years[years.length - 1]}`;
 }
 function refresh() { applyFilters(); updateStats(); if (!S.sel) overview(); draw(); }
-$('foot').innerHTML = `Papers listed on the <a href="https://camels.readthedocs.io/en/latest/publications.html" target="_blank" rel="noopener">CAMELS publications page</a> (${P.length} with arXiv IDs). Abstracts and authors from arXiv; ${D.nads ? 'citation counts from NASA ADS (Semantic Scholar where ADS has no record)' : 'citation counts from Semantic Scholar'}; SPECTER2 embeddings and the citation links between papers from Semantic Scholar, fetched ${D.fetched}. Topics are k-means clusters of the embeddings, named by hand.`;
+$('foot').innerHTML = `Papers listed on the <a href="https://camels.readthedocs.io/en/latest/publications.html" target="_blank" rel="noopener">CAMELS publications page</a> (all ${P.length} entries). Abstracts and authors from arXiv, or from ADS and the publications page for entries without an arXiv ID; ${D.nads ? 'citation counts from NASA ADS (Semantic Scholar where ADS has no record)' : 'citation counts from Semantic Scholar'}; SPECTER2 embeddings and the citation links between papers from Semantic Scholar, fetched ${D.fetched}. Topics are k-means clusters of the embeddings, named by hand.`;
 
 // ---------- boot ----------
 renderLegend(); applyFilters(); renderPanel();
