@@ -84,8 +84,9 @@ select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; ba
 .mapopts { position: absolute; left: 10px; top: 10px; z-index: 2; display: flex; flex-direction: column; gap: 4px; }
 .playbtn { padding: 5px 9px; }
 .playbtn[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
-.playyear { position: absolute; right: 64px; bottom: 26px; font-family: var(--f-display); font-size: 56px; font-weight: 700;
-  color: var(--ink); opacity: .16; pointer-events: none; font-variant-numeric: tabular-nums; line-height: 1; }
+.playyear { position: absolute; right: 64px; bottom: 26px; font-family: var(--f-display); font-size: 48px; font-weight: 700; text-align: right;
+  color: var(--ink); opacity: .22; pointer-events: none; font-variant-numeric: tabular-nums; line-height: 1; }
+.playyear small { display: block; font-family: var(--f-body); font-size: 13px; font-weight: 600; margin-top: 6px; }
 .mapopts select { font-size: 12px; padding: 1px 4px; margin-left: 4px; border-radius: 6px; }
 .cbkey { background: color-mix(in srgb, var(--surface) 92%, transparent); border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px;
   font-size: 11.5px; color: var(--ink-2); display: grid; gap: 3px; max-width: 230px; }
@@ -256,7 +257,7 @@ footer { font-size: 12px; color: var(--muted); }
 <div class="toolbar">
   <label class="search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3.5 3.5"/></svg>
     <input id="q" type="search" placeholder="Search  ( / )" aria-label="Search papers, authors, abstracts and tags"><span class="qcount" id="qcount" aria-live="polite"></span></label>
-  <span class="field"><label for="y0">Years</label> <select id="y0"></select> <span aria-hidden="true">–</span> <select id="y1" aria-label="To year"></select> <button class="ghost playbtn" id="play" type="button" title="Play the history: papers appear year by year" aria-label="Play the history year by year">▶ Play</button></span>
+  <span class="field"><label for="y0">Years</label> <select id="y0"></select> <span aria-hidden="true">–</span> <select id="y1" aria-label="To year"></select> <button class="ghost playbtn" id="play" type="button" title="Play the history: papers appear one by one in date order" aria-label="Play the history paper by paper">▶ Play</button></span>
   <span class="field"><label for="f-suite">Suite</label> <select id="f-suite"></select></span>
   <span class="field"><label for="f-data">Data</label> <select id="f-data"></select></span>
   <span class="field"><label for="f-method">Method</label> <select id="f-method"></select></span>
@@ -411,6 +412,7 @@ function colorKey() {
   k.hidden = false;
 }
 
+const PLAY = { on: false, timer: 0, upto: null, flash: null, total: 20000 };   // Play: ~20 s for the whole history
 // ---------- filters ----------
 let pOn = [], aOn = [], nShown = 0;
 function applyFilters() {
@@ -423,7 +425,7 @@ function applyFilters() {
     for (const tk of toks) { const v = tokScore(p, tk); if (!v) return false; s += v; }
     S.score[p.i] = s; return true;
   };
-  pOn = P.map(p => p.y >= S.y0 && p.y <= S.y1 && S.on.has(p.k) && tagOk(p) && (!S.newOnly || p.nw) && qOk(p));
+  pOn = P.map(p => p.y >= S.y0 && p.y <= S.y1 && S.on.has(p.k) && tagOk(p) && (!S.newOnly || p.nw) && qOk(p) && (PLAY.upto === null || p.rank <= PLAY.upto));
   const nameHit = qn ? AU.filter(a => a.norm.includes(qn)) : [];
   aOn = AU.map(a => nameHit.length ? a.norm.includes(qn) : a.papers.some(j => pOn[j]));
   nShown = pOn.filter(Boolean).length;
@@ -691,6 +693,11 @@ function render() {
   const byId = new Map(nodes.map(n => [n.id, n]));
   if (S.sel && (S.sel.kind === 'p') === isP && byId.has(S.sel.i)) ring(byId.get(S.sel.i), 2);
   if (S.hover && (S.hover.kind === 'p') === isP && byId.has(S.hover.i)) ring(byId.get(S.hover.i), 1.25);
+  if (PLAY.flash !== null) {   // newest paper while playing (in the co-author view: its authors)
+    const ids = isP ? [PLAY.flash] : P[PLAY.flash].au;
+    ids.forEach(id => { const n = byId.get(id); if (!n) return;
+      ctx.beginPath(); ctx.arc(sx(n), sy(n), rad(n) + 5, 0, 6.2832); ctx.lineWidth = 2.5; ctx.strokeStyle = C.accent; ctx.stroke(); });
+  }
   // labels
   ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
   const boxes = [];
@@ -1172,32 +1179,42 @@ $('dlmenu').addEventListener('click', e => {
   dlMenu(false);
 });
 
-// ---------- play history: papers appear year by year ----------
-const PLAY = { on: false, timer: 0, saved: null };
-function stopPlay(restore) {
+// ---------- play history: papers appear one by one in date order ----------
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const sortKey = p => p.d.length >= 7 ? p.d.slice(0, 10) : p.d.slice(0, 4) + '-07';   // year-only dates go mid-year
+const playOrder = P.slice().sort((a, b) => sortKey(a).localeCompare(sortKey(b)) || a.i - b.i);
+playOrder.forEach((p, r) => { p.rank = r; });
+function stopPlay() {
   if (!PLAY.on) return;
-  PLAY.on = false; clearTimeout(PLAY.timer);
+  PLAY.on = false; clearTimeout(PLAY.timer); PLAY.upto = null; PLAY.flash = null;
   $('play').setAttribute('aria-pressed', 'false'); $('play').textContent = '▶ Play'; $('playyear').hidden = true;
-  if (restore && PLAY.saved) { [S.y0, S.y1] = PLAY.saved; $('y0').value = S.y0; $('y1').value = S.y1; refresh(); }
+  refresh();
 }
 function startPlay() {
   if (FLAT[S.view]) setView('topics', false);
-  PLAY.on = true; PLAY.saved = [S.y0, S.y1];
+  PLAY.on = true;
   $('play').setAttribute('aria-pressed', 'true'); $('play').textContent = '■ Stop';
-  const ys = years.filter(y => y >= S.y0 && y <= S.y1);
+  // only the papers that pass the current filters take part, in date order
+  PLAY.upto = Infinity; applyFilters();
+  const seq = playOrder.filter(p => pOn[p.i]);
+  PLAY.upto = -1;
+  const dt = Math.max(40, Math.min(250, PLAY.total / Math.max(1, seq.length)));
   let i = 0;
   const step = () => {
     if (!PLAY.on) return;
-    if (i >= ys.length) { PLAY.timer = setTimeout(() => stopPlay(true), 1200); return; }
-    S.y1 = ys[i]; $('y1').value = S.y1; refresh();
-    const py = $('playyear'); py.textContent = ys[i]; py.hidden = false;
-    i++; PLAY.timer = setTimeout(step, 1500);
+    if (i >= seq.length) { PLAY.flash = null; draw(); PLAY.timer = setTimeout(() => stopPlay(), 1500); return; }
+    const p = seq[i];
+    PLAY.upto = p.rank; PLAY.flash = p.i; refresh();
+    const k = sortKey(p), py = $('playyear');
+    py.innerHTML = `${p.d.length >= 7 ? MON[+k.slice(5, 7) - 1] + ' ' : ''}${k.slice(0, 4)}<small>${i + 1} of ${seq.length} papers</small>`;
+    py.hidden = false;
+    i++; PLAY.timer = setTimeout(step, dt);
   };
   step();
 }
-$('play').addEventListener('click', e => { e.stopPropagation(); if (!PLAY.on) track('atlas_play', { view: S.view }); PLAY.on ? stopPlay(true) : startPlay(); });
-cv.addEventListener('pointerdown', () => stopPlay(true));
-['y0', 'y1'].forEach(id => $(id).addEventListener('change', () => stopPlay(false)));
+$('play').addEventListener('click', e => { e.stopPropagation(); if (!PLAY.on) track('atlas_play', { view: S.view }); PLAY.on ? stopPlay() : startPlay(); });
+cv.addEventListener('pointerdown', () => stopPlay());
+['y0', 'y1'].forEach(id => $(id).addEventListener('change', () => stopPlay()));
 
 // ---------- usage events for Google Analytics (public site only; no-op when gtag is absent) ----------
 const track = (name, params) => { try { if (window.gtag) window.gtag('event', name, params || {}); } catch (e) {} };
@@ -1224,7 +1241,7 @@ function stateHash() {
   return '#' + S.view + (s ? '&' + s : '');
 }
 function writeHash(push) {   // push: add a history entry (selections), else replace (filters, view)
-  if (applying) return;
+  if (applying || PLAY.on) return;
   const h = URLSTATE ? stateHash() : '#' + S.view;
   if (location.hash === h) return;
   try { if (push) history.pushState(null, '', h); else history.replaceState(null, '', h); } catch (e) {}

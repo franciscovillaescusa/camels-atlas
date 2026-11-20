@@ -16,7 +16,7 @@ The site has five views. A button switches between them:
 | **Trends** | papers per year | — | stacked bars split by topic, method or suite; click a segment to list those papers |
 
 Colors show 10 topics, found by k-means clustering of the paper embeddings and named by hand.
-**▶ Play** (next to the years) animates the maps year by year from the first paper to today.
+**▶ Play** (next to the years) animates the maps: papers appear one by one in date order (about 20 s in all).
 A *Color by* menu in the map corner switches the dot colours between topic, year, method and suite.
 Each paper's panel lists its 5 most similar papers by embedding similarity, and selecting a paper on
 the topic map highlights them. Search (press `/`) covers titles, authors, IDs, abstracts and tags, ignores accents, tolerates small typos
