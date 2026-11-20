@@ -27,6 +27,10 @@ Usage
   python3 build_camels_atlas.py --artifact      # body-only HTML, for publishing as a claude.ai artifact
   python3 build_camels_atlas.py --recluster     # redo the topic clustering (then check/rename topics)
 
+Safety: before writing anything, the script checks that it found at least 90% as many papers as the
+previous build in --out, that arXiv returned >= 95% of the requested records and that >= 90% of
+entries have embeddings. If not, it stops without touching the page or the cache (--force overrides).
+
 Requirements: Python 3.9+, requests, numpy, scipy, scikit-learn.
 
 Topics: 10 k-means clusters of the SPECTER2 embeddings, named by hand after reading their titles
@@ -249,6 +253,9 @@ def fetch_ads_citations(ids):
     return out
 
 
+PENDING_CACHE = {}  # fresh downloads, written to the cache only after the sanity checks pass
+
+
 def load_or_fetch(cache, name, fn, offline):
     path = os.path.join(cache, name)
     if offline:
@@ -256,8 +263,36 @@ def load_or_fetch(cache, name, fn, offline):
             sys.exit(f"--offline: missing cached file {path}; run once without --offline first")
         return json.load(open(path))
     data = fn()
-    json.dump(data, open(path, "w"))
+    PENDING_CACHE[path] = data
     return data
+
+
+def previous_paper_count(path):
+    """Number of papers in an earlier build of the page at `path` (None if there is none)."""
+    try:
+        h = open(path, encoding="utf-8").read()
+        blob = h.split('id="atlas-data">', 1)[1].split("</script>", 1)[0].replace("<\\/", "</")
+        return len(json.loads(blob)["papers"])
+    except (OSError, IndexError, ValueError, KeyError):
+        return None
+
+
+def sanity_check(entries, arx, s2, prev_n):
+    """Refuse to build a page that looks broken (e.g. the publications page changed its HTML,
+    or an API returned partial results). Returns a list of problems (empty if all is well)."""
+    problems = []
+    n, ax = len(entries), [e["arxiv"] for e in entries if e["arxiv"]]
+    if n == 0:
+        problems.append("no entries found on the publications page (did its HTML structure change?)")
+    elif prev_n and n < 0.9 * prev_n:
+        problems.append(f"only {n} entries found, but the previous build had {prev_n} (more than 10% fewer)")
+    got_ax = sum(1 for a in ax if a in arx)
+    if ax and got_ax < 0.95 * len(ax):
+        problems.append(f"arXiv returned only {got_ax} of {len(ax)} requested records")
+    n_emb = sum(1 for p in s2 if p and p.get("embedding"))
+    if n and n_emb < 0.9 * n:
+        problems.append(f"Semantic Scholar embeddings for only {n_emb} of {n} entries (below 90%)")
+    return problems
 
 
 # ----------------------------------------------------------------------------- analysis
@@ -460,6 +495,8 @@ def main():
     ap.add_argument("--offline", action="store_true", help="rebuild from the cached downloads, no network")
     ap.add_argument("--recluster", action="store_true",
                     help="redo the k-means topic clustering instead of using the fixed TOPIC_SEED assignments")
+    ap.add_argument("--force", action="store_true",
+                    help="build even if the sanity checks fail (e.g. papers were really removed from the list)")
     ap.add_argument("--artifact", action="store_true",
                     help="write the page body only (no <html>/<head>), for publishing as a claude.ai artifact")
     args = ap.parse_args()
@@ -472,6 +509,16 @@ def main():
     ads_rec = load_or_fetch(args.cache, "ads_records.json", lambda: fetch_ads_records(bibs), args.offline)
     s2 = load_or_fetch(args.cache, "s2.json", lambda: fetch_semantic_scholar(entries, ads_rec), args.offline)
     ads_cit = load_or_fetch(args.cache, "ads.json", lambda: fetch_ads_citations(ax_ids), args.offline)
+
+    problems = sanity_check(entries, arx, s2, previous_paper_count(args.out))
+    if problems:
+        msg = "\n  - ".join(["sanity checks failed:"] + problems)
+        if not args.force:
+            sys.exit(f"{msg}\nNothing was written. Rerun with --force if this is expected.")
+        log(f"{msg}\n--force given: building anyway.")
+    for path, d in PENDING_CACHE.items():
+        with open(path, "w") as f:
+            json.dump(d, f)
 
     data = build_data(entries, arx, s2, ads_rec, ads_cit, recluster=args.recluster)
     blob = json.dumps(data, separators=(",", ":"), ensure_ascii=False).replace("</", "<\\/")

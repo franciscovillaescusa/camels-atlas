@@ -34,6 +34,11 @@ python build_camels_atlas.py --out index.html      # fetch fresh data and rebuil
 python build_camels_atlas.py --offline --out index.html   # rebuild from ./atlas_cache, no network
 ```
 
+Before writing anything, the script checks that it found at least 90% as many papers as the current
+`index.html`, that arXiv returned at least 95% of the requested records and that at least 90% of the
+entries have embeddings. If a check fails it stops without changing the page or the cache, so a broken
+fetch is never published; use `--force` when a drop is real.
+
 For ADS citation counts, put your [ADS API token](https://ui.adsabs.harvard.edu/user/settings/token)
 in `~/.ads/dev_key` or the `ADS_TOKEN` environment variable.
 
