@@ -134,6 +134,14 @@ recomputed, hand-checked topics and overrides are kept, the page matches the pro
 allowed vocabulary, and every stored layout is complete. `--online` also compares with the live publications
 page and live ADS counts. The update job runs it before publishing.
 
+### Unit tests
+
+`python -m pytest -q` (after `pip install pytest`) runs the unit tests in `tests/`: author-name merging,
+overrides (including `id`), the sanity and citation-collapse checks, ADS retries, problem entries, link
+cleaning, the config checks, and the page's LaTeX converter and link check (run in Node on the real
+`atlas.js`). They take under a second and run first in the update job, so a failing test stops it before
+anything is built.
+
 ### Checking the page
 
 `python check_atlas.py --project <name>` opens the built site in a headless browser, goes through all five

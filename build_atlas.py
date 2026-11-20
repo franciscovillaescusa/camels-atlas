@@ -456,6 +456,7 @@ def canonical_authors(names):
 def first_sentence(text):
     """First sentence of an abstract (markup removed), used where only an excerpt may be published."""
     text = " ".join(re.sub(r"<[^>]+>", " ", html_mod.unescape(text or "")).split())
+    text = re.sub(r" ([.,;:?!)])", r"\1", text)   # markup removed right before punctuation left a space
     m = re.search(r"^(.{40,}?[.?!])\s+[A-Z(]", text)
     return m.group(1) if m else text[:300]
 

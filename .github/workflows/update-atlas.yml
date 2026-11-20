@@ -30,8 +30,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt playwright==1.48.0
+          pip install -r requirements.txt playwright==1.48.0 pytest==8.3.3
           python -m playwright install --with-deps chromium
+
+      - name: Unit tests (nothing is built or published if they fail)
+        run: python -m pytest -q
 
       - name: Build, validate and check every project
         env:

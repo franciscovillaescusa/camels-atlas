@@ -56,5 +56,6 @@ or run step 3 for every project.
   `topic_seed`; `--recluster` would redo them and needs topic names reviewed.
 - Layout positions are stored in `projects/<name>/positions.json` so the maps stay stable; commit it with the site.
 - The ADS token is read from `~/.ads/dev_key` locally and from the `ADS_TOKEN` secret in GitHub.
-- Changes to `atlas.js`, `atlas.html`, `atlas.css` or `build_atlas.py` affect every project: rebuild and check
-  all of them (`for p in $(ls projects); do ...; done`).
+- Changes to `atlas.js`, `atlas.html`, `atlas.css` or `build_atlas.py` affect every project: run the unit tests
+  (`python3 -m pytest -q`), then rebuild and check all projects (`for p in $(ls projects); do ...; done`).
+  When you fix a bug, add a test in `tests/` that fails without the fix.
