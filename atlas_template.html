@@ -306,9 +306,21 @@ function topicLabels(nodes, keys) {
     return l;
   }).filter(Boolean);
 }
+// turn a 2D layout so its long (principal) axis runs along the canvas's long side; display only
+function alignWide(nodes) {
+  const n = nodes.length; if (n < 3) return nodes;
+  const mx = nodes.reduce((s, v) => s + v.x, 0) / n, my = nodes.reduce((s, v) => s + v.y, 0) / n;
+  let sxx = 0, syy = 0, sxy = 0;
+  nodes.forEach(v => { const dx = v.x - mx, dy = v.y - my; sxx += dx * dx; syy += dy * dy; sxy += dx * dy; });
+  const th = 0.5 * Math.atan2(2 * sxy, sxx - syy) - (H > W * 1.1 ? Math.PI / 2 : 0);
+  const c = Math.cos(-th), s = Math.sin(-th);
+  nodes.forEach(v => { const dx = v.x - mx, dy = v.y - my; v.x = dx * c - dy * s; v.y = dx * s + dy * c; });
+  return nodes;
+}
 function topicLayout() {
   if (S.dim === 2) {
     const nodes = P.map(p => ({ id: p.i, kind: 'p', x: p.x * 420, y: -p.yy * 420, r: Math.min(16, 3 + Math.sqrt(p.c) * 0.9) }));
+    alignWide(nodes);
     return { nodes, links: [], labels: topicLabels(nodes, ['x', 'y']), is3d: false, glow: true };
   }
   const nodes = P.map(p => ({ id: p.i, kind: 'p', x3: p.p3[0] * 420, y3: -p.p3[1] * 420, z3: p.p3[2] * 420, r: Math.min(16, 3 + Math.sqrt(p.c) * 0.9) }));
@@ -322,6 +334,7 @@ function citationLayout() {
   const nodes = P.map(p => ({ id: p.i, kind: 'p', r: 3 + Math.sqrt(citeCount(p)) * 2.2,
     ...(d2 ? { x: p.c2[0], y: p.c2[1] } : { x3: p.c3[0], y3: p.c3[1], z3: p.c3[2] }) }));
   const links = CE.map(e => ({ source: nodes[e.s], target: nodes[e.t], s: e.s, t: e.t, w: 0.45, self: e.self }));
+  if (d2) alignWide(nodes);
   return d2 ? { nodes, links, labels: [], is3d: false } : { nodes, links, labels: [], R: centre3d(nodes), is3d: true };
 }
 function coauthorLayout(min2) {
@@ -332,6 +345,7 @@ function coauthorLayout(min2) {
   const links = [...EM.values()].filter(e => byId.has(e.s) && byId.has(e.t)).map(e => ({
     source: byId.get(e.s), target: byId.get(e.t), s: e.s, t: e.t, papers: e.papers,
     w: e.papers.reduce((s, j) => s + 1 / (P[j].au.length - 1), 0) }));  // Newman collaboration strength
+  if (d2) alignWide(nodes);
   return d2 ? { nodes, links, labels: [], is3d: false } : { nodes, links, labels: [], R: centre3d(nodes), is3d: true };
 }
 // camera for the 3D view
@@ -417,16 +431,17 @@ function resize() {
   const r = stage.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
   W = r.width; H = r.height; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); draw();
 }
-function fit(animate) {
+function fit(animate, all) {   // all: frame every dot (fit button); otherwise the central 98%
   if (S.view === 'table') return;
   const lay = layout(), { nodes } = lay; if (!nodes.length || !W) return;
   const reduce0 = matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (lay.is3d) {
-    animateTo(Math.min(W - 40, H - 40) / (2 * lay.R * 1.15), W / 2, H / 2, animate && !reduce0 ? 450 : 0); return;
+    animateTo(Math.min(W - 40, H - 40) / (2 * lay.R * (all ? 1.6 : 1.15)), W / 2, H / 2, animate && !reduce0 ? 450 : 0); return;
   }
-  const xs = nodes.map(n => n.x), ys = nodes.map(n => n.y);
-  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
-  const k = Math.min((W - 60) / (x1 - x0 || 1), (H - 60) / (y1 - y0 || 1));
+  const q = (a, f) => { const s = a.slice().sort((u, v) => u - v); return s[Math.min(s.length - 1, Math.max(0, Math.round(f * (s.length - 1))))]; };
+  const xs = nodes.map(n => n.x), ys = nodes.map(n => n.y), lo = all ? 0 : 0.01, hi = all ? 1 : 0.99;
+  const x0 = q(xs, lo), x1 = q(xs, hi), y0 = q(ys, lo), y1 = q(ys, hi);
+  const k = Math.min((W - 180) / (x1 - x0 || 1), (H - 90) / (y1 - y0 || 1));   // margins leave room for labels
   animateTo(k, W / 2 - k * (x0 + x1) / 2, H / 2 - k * (y0 + y1) / 2, animate && !reduce0 ? 450 : 0);
 }
 const draw = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; render(); }); };
@@ -785,7 +800,7 @@ $('reset').addEventListener('click', () => { S.q = ''; $('q').value = ''; S.y0 =
 });
 $('zin').addEventListener('click', () => { userMoved = true; zoomAt(1.5, W / 2, H / 2, 200); });
 $('zout').addEventListener('click', () => { userMoved = true; zoomAt(1 / 1.5, W / 2, H / 2, 200); });
-$('zfit').addEventListener('click', () => { userMoved = false; fit(true); });
+$('zfit').addEventListener('click', () => { userMoved = false; fit(true, true); });
 const spinBtn = () => { const b = $('zspin'); b.textContent = CAM.spin ? '⏸' : '⟳'; b.setAttribute('aria-label', CAM.spin ? 'Pause rotation' : 'Start rotation'); b.setAttribute('aria-pressed', CAM.spin); };
 $('zspin').addEventListener('click', () => { CAM.spin = !CAM.spin; spinBtn(); });
 function updateStats() {
