@@ -18,7 +18,7 @@ Pipeline
   publications page; if no date is known, the year is estimated from the entry's position
   in the list (which is newest first) and marked as estimated on the page.
   5. Analysis            k-means topics (10, hand-named), 3D t-SNE, author-name merging
-  6. Output              one self-contained HTML file (loads d3 from cdnjs and Google Fonts)
+  6. Output              one self-contained HTML file (only Google Fonts is loaded from outside)
 
 Usage
   python3 build_camels_atlas.py                 # fetch everything fresh, write camels_atlas.html
@@ -1086,7 +1086,6 @@ footer { font-size: 12px; color: var(--muted); }
 <footer id="foot"></footer>
 
 <script type="application/json" id="atlas-data">__DATA__</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script>
 (() => {
 const D = JSON.parse(document.getElementById('atlas-data').textContent);
@@ -1206,10 +1205,49 @@ const layout = () => {
 
 // ---------- canvas ----------
 const cv = $('cv'), ctx = cv.getContext('2d'), stage = $('stage');
-let W = 0, H = 0, T = d3.zoomIdentity, raf = 0;
-const zoom = d3.zoom().scaleExtent([0.2, 14])
-  .filter(e => (e.type === 'wheel' || (e.touches && e.touches.length > 1)) && (!e.ctrlKey || e.type === 'wheel') && !e.button).on('zoom', e => { T = e.transform; hideTip(); draw(); });
-d3.select(cv).call(zoom).on('dblclick.zoom', null);
+let W = 0, H = 0, raf = 0;
+// ---------- zoom & pan (own small implementation: screen = (x, y) + k * world) ----------
+const T = { k: 1, x: 0, y: 0, applyX(v) { return this.x + this.k * v; }, applyY(v) { return this.y + this.k * v; } };
+const ZMIN = 0.05, ZMAX = 40;
+let zAnim = 0, zTarget = null;   // zTarget: where a running zoom animation will end
+function setView2(k, x, y) { T.k = k; T.x = x; T.y = y; hideTip(); draw(); }
+function animateTo(k, x, y, ms) {
+  cancelAnimationFrame(zAnim);
+  zTarget = null;
+  if (!ms || matchMedia('(prefers-reduced-motion: reduce)').matches) return setView2(k, x, y);
+  zTarget = { k, x, y };
+  const k0 = T.k, x0 = T.x, y0 = T.y, t0 = performance.now();
+  const step = now => {
+    const u = Math.min(1, (now - t0) / ms), e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+    setView2(k0 + (k - k0) * e, x0 + (x - x0) * e, y0 + (y - y0) * e);
+    if (u < 1) zAnim = requestAnimationFrame(step); else zTarget = null;
+  };
+  zAnim = requestAnimationFrame(step);
+}
+function zoomAt(f, px, py, ms) {   // zoom by factor f keeping screen point (px, py) fixed
+  const b = zTarget || T;            // build on an unfinished animation's end point, so quick clicks add up
+  const k = Math.max(ZMIN, Math.min(ZMAX, b.k * f)), r = k / b.k;
+  animateTo(k, px - (px - b.x) * r, py - (py - b.y) * r, ms);
+}
+cv.addEventListener('wheel', e => {
+  e.preventDefault();
+  const r = cv.getBoundingClientRect();
+  zoomAt(Math.pow(2, -e.deltaY * (e.deltaMode ? 0.05 : 0.002)), e.clientX - r.left, e.clientY - r.top);
+}, { passive: false });
+const pointers = new Map();   // two-finger pinch zoom
+let pinch = null;
+cv.addEventListener('pointerdown', e => { pointers.set(e.pointerId, [e.clientX, e.clientY]); if (pointers.size === 2) pinch = null; });
+cv.addEventListener('pointermove', e => {
+  if (!pointers.has(e.pointerId)) return;
+  pointers.set(e.pointerId, [e.clientX, e.clientY]);
+  if (pointers.size !== 2) return;
+  const [a, b] = [...pointers.values()], r = cv.getBoundingClientRect();
+  const d = Math.hypot(a[0] - b[0], a[1] - b[1]), mx = (a[0] + b[0]) / 2 - r.left, my = (a[1] + b[1]) / 2 - r.top;
+  if (pinch) zoomAt(d / pinch.d, mx, my);
+  pinch = { d };
+});
+const dropPointer = e => { pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null; };
+cv.addEventListener('pointerup', dropPointer); cv.addEventListener('pointercancel', dropPointer);
 function resize() {
   const r = stage.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
   W = r.width; H = r.height; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); draw();
@@ -1219,15 +1257,12 @@ function fit(animate) {
   const lay = layout(), { nodes } = lay; if (!nodes.length || !W) return;
   const reduce0 = matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (lay.is3d) {
-    const t = d3.zoomIdentity.translate(W / 2, H / 2).scale(Math.min(W - 40, H - 40) / (2 * lay.R * 1.15));
-    (animate && !reduce0 ? d3.select(cv).transition().duration(450) : d3.select(cv)).call(zoom.transform, t); return;
+    animateTo(Math.min(W - 40, H - 40) / (2 * lay.R * 1.15), W / 2, H / 2, animate && !reduce0 ? 450 : 0); return;
   }
   const xs = nodes.map(n => n.x), ys = nodes.map(n => n.y);
   const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
   const k = Math.min((W - 60) / (x1 - x0 || 1), (H - 60) / (y1 - y0 || 1));
-  const t = d3.zoomIdentity.translate(W / 2, H / 2).scale(k).translate(-(x0 + x1) / 2, -(y0 + y1) / 2);
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  (animate && !reduce ? d3.select(cv).transition().duration(450) : d3.select(cv)).call(zoom.transform, t);
+  animateTo(k, W / 2 - k * (x0 + x1) / 2, H / 2 - k * (y0 + y1) / 2, animate && !reduce0 ? 450 : 0);
 }
 const draw = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; render(); }); };
 
@@ -1352,7 +1387,7 @@ cv.addEventListener('pointermove', e => {
   S.hover = h; cv.classList.toggle('hovering', !!h); if (h) showTip(h, mx, my); else hideTip(); if (!same) draw();
 });
 cv.addEventListener('pointerleave', () => { S.hover = null; hideTip(); draw(); });
-// 3D view: drag rotates (d3.zoom keeps wheel/pinch zoom), arrow keys rotate, gentle auto-spin
+// 3D view: drag rotates (wheel/pinch zoom above), arrow keys rotate, gentle auto-spin
 let rot = null, dragged = false;
 cv.addEventListener('pointerdown', e => {
   dragged = false; if (e.button) return;
@@ -1360,6 +1395,7 @@ cv.addEventListener('pointerdown', e => {
 });
 cv.addEventListener('pointermove', e => {
   if (!rot || !e.buttons) return;
+  if (pointers.size > 1) { rot.x = e.clientX; rot.y = e.clientY; dragged = true; return; }
   CAM.yaw += (e.clientX - rot.x) * 0.008; CAM.pitch = Math.max(-1.45, Math.min(1.45, CAM.pitch + (e.clientY - rot.y) * 0.008));
   rot.x = e.clientX; rot.y = e.clientY; if (Math.hypot(e.clientX - rot.x0, e.clientY - rot.y0) > 4) dragged = true;
   hideTip(); draw();
@@ -1542,8 +1578,8 @@ $('reset').addEventListener('click', () => { S.q = ''; $('q').value = ''; S.y0 =
     .map(t => `<option value="${esc(t)}">${esc(t)} (${n(t)})</option>`).join('');
   sel.addEventListener('change', () => { S.tag[ax] = sel.value; refresh(); });
 });
-$('zin').addEventListener('click', () => d3.select(cv).transition().duration(200).call(zoom.scaleBy, 1.5));
-$('zout').addEventListener('click', () => d3.select(cv).transition().duration(200).call(zoom.scaleBy, 1 / 1.5));
+$('zin').addEventListener('click', () => zoomAt(1.5, W / 2, H / 2, 200));
+$('zout').addEventListener('click', () => zoomAt(1 / 1.5, W / 2, H / 2, 200));
 $('zfit').addEventListener('click', () => fit(true));
 const spinBtn = () => { const b = $('zspin'); b.textContent = CAM.spin ? '⏸' : '⟳'; b.setAttribute('aria-label', CAM.spin ? 'Pause rotation' : 'Start rotation'); b.setAttribute('aria-pressed', CAM.spin); };
 $('zspin').addEventListener('click', () => { CAM.spin = !CAM.spin; spinBtn(); });
