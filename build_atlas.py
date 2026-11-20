@@ -62,6 +62,7 @@ import sys
 import time
 import unicodedata
 import urllib.parse
+import warnings
 import xml.etree.ElementTree as ET
 from collections import Counter, defaultdict
 from datetime import date
@@ -668,7 +669,8 @@ def force3d(pos, s, t, length, k, r, charge, gravity, fixed, iters=300):
         np.fill_diagonal(d2, np.inf)
         f = charge * alpha / d2
         dd = np.sqrt(d2)
-        f = f + np.where(dd < rr, (rr - dd) / dd * 0.35, 0.0)  # collision
+        # collision; divide only where it applies (dd is inf on the diagonal, which gave inf/inf warnings)
+        f = f + np.divide(rr - dd, dd, out=np.zeros_like(dd), where=dd < rr) * 0.35
         vel -= (diff * f[..., None]).sum(1)
         vel -= pos * gravity * alpha
         vel *= 0.6
@@ -747,6 +749,8 @@ def similarity(X, T, emb, N):
     sim, kind = W.copy(), np.full((N, N), "w")
     row = np.array(emb)
     E = X @ X.T
+    if not np.isfinite(E).all():   # a real overflow (see the matmul warning filter in main)
+        raise FloatingPointError("embedding similarities are not finite")
     sim[np.ix_(row, row)] = E
     kind[np.ix_(row, row)] = "e"
     np.fill_diagonal(sim, -np.inf)
@@ -1187,6 +1191,11 @@ def main():
     ap.add_argument("--force", action="store_true",
                     help="build even if the sanity checks fail (e.g. papers were really removed from the list)")
     args = ap.parse_args()
+    # numpy 2.0 with Apple's Accelerate BLAS (macOS) raises false "... encountered in matmul" warnings: the
+    # products are correct (checked against einsum: same to 2e-15; Linux builds give identical pages and show
+    # no such warning). similarity() still stops the build if a product is really not finite.
+    warnings.filterwarnings("ignore", message=r"(divide by zero|overflow|invalid value) encountered in matmul",
+                            category=RuntimeWarning)
     pdir = os.path.join("projects", args.project)
     if not os.path.exists(os.path.join(pdir, "config.json")):
         sys.exit(f"no project {args.project!r}: {pdir}/config.json not found")
@@ -1278,8 +1287,12 @@ def main():
             + head.strip() + '\n<style>body{margin:0}</style>\n</head>\n<body>\n<header>' + body + '\n</body>\n</html>\n')
     with open(args.positions, "w") as f:
         json.dump(new_store, f, separators=(",", ":"), sort_keys=True)
-    make_preview(data, template, os.path.join(os.path.dirname(os.path.abspath(args.out)), "preview.png"), proj)
+    # the preview image is redrawn only when the page changes (or is missing): fonts render slightly differently
+    # on macOS and Linux, so redrawing it on every build made local builds differ from the update job's
+    preview = os.path.join(os.path.dirname(os.path.abspath(args.out)), "preview.png")
     old = open(args.out, encoding="utf-8").read() if os.path.exists(args.out) else None
+    if old != html or not os.path.exists(preview):
+        make_preview(data, template, preview, proj)
     if old == html:
         log(f"\nno changes: {args.out} left as it was (data as of {data['fetched']}).")
         return
