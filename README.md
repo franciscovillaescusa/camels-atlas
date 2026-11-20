@@ -5,7 +5,7 @@ An interactive 3D map of the papers that use data from the
 
 **Live site:** https://franciscovillaescusa.github.io/camels-atlas/
 
-The site has four views. A button switches between them:
+The site has five views. A button switches between them:
 
 | View | Each dot is | Lines | Dot size |
 |---|---|---|---|
@@ -13,6 +13,7 @@ The site has four views. A button switches between them:
 | **Citations** | a paper | one CAMELS paper cites another | citations from other CAMELS papers (a toggle hides self-citations, i.e. links between papers sharing an author: 68% of all links) |
 | **Co-authors** | an author | the two authors share a paper; darker lines mean closer collaboration | number of CAMELS papers |
 | **Table** | a paper (one row) | — | sortable columns: title, first author, year, topic, methods, citations, citations within CAMELS; keyboard accessible |
+| **Trends** | papers per year | — | stacked bars split by topic, method or suite; click a segment to list those papers |
 
 Colors show 10 topics, found by k-means clustering of the paper embeddings and named by hand.
 Each paper's panel lists its 5 most similar papers by embedding similarity, and selecting a paper on

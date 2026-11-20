@@ -85,6 +85,22 @@ select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; ba
 .mapopts { position: absolute; left: 10px; top: 10px; z-index: 2; display: flex; flex-direction: column; gap: 4px; }
 .mapopts .chk { background: color-mix(in srgb, var(--surface) 88%, transparent); border: 1px solid var(--line); border-radius: 8px; padding: 4px 9px; font-size: 12.5px; }
 .tablewrap { position: absolute; inset: 0; overflow: auto; }
+.trendswrap { position: absolute; inset: 0; overflow: auto; padding: 16px 20px; }
+.trhead { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 8px; }
+.trhead .dimtoggle { background: var(--surface); border: 1px solid var(--line); border-radius: 9px; }
+.trhead .dimtoggle button { border: 0; background: transparent; color: var(--ink-2); cursor: pointer; font: inherit; font-size: 12px; font-weight: 600; }
+.trhead .dimtoggle button:not([aria-pressed="true"]):hover { background: var(--wash); color: var(--ink); }
+.trhead h3 { margin: 0; font-family: var(--f-display); font-size: 16px; }
+.trendswrap .tgrid { stroke: var(--line); stroke-width: 1; }
+.trendswrap .tax { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.trendswrap .ttot { fill: var(--ink-2); font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.trendswrap .tseg { cursor: pointer; stroke: var(--surface); stroke-width: 1; }
+.trendswrap .tseg:hover { opacity: .8; }
+.tlegend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 6px; font-size: 12px; color: var(--ink-2); }
+.tleg { display: inline-flex; align-items: center; gap: 6px; }
+.tleg i { width: 10px; height: 10px; border-radius: 3px; }
+.tleg .n { color: var(--muted); font-variant-numeric: tabular-nums; }
+.tnote { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
 .ptable { width: 100%; border-collapse: collapse; font-size: 13px; }
 .ptable caption { text-align: left; padding: 10px 12px; color: var(--muted); font-size: 12px; }
 .ptable th { position: sticky; top: 0; background: var(--surface); text-align: left; font-weight: 600; font-size: 12px;
@@ -219,6 +235,9 @@ footer { font-size: 12px; color: var(--muted); }
     <button id="m-table" data-view="table" aria-pressed="false">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="2.5" width="12" height="11" rx="1.5"/><path d="M2 6h12M2 9.5h12M6.5 6v7.5"/></svg>
       <span>Table</span></button>
+    <button id="m-trends" data-view="trends" aria-pressed="false">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2.5 13.5h11M4.5 13.5V9M8 13.5V5.5M11.5 13.5V7.5"/></svg>
+      <span>Trends</span></button>
   </div>
 </header>
 
@@ -245,6 +264,7 @@ footer { font-size: 12px; color: var(--muted); }
     <div class="stage-note" id="note"></div>
     <div class="tip" id="tip" hidden></div>
     <div class="tablewrap" id="tablewrap" hidden></div>
+    <div class="trendswrap" id="trendswrap" hidden></div>
     <div class="tapcard" id="tapcard" hidden><span class="tt" id="tapcard-t"></span><button class="ghost" id="tapcard-go">Details ↓</button><button class="ghost" id="tapcard-x" aria-label="Close">×</button></div>
   </div>
   <aside id="panel" aria-live="polite"></aside>
@@ -464,7 +484,7 @@ function resize() {
   W = r.width; H = r.height; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); draw();
 }
 function fit(animate, all) {   // all: frame every dot (fit button); otherwise the central 98%
-  if (S.view === 'table') return;
+  if (FLAT[S.view]) return;
   const done = k => { fitK = k; return k; };
   const lay = layout(), { nodes } = lay; if (!nodes.length || !W) return;
   const reduce0 = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -490,8 +510,9 @@ function focusSets() {
     if (S.view === 'coauthors') AU[f.i].papers.forEach(j => P[j].au.forEach(a => authors.add(a))); }
   return { f, papers, authors };
 }
+const FLAT = { table: 1, trends: 1 };   // views without the map canvas
 function render() {
-  if (S.view === 'table') return;
+  if (FLAT[S.view]) return;
   readColors();
   const lay = layout(), { nodes, links, labels } = lay;
   if (lay.is3d) project(lay);
@@ -647,7 +668,7 @@ let lastUse = performance.now(), onScreen = true;
 cv.addEventListener('pointermove', () => { lastUse = performance.now(); }, { passive: true });
 if ('IntersectionObserver' in window) new IntersectionObserver(es => { onScreen = es[0].isIntersecting; }).observe(stage);
 (function spin() {
-  if (CAM.spin && !rot && !S.hover && !document.hidden && S.view !== 'table' && S.dim === 3 && onScreen && performance.now() - lastUse < IDLE_MS) { CAM.yaw += 0.0025; render(); }
+  if (CAM.spin && !rot && !S.hover && !document.hidden && !FLAT[S.view] && S.dim === 3 && onScreen && performance.now() - lastUse < IDLE_MS) { CAM.yaw += 0.0025; render(); }
   requestAnimationFrame(spin);
 })();
 cv.addEventListener('click', e => { if (dragged) { dragged = false; return; } const r = cv.getBoundingClientRect(); select(pick(e.clientX - r.left, e.clientY - r.top)); });
@@ -659,18 +680,20 @@ const pItem = (j, sh) => `<li><button data-p="${j}">${dot(P[j].k)}<span class="t
 const VIEWINFO = {
   topics: ['Each dot is a paper, laid out in 3D. Papers with similar abstracts sit close together. Nearer papers look larger and brighter.', (D.nads ? 'Total citations (NASA ADS), on a log scale' : 'Total citations (Semantic Scholar), on a log scale'), 'Topic cluster'],
   citations: ['Each dot is a paper, laid out in 3D. A line means one CAMELS paper cites another. Select a paper to see arrows pointing to the work it cites. Nearer papers look larger and brighter.', 'Citations from other CAMELS papers, on a log scale', 'Topic cluster'],
+  trends: ['Papers per year, split by topic, method or suite. Hover a bar segment for its count; click it to list those papers in the table. The search box and filters apply here too.', 'Bar height: number of papers (a paper with several methods or suites counts once in each)', 'Topic, method or suite: see the chart legend'],
   table: ['Every paper as a row of a table. Click a column header to sort; click a row (or select it with Tab and press Enter) to see its details. The search box and filters apply here too.', 'Not used', 'Topic shown by the colored dot'],
   coauthors: ['Each dot is an author, laid out in 3D. A line joins people who wrote a CAMELS paper together. Darker lines mean a closer collaboration: each shared paper counts more when it has fewer authors, so links from 40-author papers stay faint. Nearer authors look larger and brighter.', 'Number of CAMELS papers, on a log scale', 'Author’s most frequent topic'],
 };
 const USE_TXT = 'Drag to rotate (or use the arrow keys), scroll or pinch to zoom. Rotation pauses while you hover. Click a dot for details; your selection stays highlighted when you switch views.';
 const USE2 = 'Drag to pan (or use the arrow keys), scroll or pinch to zoom. Click a dot for details; your selection stays highlighted when you switch views.';
-const USE = { topics: USE_TXT, citations: USE_TXT, coauthors: USE_TXT };
+const USE_TR = 'Hover a segment for its count; click it to see those papers in the table.';
+const USE = { topics: USE_TXT, citations: USE_TXT, coauthors: USE_TXT, trends: USE_TR };
 function overview() {
   let [what, size, color] = VIEWINFO[S.view];
   if (S.dim === 2) what = what.replace(', laid out in 3D', '').replace(/ Nearer (papers|authors) look larger and brighter\./, '');
   if (S.view === 'citations' && !S.selfc) size += ', not counting papers that share an author (self-citations hidden)';
   let list = '';
-  if (S.view === 'table') {
+  if (FLAT[S.view]) {
     panel.innerHTML = `<div><h3>How to read this view</h3><p>${what}</p></div><p>${nShown} of ${P.length} papers shown.</p>`;
     return;
   }
@@ -689,7 +712,7 @@ function overview() {
   }
   panel.innerHTML = `<div><h3>How to read this view</h3><p>${what}</p></div>
     <div class="how"><div><b>Size</b><span>${size}</span></div><div><b>Color</b><span>${color}</span></div>
-    <div><b>Use</b><span>${S.dim === 2 && S.view !== 'table' ? USE2 : USE[S.view]}</span></div></div>${list}`;
+    <div><b>Use</b><span>${S.dim === 2 && !FLAT[S.view] ? USE2 : USE[S.view]}</span></div></div>${list}`;
 }
 function tagBlock(p) {
   if (!p.tg) return '<div><h3>Tags</h3><p>Not tagged yet.</p></div>';
@@ -746,7 +769,7 @@ function select(s) { S.sel = s; renderPanel(); draw(); if (S.view === 'table') m
 const narrow = () => matchMedia('(max-width: 880px)').matches;
 function tapCard() {
   const c = $('tapcard');
-  if (!S.sel || !narrow() || S.view === 'table') { c.hidden = true; return; }
+  if (!S.sel || !narrow() || FLAT[S.view]) { c.hidden = true; return; }
   $('tapcard-t').textContent = S.sel.kind === 'p' ? P[S.sel.i].t : AU[S.sel.i].name + ' · ' + AU[S.sel.i].papers.length + ' papers';
   c.hidden = false;
 }
@@ -795,11 +818,13 @@ $('tablewrap').addEventListener('keydown', e => {
 
 // ---------- controls ----------
 function setView(v, animate) {
-  S.view = v; CAM.snap = true; ['topics', 'citations', 'coauthors', 'table'].forEach(x => $('m-' + x).setAttribute('aria-pressed', x === v));
+  S.view = v; CAM.snap = true; ['topics', 'citations', 'coauthors', 'table', 'trends'].forEach(x => $('m-' + x).setAttribute('aria-pressed', x === v));
   $('selfwrap').hidden = v !== 'citations'; $('zspin').hidden = S.dim === 2; spinBtn();
-  const tbl = v === 'table';
-  cv.hidden = tbl; $('note').hidden = tbl; document.querySelector('.zoom').hidden = tbl; $('tablewrap').hidden = !tbl;
-  if (tbl) renderTable();
+  const flat = !!FLAT[v];
+  cv.hidden = flat; $('note').hidden = flat; document.querySelector('.zoom').hidden = flat;
+  $('tablewrap').hidden = v !== 'table'; $('trendswrap').hidden = v !== 'trends';
+  if (v === 'table') renderTable();
+  if (v === 'trends') renderTrends();
   cv.tabIndex = 0;
   $('note').textContent = noteText(v);
   writeHash(false);
@@ -857,7 +882,7 @@ function updateStats() {
   const filtered = nShown < P.length;
   $('stats').innerHTML = `<b>${filtered ? nShown + ' of ' : ''}${P.length}</b> papers · <b>${AU.length}</b> authors · <b>${CE.length}</b> citation links · ${years[0]}–${years[years.length - 1]}`;
 }
-function refresh() { applyFilters(); updateStats(); if (!S.sel) overview(); if (S.view === 'table') renderTable(); draw(); writeHash(false); }
+function refresh() { applyFilters(); updateStats(); if (!S.sel) overview(); if (S.view === 'table') renderTable(); if (S.view === 'trends') renderTrends(); draw(); writeHash(false); }
 const nSelf = CE.filter(e => e.self).length;
 $('foot').innerHTML = `Data as of ${D.fetched} · ${P.length} papers · <button class="linkbtn" id="aboutbtn" type="button">About &amp; data sources</button> · <a href="https://github.com/franciscovillaescusa/camels-atlas" target="_blank" rel="noopener">Source on GitHub</a>`;
 $('about-body').innerHTML = `
@@ -884,6 +909,71 @@ const about = $('about');
 $('aboutbtn').addEventListener('click', () => { if (about.showModal) about.showModal(); else about.setAttribute('open', ''); });
 $('about-x').addEventListener('click', () => about.close ? about.close() : about.removeAttribute('open'));
 about.addEventListener('click', e => { if (e.target === about) about.close(); });
+
+// ---------- trends view: papers per year, stacked by topic, method or suite ----------
+const TR = { by: 'topic' };
+function trendSeries() {
+  if (TR.by === 'topic') return TOP.map((name, k) => ({ label: name, color: `var(--t${k})`, match: p => p.k === k,
+    apply: () => { S.on = new Set([k]); renderLegend(); } })).filter(s => P.some(s.match));
+  const axis = TR.by, ax = axis === 'method' ? 'm' : 's';
+  const cnt = tg => P.filter(p => p.tg && p.tg[ax].includes(tg)).length;
+  let names = D.tagaxes[axis].filter(tg => cnt(tg) > 0), small = [];
+  if (axis === 'suite') { small = names.filter(tg => cnt(tg) < 5); names = names.filter(tg => cnt(tg) >= 5); }   // fold rare suites
+  const s = names.map((tg, i) => ({ label: tg, color: `var(--t${i % 10})`, match: p => !!(p.tg && p.tg[ax].includes(tg)),
+    apply: () => { S.tag[ax] = tg; $('f-' + axis).value = tg; } }));
+  if (small.length) s.push({ label: 'Other (' + small.join(', ') + ')', color: 'var(--t10)',
+    match: p => !!(p.tg && small.some(tg => p.tg[ax].includes(tg))), apply: null });
+  return s;
+}
+function renderTrends() {
+  const wrap = $('trendswrap'); if (wrap.hidden) return;
+  const series = trendSeries(), yrs = years.filter(y => y >= S.y0 && y <= S.y1);
+  const nowY = +String(D.fetched).slice(0, 4);
+  const cnt = yrs.map(y => series.map(s => P.filter(p => pOn[p.i] && p.y === y && s.match(p)).length));
+  const tot = yrs.map(y => P.filter(p => pOn[p.i] && p.y === y).length);
+  const ww = Math.max(320, wrap.clientWidth - 40), hh = Math.max(220, Math.min(420, wrap.clientHeight - 190));
+  const ml = 40, mr = 8, mt = 22, mb = 26, iw = ww - ml - mr, ih = hh - mt - mb;
+  const maxV = Math.max(1, ...cnt.map(r => r.reduce((a, b) => a + b, 0)));
+  const step = [1, 2, 5, 10, 20, 25, 50, 100].find(s => maxV / s <= 6) || 200, top = Math.ceil(maxV / step) * step;
+  const yS = v => mt + ih - v / top * ih, band = iw / Math.max(1, yrs.length), bw = Math.min(64, band * 0.62);
+  let g = '';
+  for (let v = 0; v <= top; v += step) g += `<line x1="${ml}" x2="${ww - mr}" y1="${yS(v)}" y2="${yS(v)}" class="tgrid"/><text x="${ml - 6}" y="${yS(v) + 4}" text-anchor="end" class="tax">${v}</text>`;
+  let bars = '';
+  yrs.forEach((y, yi) => {
+    const x = ml + yi * band + (band - bw) / 2; let acc = 0;
+    series.forEach((s, si) => {
+      const v = cnt[yi][si]; if (!v) return;
+      const y1 = yS(acc + v), y0 = yS(acc); acc += v;
+      bars += `<rect x="${x}" y="${y1}" width="${bw}" height="${Math.max(1, y0 - y1 - 2)}" rx="2" fill="${s.color}" data-y="${y}" data-s="${si}" data-v="${v}" class="tseg"/>`;
+    });
+    bars += `<text x="${x + bw / 2}" y="${yS(acc) - 6}" text-anchor="middle" class="ttot">${tot[yi]}</text>`;
+    bars += `<text x="${x + bw / 2}" y="${hh - 8}" text-anchor="middle" class="tax">${y}${y === nowY ? ' (to date)' : ''}</text>`;
+  });
+  const opts = ['topic', 'method', 'suite'].map(b => `<button type="button" data-by="${b}" aria-pressed="${TR.by === b}">${b[0].toUpperCase() + b.slice(1)}</button>`).join('');
+  const legend = series.map((s, si) => { const n = cnt.reduce((a, r) => a + r[si], 0);
+    return n ? `<span class="tleg"><i style="background:${s.color}"></i>${esc(s.label)} <span class="n">${n}</span></span>` : ''; }).join('');
+  wrap.innerHTML = `<div class="trhead"><h3>Papers per year</h3><div class="dimtoggle" role="group" aria-label="Split by">${opts}</div></div>
+    <svg width="${ww}" height="${hh}" viewBox="0 0 ${ww} ${hh}" role="img" aria-label="Stacked bar chart of papers per year by ${TR.by}">${g}${bars}</svg>
+    <div class="tlegend">${legend}</div>
+    <p class="tnote">Numbers above the bars count papers${TR.by !== 'topic' ? `; a paper with several ${TR.by === 'method' ? 'methods' : 'suites'} appears in each of its segments` : ''}. ${yrs.includes(nowY) ? nowY + ' is partial (data as of ' + D.fetched + '). ' : ''}Click a segment to list those papers.</p>`;
+  wrap._series = series;
+}
+$('trendswrap').addEventListener('click', e => {
+  const b = e.target.closest('button[data-by]');
+  if (b) { TR.by = b.dataset.by; renderTrends(); return; }
+  const r = e.target.closest('rect.tseg'); if (!r) return;
+  const s = $('trendswrap')._series[+r.dataset.s], y = +r.dataset.y;
+  if (!s.apply) return;
+  s.apply(); S.y0 = S.y1 = y; $('y0').value = y; $('y1').value = y; hideTip();
+  applyFilters(); setView('table', false); refresh();
+});
+$('trendswrap').addEventListener('mousemove', e => {
+  const r = e.target.closest('rect.tseg'); if (!r) { hideTip(); return; }
+  const s = $('trendswrap')._series[+r.dataset.s], box = stage.getBoundingClientRect();
+  tip.innerHTML = `${esc(s.label)}<small>${r.dataset.y}: ${r.dataset.v} paper${r.dataset.v === '1' ? '' : 's'}${s.apply ? ' · click to list them' : ''}</small>`;
+  tip.hidden = false; tip.style.left = Math.min(box.width - tip.offsetWidth - 8, e.clientX - box.left + 14) + 'px'; tip.style.top = (e.clientY - box.top + 14) + 'px';
+});
+$('trendswrap').addEventListener('mouseleave', hideTip);
 
 // ---------- shareable links ----------
 // On the public site the address holds the view, the selected paper/author, the filters and 2D/3D,
@@ -938,6 +1028,7 @@ function applyHash() {
     if (URLSTATE && q.get('author')) { const a = AU.find(x => x.name === q.get('author')); if (a) sel = { kind: 'a', i: a.i }; }
     select(sel);
     if (S.view === 'table') renderTable();
+    if (S.view === 'trends') renderTrends();
     if (!S.sel) overview();
     draw();
   } finally { applying = false; }
@@ -945,7 +1036,7 @@ function applyHash() {
 
 // ---------- boot ----------
 renderLegend(); applyFilters(); renderPanel();
-new ResizeObserver(() => { resize(); if (!userMoved) fit(false); }).observe(stage);
+new ResizeObserver(() => { resize(); if (!userMoved) fit(false); if (S.view === 'trends') renderTrends(); }).observe(stage);
 const mq = matchMedia('(prefers-color-scheme: dark)'); mq.addEventListener && mq.addEventListener('change', draw);
 new MutationObserver(draw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 applyHash();
