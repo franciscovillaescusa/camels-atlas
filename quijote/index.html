@@ -1044,7 +1044,11 @@ panel.addEventListener('click', e => {
     else done(false);
     return;
   }
-  if (b.dataset.more) { const y = panel.scrollTop; S.nTop[S.view] = b.dataset.more === 'all' ? 1e9 : S.nTop[S.view] + 25; overview(); panel.scrollTop = y; }
+  if (b.dataset.more) {   // after re-rendering, focus the first newly shown paper (the button itself is gone)
+    const y = panel.scrollTop, before = panel.querySelectorAll('ul.list button').length;
+    S.nTop[S.view] = b.dataset.more === 'all' ? 1e9 : S.nTop[S.view] + 25; overview(); panel.scrollTop = y;
+    const first = panel.querySelectorAll('ul.list button')[before]; if (first) first.focus({ preventScroll: true });
+  }
   else if (b.dataset.back !== undefined) select(null);
   else if (b.dataset.p) select({ kind: 'p', i: +b.dataset.p });
   else if (b.dataset.a) select({ kind: 'a', i: +b.dataset.a });
@@ -1129,11 +1133,14 @@ function renderLegend() {
   const nNew = P.filter(p => p.nw).length;
   if (nNew) legend.insertAdjacentHTML('afterbegin', `<button class="chip" data-new aria-pressed="${S.newOnly}" title="Papers added to the site in the last 30 days"><i style="background:var(--accent)"></i>New <span class="n">${nNew}</span></button>`);
 }
+// update the chips in place (not renderLegend): the clicked button stays in the page and keeps the focus
+const syncLegend = () => legend.querySelectorAll('.chip').forEach(b =>
+  b.setAttribute('aria-pressed', b.dataset.new !== undefined ? S.newOnly : S.on.has(+b.dataset.k)));
 legend.addEventListener('click', e => {
   const b = e.target.closest('.chip'); if (!b) return;
-  if (b.dataset.new !== undefined) { S.newOnly = !S.newOnly; renderLegend(); refresh(); return; } const k = +b.dataset.k;
+  if (b.dataset.new !== undefined) { S.newOnly = !S.newOnly; syncLegend(); refresh(); return; } const k = +b.dataset.k;
   if (e.altKey || e.metaKey) { S.on = new Set([k]); } else if (S.on.has(k)) S.on.delete(k); else S.on.add(k);
-  renderLegend(); refresh(); });
+  syncLegend(); refresh(); });
 [$('y0'), $('y1')].forEach((sel, n) => { sel.innerHTML = years.map(y => `<option ${y === (n ? S.y1 : S.y0) ? 'selected' : ''}>${y}</option>`).join('');
   sel.addEventListener('change', () => { S.y0 = +$('y0').value; S.y1 = +$('y1').value; if (S.y0 > S.y1) { [S.y0, S.y1] = [S.y1, S.y0]; $('y0').value = S.y0; $('y1').value = S.y1; } refresh(); }); });
 let qt; $('q').addEventListener('input', e => { clearTimeout(qt); qt = setTimeout(() => {
@@ -1268,7 +1275,7 @@ function renderTrends() {
 }
 $('trendswrap').addEventListener('click', e => {
   const b = e.target.closest('button[data-by]');
-  if (b) { TR.by = b.dataset.by; renderTrends(); return; }
+  if (b) { TR.by = b.dataset.by; renderTrends(); const nb = $('trendswrap').querySelector(`button[data-by="${TR.by}"]`); if (nb) nb.focus(); return; }
   const r = e.target.closest('rect.tseg'); if (!r) return;
   const s = $('trendswrap')._series[+r.dataset.s], y = +r.dataset.y;
   if (!s.apply) return;
@@ -1306,7 +1313,9 @@ $('active').addEventListener('click', e => {
 });
 const fPanel = open => { $('fpanel').hidden = !open; $('fbtn').setAttribute('aria-expanded', open); };
 $('fbtn').addEventListener('click', e => { e.stopPropagation(); fPanel($('fpanel').hidden); });
-document.addEventListener('click', e => { if (!$('fpanel').hidden && !e.target.closest('#fpanel, #fbtn')) fPanel(false); });
+// composedPath() is the path at dispatch time, so a click on a button that a handler has since removed
+// from the page still counts as inside the panel
+document.addEventListener('click', e => { if (!$('fpanel').hidden && !e.composedPath().some(n => n === $('fpanel') || n === $('fbtn'))) fPanel(false); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') fPanel(false); });
 
 // ---------- export the papers currently shown ----------
