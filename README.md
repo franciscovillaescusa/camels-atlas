@@ -21,6 +21,13 @@ the topic map highlights them. Search, the year range and the topic buttons filt
 stays highlighted when you switch views. The maps open in 2D (drag to pan, scroll or pinch to zoom); a
 2D/3D button next to the zoom controls switches them to rotatable 3D layouts (drag to rotate).
 
+### Corrections from visitors
+
+Each paper's panel has a **Report a problem with this paper** link, and the footer has **Suggest a missing
+paper**. Both open a pre-filled issue in this repository (a GitHub account is needed). Fix reports by editing
+`atlas_overrides.json` or `atlas_tags.json`; missing papers usually need adding to the CAMELS publications
+page first, since the atlas reads its list from there.
+
 ### Downloading papers
 
 **Download ▾** (next to *Clear filters*) saves the papers currently shown, after search and filters, as

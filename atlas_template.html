@@ -35,6 +35,9 @@ header { display: flex; flex-wrap: wrap; align-items: center; justify-content: s
 .brand { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 h1 { font-family: var(--f-display); font-weight: 700; font-size: 22px; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
 .newb { display: inline-block; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--surface); background: var(--accent); border-radius: 4px; padding: 1px 5px; margin-left: 4px; vertical-align: 1px; }
+.reportlink { margin: 4px 0 0; font-size: 12px; }
+.reportlink a { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
+.reportlink a:hover { color: var(--accent); }
 .panelbar { display: flex; justify-content: space-between; gap: 8px; }
 .linkbtn { all: unset; color: var(--accent); cursor: pointer; }
 .linkbtn:hover { text-decoration: underline; }
@@ -715,6 +718,15 @@ function tagBlock(p) {
   return `<div><h3>Tags</h3>${row('Suite', 's')}${row('Data', 'd')}${row('Method', 'm')}${p.tg.n ? `<p class="tagnote">${esc(p.tg.n)}</p>` : ''}</div>`;
 }
 const panelBar = () => `<div class="panelbar"><button class="ghost back" data-back>← Overview</button>${URLSTATE ? '<button class="ghost" data-copy title="Copy a link to this paper or author">Copy link</button>' : ''}</div>`;
+// pre-filled GitHub issues for corrections and missing papers
+const REPO = 'https://github.com/franciscovillaescusa/camels-atlas';
+const newIssue = (title, body) => `${REPO}/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
+function issueUrl(p) {
+  const tg = p.tg ? `suite: ${p.tg.s.join(', ') || '–'}; data: ${p.tg.d.join(', ') || '–'}; method: ${p.tg.m.join(', ') || '–'}` : 'none';
+  return newIssue(`Correction: ${p.t.slice(0, 80)}`, `**Paper:** ${p.t}\n**ID:** ${p.id}${p.url ? ` (${p.url})` : ''}\n**Current topic:** ${TOP[p.k]}\n**Current tags:** ${tg}\n\n` +
+    `What is wrong?\n- [ ] Wrong topic\n- [ ] Wrong or missing tags\n- [ ] Missing or wrong citation links\n- [ ] Wrong date, authors or link\n- [ ] Other\n\nDetails (what should it be?):\n\n`);
+}
+const missingUrl = () => newIssue('Missing paper: ', `**Title:**\n**arXiv ID or DOI:**\n\nNote: the atlas lists the papers on the CAMELS publications page (https://camels.readthedocs.io/en/latest/publications.html). If the paper is missing there too, it may need to be added to that page first.\n`);
 function paperPanel(i) {
   const p = P[i];
   const venue = p.v && p.v !== p.lk ? `<span>${esc(p.v)}</span>` : '';
@@ -728,7 +740,8 @@ function paperPanel(i) {
     ${p.sim && p.sim.l.length ? `<div><h3>Most similar papers <span style="text-transform:none;letter-spacing:0;font-weight:400">· by ${p.sim.k === 'e' ? 'abstract embedding (1 = identical)' : 'shared words (no embedding available)'}</span></h3><ul class="list">${p.sim.l.map(([j, s]) =>
       `<li><button data-p="${j}">${dot(P[j].k)}<span class="tt">${esc(P[j].t)}</span><span class="num">${s.toFixed(3)}</span></button></li>`).join('')}</ul></div>` : ''}
     <div><h3>${p.rm && !p.r.length ? 'Cites' : `Cites ${p.r.length} CAMELS paper${p.r.length === 1 ? '' : 's'}`}</h3>${p.rm ? `<p class="tagnote">${p.r.length ? 'This list may be incomplete: ' : ''}The reference list of this ${p.lk && /thesis|project/i.test(p.lk) ? 'work' : 'paper'} is not yet available from ADS or Semantic Scholar${p.r.length ? '.' : ', so the CAMELS papers it cites are unknown.'}</p>` : ''}${p.r.length ? `<ul class="list">${p.r.slice().sort((a, b) => P[b].d.localeCompare(P[a].d)).map(j => pItem(j, shares(j, p.i))).join('')}</ul>` : (p.rm ? '' : '<p>None found.</p>')}</div>
-    <div><h3>Cited by ${p.citers.length} CAMELS paper${p.citers.length === 1 ? '' : 's'}${p.citers.length ? `, ${p.citersInd.length} without shared authors` : ''}</h3>${p.citers.length ? `<ul class="list">${p.citers.slice().sort((a, b) => P[b].d.localeCompare(P[a].d)).map(j => pItem(j, shares(j, p.i))).join('')}</ul>` : '<p>None yet.</p>'}</div>`;
+    <div><h3>Cited by ${p.citers.length} CAMELS paper${p.citers.length === 1 ? '' : 's'}${p.citers.length ? `, ${p.citersInd.length} without shared authors` : ''}</h3>${p.citers.length ? `<ul class="list">${p.citers.slice().sort((a, b) => P[b].d.localeCompare(P[a].d)).map(j => pItem(j, shares(j, p.i))).join('')}</ul>` : '<p>None yet.</p>'}</div>
+    <p class="reportlink"><a href="${issueUrl(p)}" target="_blank" rel="noopener">Report a problem with this paper</a></p>`;
 }
 function authorPanel(i) {
   const a = AU[i], co = new Map();
@@ -881,7 +894,7 @@ function updateStats() {
 }
 function refresh() { applyFilters(); updateStats(); if (!S.sel) overview(); if (S.view === 'table') renderTable(); if (S.view === 'trends') renderTrends(); draw(); writeHash(false); }
 const nSelf = CE.filter(e => e.self).length;
-$('foot').innerHTML = `Data as of ${D.fetched} · ${P.length} papers · <button class="linkbtn" id="aboutbtn" type="button">About &amp; data sources</button> · <a href="https://github.com/franciscovillaescusa/camels-atlas" target="_blank" rel="noopener">Source on GitHub</a>`;
+$('foot').innerHTML = `Data as of ${D.fetched} · ${P.length} papers · <button class="linkbtn" id="aboutbtn" type="button">About &amp; data sources</button> · <a href="${missingUrl()}" target="_blank" rel="noopener">Suggest a missing paper</a> · <a href="https://github.com/franciscovillaescusa/camels-atlas" target="_blank" rel="noopener">Source on GitHub</a>`;
 $('about-body').innerHTML = `
   <h3>What this is</h3>
   <p>Every entry on the <a href="https://camels.readthedocs.io/en/latest/publications.html" target="_blank" rel="noopener">CAMELS publications page</a> (${P.length} papers and theses), shown as a topic map, a citation network, a co-author network and a table. The site is rebuilt automatically every week.</p>
