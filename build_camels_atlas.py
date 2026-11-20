@@ -27,7 +27,6 @@ Usage
   python3 build_camels_atlas.py                 # fetch everything fresh, write index.html
   python3 build_camels_atlas.py --offline       # reuse the cached downloads in ./atlas_cache
   python3 build_camels_atlas.py --out page.html --cache mycache
-  python3 build_camels_atlas.py --artifact      # body-only HTML, for publishing as a claude.ai artifact
   python3 build_camels_atlas.py --recluster     # redo the topic clustering (then check/rename topics)
 
 Layout positions are stored in atlas_positions.json (--positions) and reused on later builds, so the
@@ -966,8 +965,6 @@ def main():
                     help="ignore the stored positions and compute all layouts from scratch")
     ap.add_argument("--force", action="store_true",
                     help="build even if the sanity checks fail (e.g. papers were really removed from the list)")
-    ap.add_argument("--artifact", action="store_true",
-                    help="write the page body only (no <html>/<head>), for publishing as a claude.ai artifact")
     args = ap.parse_args()
     os.makedirs(args.cache, exist_ok=True)
 
@@ -1009,35 +1006,32 @@ def main():
     strip = lambda d: json.dumps({k: v for k, v in d.items() if k != "fetched"}, sort_keys=True)
     if prev and strip(prev) == strip(data):
         data["fetched"] = prev["fetched"]
-    data["urlstate"] = 0 if args.artifact else 1   # shareable links only on the public site
     blob = json.dumps(data, separators=(",", ":"), ensure_ascii=False).replace("</", "<\\/")
     with open(args.template, encoding="utf-8") as f:
         template = f.read()
     html = template.replace("__DATA__", blob)
-    if not args.artifact:  # a complete document that opens directly in a browser or on GitHub Pages
-        head, body = html.split("<header>", 1)
-        head = head.replace('<meta name="claude:viewport-fit-sides" content="cover">\n', "")  # claude.ai-only
-        n = len(data["papers"])
-        desc = (f"Interactive map of the {n} papers that use the CAMELS simulations: "
-                "topics, citation network and co-author network.")
-        html = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
-                '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
-                f'<meta name="description" content="{desc}">\n'
-                '<meta property="og:title" content="CAMELS Literature Atlas">\n'
-                f'<meta property="og:description" content="{desc}">\n'
-                '<meta property="og:type" content="website">\n'
-                f'<meta property="og:url" content="{SITE_URL}">\n'
-                f'<meta property="og:image" content="{SITE_URL}preview.png">\n'
-                '<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n'
-                '<meta name="twitter:card" content="summary_large_image">\n'
-                + (f'<!-- Google tag (gtag.js) -->\n<script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>\n'
-                   f"<script>window.dataLayer = window.dataLayer || []; function gtag(){{dataLayer.push(arguments);}} "
-                   f"gtag('js', new Date()); gtag('config', '{GA_ID}');</script>\n" if GA_ID else "")
-                + head.strip() + '\n<style>body{margin:0}</style>\n</head>\n<body>\n<header>' + body + '\n</body>\n</html>\n')
+    # complete document: <head> with description, link-preview and analytics tags
+    head, body = html.split("<header>", 1)
+    n = len(data["papers"])
+    desc = (f"Interactive map of the {n} papers that use the CAMELS simulations: "
+            "topics, citation network and co-author network.")
+    html = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
+            '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
+            f'<meta name="description" content="{desc}">\n'
+            '<meta property="og:title" content="CAMELS Literature Atlas">\n'
+            f'<meta property="og:description" content="{desc}">\n'
+            '<meta property="og:type" content="website">\n'
+            f'<meta property="og:url" content="{SITE_URL}">\n'
+            f'<meta property="og:image" content="{SITE_URL}preview.png">\n'
+            '<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n'
+            '<meta name="twitter:card" content="summary_large_image">\n'
+            + (f'<!-- Google tag (gtag.js) -->\n<script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>\n'
+               f"<script>window.dataLayer = window.dataLayer || []; function gtag(){{dataLayer.push(arguments);}} "
+               f"gtag('js', new Date()); gtag('config', '{GA_ID}');</script>\n" if GA_ID else "")
+            + head.strip() + '\n<style>body{margin:0}</style>\n</head>\n<body>\n<header>' + body + '\n</body>\n</html>\n')
     with open(args.positions, "w") as f:
         json.dump(new_store, f, separators=(",", ":"), sort_keys=True)
-    if not args.artifact:  # link-preview image next to the page
-        make_preview(data, template, os.path.join(os.path.dirname(os.path.abspath(args.out)), "preview.png"))
+    make_preview(data, template, os.path.join(os.path.dirname(os.path.abspath(args.out)), "preview.png"))
     old = open(args.out, encoding="utf-8").read() if os.path.exists(args.out) else None
     if old == html:
         log(f"\nno changes: {args.out} left as it was (data as of {data['fetched']}).")

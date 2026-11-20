@@ -1,5 +1,4 @@
 <title>CAMELS Literature Atlas</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%227%22%20fill%3D%22%2312151c%22/%3E%3Cg%20stroke%3D%22%235b9cf0%22%20stroke-width%3D%221.6%22%20opacity%3D%22.8%22%3E%3Cpath%20d%3D%22M8%2022%20L14%2011%20L23%209%20M14%2011%20L19%2020%20L8%2022%20M19%2020%20L25%2023%22/%3E%3C/g%3E%3Cg%20fill%3D%22%235b9cf0%22%3E%3Ccircle%20cx%3D%228%22%20cy%3D%2222%22%20r%3D%222.6%22/%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2211%22%20r%3D%223.2%22/%3E%3Ccircle%20cx%3D%2223%22%20cy%3D%229%22%20r%3D%222.2%22/%3E%3Ccircle%20cx%3D%2219%22%20cy%3D%2220%22%20r%3D%222.8%22/%3E%3Ccircle%20cx%3D%2225%22%20cy%3D%2223%22%20r%3D%221.8%22/%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -316,7 +315,7 @@ footer { font-size: 12px; color: var(--muted); }
     <div class="stage-note" id="note"></div>
     <div class="tip" id="tip" hidden></div>
     <div class="tablebar" id="tablebar" hidden><span class="tcap" id="tcap"></span>
-<span class="dlwrap" id="dlwrap" hidden><button class="ghost" id="dlbtn" type="button" aria-haspopup="true" aria-expanded="false" title="Download the papers currently shown">Download ▾</button>
+<span class="dlwrap" id="dlwrap"><button class="ghost" id="dlbtn" type="button" aria-haspopup="true" aria-expanded="false" title="Download the papers currently shown">Download ▾</button>
     <span class="dlmenu" id="dlmenu" hidden><button type="button" data-dl="bib">BibTeX (.bib)</button><button type="button" data-dl="csv">Spreadsheet (.csv)</button></span></span>
     </div>
     <div class="tablewrap" id="tablewrap" hidden></div>
@@ -885,7 +884,7 @@ function tagBlock(p) {
     `<span class="tag${p.tg.u.includes(t) ? ' unsure' : ''}"${p.tg.u.includes(t) ? ' title="Uncertain: not clearly stated in the abstract"' : ''}>${esc(t)}${p.tg.u.includes(t) ? ' ?' : ''}</span>`).join('')}</span></div>` : '';
   return `<div><h3>Tags</h3>${row('Suite', 's')}${row('Data', 'd')}${row('Method', 'm')}${p.tg.n ? `<p class="tagnote">${esc(p.tg.n)}</p>` : ''}</div>`;
 }
-const panelBar = () => `<div class="panelbar"><button class="ghost back" data-back>← Overview</button>${URLSTATE ? '<button class="ghost" data-copy title="Copy a link to this paper or author">Copy link</button>' : ''}</div>`;
+const panelBar = () => `<div class="panelbar"><button class="ghost back" data-back>← Overview</button><button class="ghost" data-copy title="Copy a link to this paper or author">Copy link</button></div>`;
 // pre-filled GitHub issues for corrections and missing papers
 const REPO = 'https://github.com/franciscovillaescusa/camels-atlas';
 const newIssue = (title, body) => `${REPO}/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
@@ -1203,7 +1202,7 @@ $('fbtn').addEventListener('click', e => { e.stopPropagation(); fPanel($('fpanel
 document.addEventListener('click', e => { if (!$('fpanel').hidden && !e.target.closest('#fpanel, #fbtn')) fPanel(false); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') fPanel(false); });
 
-// ---------- export the papers currently shown (public site only; claude.ai blocks downloads) ----------
+// ---------- export the papers currently shown ----------
 function shownPapers() { return P.filter(p => pOn[p.i]).sort((a, b) => b.d.localeCompare(a.d)); }
 function bibtex(list) {
   const used = new Set();
@@ -1237,7 +1236,6 @@ function download(name, text, type) {
   a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name;
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
 }
-if (D.urlstate) $('dlwrap').hidden = false;
 const dlMenu = open => { $('dlmenu').hidden = !open; $('dlbtn').setAttribute('aria-expanded', open); };
 $('dlbtn').addEventListener('click', e => { e.stopPropagation(); dlMenu($('dlmenu').hidden); });
 document.addEventListener('click', e => { if (!e.target.closest('#dlwrap')) dlMenu(false);
@@ -1295,8 +1293,7 @@ const track = (name, params) => { try { if (window.gtag) window.gtag('event', na
 
 // ---------- shareable links ----------
 // On the public site the address holds the view, the selected paper/author, the filters and 2D/3D,
-// e.g. #citations&paper=2201.02202&years=2022-2024. (The claude.ai page keeps only #view.)
-const URLSTATE = !!D.urlstate;
+// e.g. #citations&paper=2201.02202&years=2022-2024.
 let applying = false, viewInit = false;
 function stateHash() {
   const q = new URLSearchParams();
@@ -1316,7 +1313,7 @@ function stateHash() {
 }
 function writeHash(push) {   // push: add a history entry (selections), else replace (filters, view)
   if (applying || PLAY.on) return;
-  const h = URLSTATE ? stateHash() : '#' + S.view;
+  const h = stateHash();
   if (location.hash === h) return;
   try { if (push) history.pushState(null, '', h); else history.replaceState(null, '', h); } catch (e) {}
 }
@@ -1326,7 +1323,7 @@ function applyHash() {
   const q = new URLSearchParams(amp < 0 ? '' : location.hash.slice(amp + 1));
   applying = true;
   try {
-    if (URLSTATE) {
+    {
       S.q = q.get('q') || ''; $('q').value = S.q;
       const yr = (q.get('years') || '').split('-').map(Number);
       S.y0 = years.includes(yr[0]) ? yr[0] : years[0];
@@ -1346,8 +1343,8 @@ function applyHash() {
     if (!viewInit || (VIEWINFO[v] && v !== S.view)) { viewInit = true; setView(VIEWINFO[v] ? v : 'topics', false); }
     applyFilters(); updateStats(); renderActive();
     let sel = null;
-    if (URLSTATE && q.get('paper')) { const p = P.find(x => x.id === q.get('paper')); if (p) sel = { kind: 'p', i: p.i }; }
-    if (URLSTATE && q.get('author')) { const a = AU.find(x => x.name === q.get('author')); if (a) sel = { kind: 'a', i: a.i }; }
+    if (q.get('paper')) { const p = P.find(x => x.id === q.get('paper')); if (p) sel = { kind: 'p', i: p.i }; }
+    if (q.get('author')) { const a = AU.find(x => x.name === q.get('author')); if (a) sel = { kind: 'a', i: a.i }; }
     select(sel);
     if (S.view === 'table') renderTable();
     if (S.view === 'trends') renderTrends();
