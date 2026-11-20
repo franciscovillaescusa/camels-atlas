@@ -56,6 +56,15 @@ You can also start it by hand from the **Actions** tab ("Update atlas" → "Run 
 To use ADS citation counts there, add the token as a repository secret named `ADS_TOKEN`
 (Settings → Secrets and variables → Actions → New repository secret).
 
+### Tags
+
+`atlas_tags.json` gives every paper tags on three axes, assigned with AI assistance from its abstract:
+the CAMELS suite used, the data product (maps, catalogs, power spectra...) and the method (CNN, GNN,
+simulation-based inference, ...). Tags marked in `"uncertain"` were not clearly stated in the abstract
+and show dashed with a "?" on the site; theses without an abstract carry a note. The site has a filter
+for each axis. Edit the file to correct a tag (allowed names are listed in `TAG_AXES` in the script);
+new papers are reported as untagged by the build until you add them.
+
 ### Topics
 
 The 10 topics come from k-means clustering of the paper embeddings, named by hand (`TOPICS` at the

@@ -1,0 +1,2317 @@
+{
+ "2610.40218": {
+  "title": "Celia: Catalog Embeddings Learned from cosmologIcal simulAtions",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA",
+   "Astrid",
+   "N-body (dark matter only)",
+   "Swift-EAGLE"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Other ML"
+  ],
+  "uncertain": []
+ },
+ "2610.37825": {
+  "title": "Probing Cosmology with Diffusion Models: Memorization, Generalization, and Parameter Estimation",
+  "suite": [
+   "IllustrisTNG"
+  ],
+  "data": [
+   "2D maps",
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "Generative models",
+   "Simulation-based inference"
+  ],
+  "uncertain": []
+ },
+ "2610.33955": {
+  "title": "FastPM: Fast Pretrained Model for Cosmological Simulation-Based Inference",
+  "suite": [
+   "N-body (dark matter only)",
+   "CAMELS (suite not stated)",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "Simulation-based inference"
+  ],
+  "uncertain": []
+ },
+ "2610.10741": {
+  "title": "Feedback-Conditional 3D Reconstruction of Cosmic Baryons with Flow Matching",
+  "suite": [
+   "IllustrisTNG"
+  ],
+  "data": [
+   "3D fields",
+   "Halo & galaxy catalogs",
+   "Synthetic observables"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": []
+ },
+ "2610.03946": {
+  "title": "Baryonic Imprints on DM Halos: characterizing the full concentration-mass probability distribution with CAMELS",
+  "suite": [
+   "IllustrisTNG"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Normalizing flows"
+  ],
+  "uncertain": []
+ },
+ "2610.03544": {
+  "title": "Baryonic Imprints on DM Halos: the concentration-mass relation and its dependence on 28 model parameters in the CAMELS suite",
+  "suite": [
+   "IllustrisTNG"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "Emulators & regression ML"
+  ]
+ },
+ "2027NewA..13002638B": {
+  "title": "Gas reservoirs predict future galaxy growth beyond halo assembly history in CAMELS",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA"
+  ],
+  "data": [
+   "Halo & galaxy catalogs",
+   "Merger trees"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "Emulators & regression ML"
+  ]
+ },
+ "2026ApJ..1008..242M": {
+  "title": "Multiscale Rotational-Compressive Organization in Cosmological Baryonic Flows",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA"
+  ],
+  "data": [
+   "3D fields"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2610.00725": {
+  "title": "Emulation of the Halo Mass Function with Neural Networks",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": []
+ },
+ "2609.23982": {
+  "title": "The CAMELS-CROCODILE Simulation Suite: A New Cosmology--Astrophysics Playground for Machine Learning",
+  "suite": [
+   "CROCODILE"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2609.19295": {
+  "title": "Reconstructing the Projected Dark Matter Field across 0.1-100 Mpc Scales from the SDSS Survey",
+  "suite": [
+   "CAMELS (suite not stated)",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": []
+ },
+ "2609.10710": {
+  "title": "BINDing the lightcone: A suite of astrophysical ray-traced weak lensing and SZ maps",
+  "suite": [
+   "IllustrisTNG",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "2D maps",
+   "Synthetic observables"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": []
+ },
+ "2609.10709": {
+  "title": "BIND (Baryonic INpainting with Deep learning): A Field-level Emulator for Galaxy Groups and Clusters",
+  "suite": [
+   "IllustrisTNG",
+   "N-body (dark matter only)"
+  ],
+  "data": [
+   "3D fields",
+   "Halo & galaxy catalogs",
+   "Profiles"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": []
+ },
+ "2609.09504": {
+  "title": "Inductive Biases in Field-Level Cosmological Inference from Galaxy Catalogs",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Graph neural networks",
+   "Simulation-based inference",
+   "Other ML"
+  ],
+  "uncertain": []
+ },
+ "2609.00807": {
+  "title": "Baryonic feedback suppression of the matter power spectrum: a three-parameter fitting formula and its single-parameter reduction",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2607.18229": {
+  "title": "Breaking the $f_{\\text{NL}}$--$b_φ$ degeneracy with the time evolution of tracer number counts",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA"
+  ],
+  "data": [
+   "Halo & galaxy catalogs",
+   "Synthetic observables"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2606.10024": {
+  "title": "Learning the Universe with cosmological rescaling of merger trees and semi-analytic galaxy formation models",
+  "suite": [
+   "CAMELS-SAM",
+   "N-body (dark matter only)"
+  ],
+  "data": [
+   "Merger trees",
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Simulation-based inference"
+  ],
+  "uncertain": [
+   "Simulation-based inference"
+  ]
+ },
+ "2606.10038": {
+  "title": "Learning the Universe with the 2nd Generation of CAMELS: Varying 35 parameters of the IllustrisTNG model in (50Mpc/h)^3 boxes",
+  "suite": [
+   "IllustrisTNG"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Power spectra & summary statistics",
+   "2D maps",
+   "Halo & galaxy catalogs",
+   "Profiles"
+  ],
+  "method": [
+   "CNN",
+   "Graph neural networks",
+   "Emulators & regression ML"
+  ],
+  "uncertain": []
+ },
+ "2605.28516": {
+  "title": "Conservative neural posterior estimation via distributionally robust training",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [],
+  "method": [
+   "Simulation-based inference",
+   "Normalizing flows"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)"
+  ]
+ },
+ "2605.26210": {
+  "title": "Field-level multi-tracers simulation-based inference of cosmological parameters from 3D maps",
+  "suite": [
+   "CAMELS (suite not stated)",
+   "N-body (dark matter only)"
+  ],
+  "data": [
+   "3D fields",
+   "2D maps",
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "Simulation-based inference",
+   "Generative models"
+  ],
+  "uncertain": []
+ },
+ "title:physicsinformedvariationalautoencodersforcosmologicalfieldreconstructionandparam": {
+  "title": "Physics-Informed Variational Autoencoders for Cosmological Field Reconstruction and Parameter Inference",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)",
+   "2D maps",
+   "Generative models"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2026MLS&T...7c5014G": {
+  "title": "BOA constrictor: a Mamba-based lossless compressor for scientific data",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Particle snapshots"
+  ],
+  "method": [
+   "Other ML"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)",
+   "Particle snapshots"
+  ]
+ },
+ "2604.21790": {
+  "title": "Informative Priors on Primordial Non-Gaussianity Bias $b_φ$ From Galaxy Formation",
+  "suite": [
+   "CAMELS-SAM"
+  ],
+  "data": [
+   "Halo & galaxy catalogs",
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2603.13011": {
+  "title": "Simulation-based inference from the Lyman-alpha forest 1D power spectrum with CAMELS",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA"
+  ],
+  "data": [
+   "Power spectra & summary statistics",
+   "Synthetic observables"
+  ],
+  "method": [
+   "Simulation-based inference",
+   "Normalizing flows"
+  ],
+  "uncertain": []
+ },
+ "2602.07651": {
+  "title": "Cosmology with one galaxy: An analytic formula relating $Ω_{\\rm m}$ with galaxy properties",
+  "suite": [
+   "IllustrisTNG",
+   "Astrid",
+   "SIMBA",
+   "Swift-EAGLE"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Symbolic regression"
+  ],
+  "uncertain": []
+ },
+ "2602.12357": {
+  "title": "Assembly bias and local Primordial non-Gaussianity from DESI DR1 Quasars",
+  "suite": [
+   "IllustrisTNG",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2602.15938": {
+  "title": "Implications of the nanoHertz Gravitational-Wave Background for Galactic Feedback and Massive Black Hole Growth",
+  "suite": [
+   "CAMELS (suite not stated)",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2602.15951": {
+  "title": "MadEvolve: Evolutionary Optimization of Cosmological Algorithms with Large Language Models",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "3D fields"
+  ],
+  "method": [
+   "Other ML"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)",
+   "3D fields"
+  ]
+ },
+ "2601.14377": {
+  "title": "Cosmo-FOLD: Fast generation and upscaling of field-level cosmological maps with overlap latent diffusion",
+  "suite": [
+   "CAMELS (suite not stated)",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "3D fields",
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)"
+  ]
+ },
+ "2601.06290": {
+  "title": "CAMELS Environments: The Impact of Local Neighbours on Galaxy Evolution across the SIMBA, IllustrisTNG, ASTRID, and Swift-EAGLE Simulations",
+  "suite": [
+   "SIMBA",
+   "IllustrisTNG",
+   "Astrid",
+   "Swift-EAGLE"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2601.06258": {
+  "title": "Cosmological back-reaction of baryons on dark matter in the CAMELS simulations",
+  "suite": [
+   "SIMBA",
+   "IllustrisTNG",
+   "Astrid",
+   "Swift-EAGLE",
+   "N-body (dark matter only)"
+  ],
+  "data": [
+   "Halo & galaxy catalogs",
+   "Profiles"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2512.17964": {
+  "title": "A Correlation Between Black Hole Mass and Dark Matter Halo Concentration in Cosmological Simulations",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2511.21881": {
+  "title": "Intrinsic galaxy alignments in CAMELS simulations and the significant impact of baryon model",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Halo & galaxy catalogs",
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2512.10222": {
+  "title": "Galaxy Phase-Space and Field-Level Cosmology: The Strength of Semi-Analytic Models",
+  "suite": [
+   "CAMELS-SAM",
+   "Astrid",
+   "SIMBA",
+   "IllustrisTNG",
+   "Swift-EAGLE",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Graph neural networks"
+  ],
+  "uncertain": []
+ },
+ "2512.03038": {
+  "title": "A new constraint on the $y$-distortion with FIRAS: implications for feedback models in galaxy formation and cosmic shear measurements",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Synthetic observables"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)"
+  ]
+ },
+ "2511.08438": {
+  "title": "Galactification: painting galaxies onto dark matter only simulations using a transformer-based model",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "3D fields",
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Generative models",
+   "Other ML"
+  ],
+  "uncertain": []
+ },
+ "2510.26593": {
+  "title": "Hybrid Physical-Neural Simulator for Fast Cosmological Hydrodynamics",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "3D fields"
+  ],
+  "method": [
+   "Other ML"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)"
+  ]
+ },
+ "2510.26851": {
+  "title": "jFoF: GPU Cluster Finding with Gradient Propagation",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)"
+  ]
+ },
+ "2510.19224": {
+  "title": "BaryonBridge: Stochastic Interpolant Model for Fast Hydrodynamical Simulations",
+  "suite": [
+   "CAMELS (suite not stated)",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "3D fields",
+   "Synthetic observables"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": []
+ },
+ "title:leveragingmachinelearningandhydrodynamicsimulationsofgalaxyformationtoilluminate": {
+  "title": "Leveraging Machine Learning and Hydrodynamic Simulations of Galaxy Formation to Illuminate the Effects of Incident Radiation Fields on Atomic Gas Cooling and Heating Functions",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [],
+  "method": [
+   "Other ML"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)",
+   "Other ML"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2509.18260": {
+  "title": "Exploring the impact of AGN feedback model variations on the Lyman-$α$ Forest Flux Power Spectrum",
+  "suite": [
+   "SIMBA"
+  ],
+  "data": [
+   "Power spectra & summary statistics",
+   "Synthetic observables"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2509.01881": {
+  "title": "One latent to fit them all: a unified representation of baryonic feedback on matter distribution",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "Other ML"
+  ],
+  "uncertain": []
+ },
+ "2508.21152": {
+  "title": "How does feedback affect the star formation histories of galaxies?",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA",
+   "Astrid"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2508.05744": {
+  "title": "Detecting Model Misspecification in Cosmology with Scale-Dependent Normalizing Flows",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "Normalizing flows",
+   "Other ML"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)"
+  ]
+ },
+ "2507.21682": {
+  "title": "Probabilistic cosmological inference on HI tomographic data",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "3D fields"
+  ],
+  "method": [
+   "CNN",
+   "Simulation-based inference",
+   "Normalizing flows"
+  ],
+  "uncertain": []
+ },
+ "2507.16816": {
+  "title": "Stellar Mass-Dispersion Measure Correlations Constrain Baryonic Feedback in Fast Radio Burst Host Galaxies",
+  "suite": [
+   "Astrid",
+   "IllustrisTNG",
+   "SIMBA"
+  ],
+  "data": [
+   "Halo & galaxy catalogs",
+   "Synthetic observables"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2507.12530": {
+  "title": "Reconstruction of Dark Matter and Baryon Density From Galaxies: A Comparison of Linear, Halo Model and Machine Learning-Based Methods",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "3D fields",
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Other ML"
+  ],
+  "uncertain": []
+ },
+ "2507.03707": {
+  "title": "CosmoBench: A Multiscale, Multiview, Multitask Cosmology Benchmark for Geometric Deep Learning",
+  "suite": [
+   "CAMELS (suite not stated)",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "Halo & galaxy catalogs",
+   "Merger trees"
+  ],
+  "method": [
+   "Graph neural networks"
+  ],
+  "uncertain": []
+ },
+ "2507.01820": {
+  "title": "The Cosmological analysis of X-ray cluster surveys VII. Bypassing scaling relations with Lagrangian Deep Learning and Simulation-based inference",
+  "suite": [
+   "CAMELS (suite not stated)",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "Synthetic observables"
+  ],
+  "method": [
+   "Emulators & regression ML",
+   "Simulation-based inference"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)"
+  ]
+ },
+ "title:investigatingtheparametersdrivingblackholegalaxycoevolution": {
+  "title": "Investigating the Parameters Driving Black Hole-Galaxy Coevolution",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [],
+  "method": [],
+  "uncertain": [
+   "CAMELS (suite not stated)"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2506.08783": {
+  "title": "syren-baryon: Analytic emulators for the impact of baryons on the matter power spectrum",
+  "suite": [
+   "Astrid",
+   "IllustrisTNG",
+   "SIMBA",
+   "Swift-EAGLE"
+  ],
+  "data": [
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "Symbolic regression"
+  ],
+  "uncertain": []
+ },
+ "2506.06087": {
+  "title": "Multilevel neural simulation-based inference",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [],
+  "method": [
+   "Simulation-based inference"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)"
+  ]
+ },
+ "2505.23904": {
+  "title": "Cosmology with Topological Deep Learning",
+  "suite": [
+   "Non-CAMELS simulations",
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Graph neural networks",
+   "Other ML"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)"
+  ]
+ },
+ "2505.21215": {
+  "title": "Transfer learning for multifidelity simulation-based inference in cosmology",
+  "suite": [
+   "N-body (dark matter only)",
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "Simulation-based inference",
+   "CNN"
+  ],
+  "uncertain": [
+   "CNN"
+  ]
+ },
+ "2505.13620": {
+  "title": "Field-Level Comparison and Robustness Analysis of Cosmological N-body Simulations",
+  "suite": [
+   "N-body (dark matter only)",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "3D fields",
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "CNN",
+   "Simulation-based inference"
+  ],
+  "uncertain": []
+ },
+ "2505.02920": {
+  "title": "Probing the co-evolution of SMBHs and their hosts from scaling relations pairwise residuals: dominance of stellar velocity dispersion and host halo mass",
+  "suite": [
+   "CAMELS (suite not stated)",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)"
+  ]
+ },
+ "2504.18745": {
+  "title": "A hydrodynamical simulations-based model that connects the FRB DM--redshift relation to suppression of the matter power spectrum via feedback",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Synthetic observables",
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2504.11794": {
+  "title": "Fast Baryonic Field Painting for Sunyaev-Zel'dovich Analyses: Transfer Function vs. Hybrid Effective Field Theory",
+  "suite": [
+   "Non-CAMELS simulations",
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "3D fields",
+   "Synthetic observables"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)"
+  ]
+ },
+ "2504.17839": {
+  "title": "Interpreting Cosmological Information from Neural Networks in the Hydrodynamic Universe",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "CNN"
+  ],
+  "uncertain": []
+ },
+ "2503.22654": {
+  "title": "On the effects of parameters on galaxy properties in CAMELS and the predictability of $Ω_{\\rm m}$",
+  "suite": [
+   "IllustrisTNG",
+   "Astrid"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Other ML"
+  ],
+  "uncertain": []
+ },
+ "2503.21736": {
+  "title": "Local Primordial non-Gaussian Bias from Time Evolution",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)"
+  ]
+ },
+ "2502.17568": {
+  "title": "Cosmology with One Galaxy: Auto-Encoding the Galaxy Properties Manifold",
+  "suite": [
+   "CAMELS (suite not stated)",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Other ML"
+  ],
+  "uncertain": []
+ },
+ "2502.13589": {
+  "title": "CASCO: Cosmological and AStrophysical parameters from Cosmological simulations and Observations III. The physics behind the emergence of the golden mass scale",
+  "suite": [
+   "IllustrisTNG"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2502.13239": {
+  "title": "Towards Robustness Across Cosmological Simulation Models TNG, SIMBA, ASTRID, and EAGLE",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA",
+   "Astrid",
+   "Swift-EAGLE"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "CNN",
+   "Other ML"
+  ],
+  "uncertain": [
+   "CNN"
+  ]
+ },
+ "2502.06954": {
+  "title": "Hydrodynamic methods and sub-resolution models for cosmological simulations",
+  "suite": [
+   "CAMELS (suite not stated)",
+   "Non-CAMELS simulations"
+  ],
+  "data": [],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)"
+  ]
+ },
+ "2501.17922": {
+  "title": "Constraining Baryonic Feedback Effects on the Matter Power Spectrum with Fast Radio Bursts",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA",
+   "Astrid"
+  ],
+  "data": [
+   "Synthetic observables",
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2501.16709": {
+  "title": "A Neural Network Model for the Cosmic Dispersion Measure in the CAMELS Simulations",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Synthetic observables"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": []
+ },
+ "2412.05131": {
+  "title": "Probabilistic Galaxy Field Generation with Diffusion Models",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "3D fields",
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "CNN",
+   "Generative models"
+  ],
+  "uncertain": [
+   "3D fields"
+  ]
+ },
+ "2412.04559": {
+  "title": "X-raying CAMELS: Constraining Baryonic Feedback in the Circum-Galactic Medium with the CAMELS simulations and eRASS X-ray Observations",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA",
+   "Astrid"
+  ],
+  "data": [
+   "Profiles",
+   "Synthetic observables"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": []
+ },
+ "2411.17682": {
+  "title": "An analytical model for the dispersion measure of Fast Radio Burst host galaxies",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Synthetic observables"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2411.13960": {
+  "title": "Learning the Universe: Cosmological and Astrophysical Parameter Inference with Galaxy Luminosity Functions and Colours",
+  "suite": [
+   "Swift-EAGLE",
+   "IllustrisTNG",
+   "SIMBA",
+   "Astrid"
+  ],
+  "data": [
+   "Synthetic observables",
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Simulation-based inference"
+  ],
+  "uncertain": []
+ },
+ "2411.10515": {
+  "title": "Towards cosmological inference on unlabeled out-of-distribution HI observational data",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "CNN",
+   "Other ML"
+  ],
+  "uncertain": []
+ },
+ "2411.08957": {
+  "title": "Learning Optimal and Interpretable Summary Statistics of Galaxy Catalogs with SBI",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Simulation-based inference"
+  ],
+  "uncertain": []
+ },
+ "2411.02496": {
+  "title": "Reconstruction of Continuous Cosmological Fields from Discrete Tracers with Graph Neural Networks",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Halo & galaxy catalogs",
+   "3D fields"
+  ],
+  "method": [
+   "Graph neural networks",
+   "CNN"
+  ],
+  "uncertain": []
+ },
+ "2410.21722": {
+  "title": "On the Significance of Covariance for Constraining Theoretical Models From Galaxy Observables",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Power spectra & summary statistics",
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Simulation-based inference",
+   "Emulators & regression ML"
+  ],
+  "uncertain": []
+ },
+ "2410.16361": {
+  "title": "Quantifying Baryonic Feedback on Warm-Hot Circumgalactic Medium in CAMELS Simulations",
+  "suite": [
+   "SIMBA",
+   "IllustrisTNG"
+  ],
+  "data": [
+   "Profiles",
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2410.10942": {
+  "title": "Cosmological and Astrophysical Parameter Inference from Stacked Galaxy Cluster Profiles Using CAMELS-zoomGZ",
+  "suite": [
+   "Zoom-ins (zoomGZ)",
+   "IllustrisTNG"
+  ],
+  "data": [
+   "Profiles",
+   "Synthetic observables"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": []
+ },
+ "2408.04864": {
+  "title": "The evolving role of astrophysical modelling in dark matter halo relaxation response",
+  "suite": [
+   "IllustrisTNG",
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Profiles",
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2407.18349": {
+  "title": "Stirring the cosmic pot: how black hole feedback shapes the matter power spectrum in the Fable simulations",
+  "suite": [
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "title:machinelearningmethodsforextractingcosmologicalinformation": {
+  "title": "Machine Learning methods for extracting cosmological information",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [],
+  "method": [],
+  "uncertain": [
+   "CAMELS (suite not stated)"
+  ],
+  "note": "No abstract available: tags guessed from the title only; please check."
+ },
+ "2405.05255": {
+  "title": "Diffusion-HMC: Parameter Inference with Diffusion-model-driven Hamiltonian Monte Carlo",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": []
+ },
+ "2405.04447": {
+  "title": "Cosmology from one galaxy in a void?",
+  "suite": [
+   "IllustrisTNG"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "Emulators & regression ML"
+  ]
+ },
+ "2404.04327": {
+  "title": "Parameter estimation from Ly$α$ forest in Fourier space using Information Maximising Neural Network",
+  "suite": [
+   "Non-CAMELS simulations",
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Synthetic observables",
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "Other ML"
+  ],
+  "uncertain": []
+ },
+ "2403.10648": {
+  "title": "Debiasing with Diffusion: Probabilistic reconstruction of Dark Matter fields from galaxies with CAMELS",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": []
+ },
+ "2403.10609": {
+  "title": "Zooming by in the CARPoolGP lane: new CAMELS-TNG simulations of zoomed-in massive halos",
+  "suite": [
+   "Zoom-ins (zoomGZ)",
+   "IllustrisTNG"
+  ],
+  "data": [
+   "Profiles",
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": []
+ },
+ "2403.08611": {
+  "title": "Galaxy dispersion measured by Fast Radio Bursts as a probe of baryonic feedback models",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Synthetic observables"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)"
+  ]
+ },
+ "2403.02313": {
+  "title": "Probing the Circum-Galactic Medium with Fast Radio Bursts: Insights from the CAMELS Simulations",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA",
+   "Astrid"
+  ],
+  "data": [
+   "Synthetic observables"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2402.10997": {
+  "title": "Cosmological multifield emulator",
+  "suite": [
+   "IllustrisTNG"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": []
+ },
+ "2401.15891": {
+  "title": "A field-level emulator for modeling baryonic effects across hydrodynamic simulations",
+  "suite": [
+   "CAMELS (suite not stated)",
+   "N-body (dark matter only)"
+  ],
+  "data": [
+   "3D fields",
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": []
+ },
+ "2401.12318": {
+  "title": "Modeling the Kinematics of Central and Satellite Galaxies Using Normalizing Flows",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Normalizing flows"
+  ],
+  "uncertain": []
+ },
+ "2312.07534": {
+  "title": "Cosmological Field Emulation and Parameter Inference with Diffusion Models",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": []
+ },
+ "2311.18007": {
+  "title": "Towards out-of-distribution generalization in large-scale astronomical surveys: robust networks learn similar representations",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "CNN"
+  ],
+  "uncertain": []
+ },
+ "2311.18017": {
+  "title": "Learning an Effective Evolution Equation for Particle-Mesh Simulations Across Cosmologies",
+  "suite": [
+   "N-body (dark matter only)",
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Particle snapshots"
+  ],
+  "method": [
+   "Other ML",
+   "Simulation-based inference"
+  ],
+  "uncertain": [
+   "N-body (dark matter only)",
+   "CAMELS (suite not stated)"
+  ]
+ },
+ "2311.10088": {
+  "title": "Taming assembly bias for primordial non-Gaussianity",
+  "suite": [
+   "CAMELS (suite not stated)",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)"
+  ]
+ },
+ "2311.08558": {
+  "title": "Probabilistic reconstruction of Dark Matter fields from biased tracers using diffusion models",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": []
+ },
+ "2311.03491": {
+  "title": "Baryonic Imprints on DM Halos: the concentration-mass relation and its dependence on halo and galaxy properties",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "Emulators & regression ML"
+  ]
+ },
+ "2311.01588": {
+  "title": "Domain Adaptive Graph Neural Networks for Constraining Cosmological Parameters Across Multiple Data Sets",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Graph neural networks"
+  ],
+  "uncertain": []
+ },
+ "2311.00833": {
+  "title": "HIDM: Emulating Large Scale HI Maps using Score-based Diffusion Models",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": []
+ },
+ "2311.00799": {
+  "title": "Latent space representations of cosmological fields",
+  "suite": [
+   "IllustrisTNG"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": []
+ },
+ "2310.15234": {
+  "title": "Field-level simulation-based inference with galaxy catalogs: the impact of systematic effects",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Graph neural networks",
+   "Simulation-based inference"
+  ],
+  "uncertain": []
+ },
+ "2310.08634": {
+  "title": "Cosmology with Galaxy Photometry Alone",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Synthetic observables",
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Simulation-based inference"
+  ],
+  "uncertain": []
+ },
+ "2310.04499": {
+  "title": "Exploring chemical enrichment of the intracluster medium with the Line Emission Mapper",
+  "suite": [
+   "CAMELS (suite not stated)",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "Synthetic observables"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)"
+  ]
+ },
+ "2309.12048": {
+  "title": "Cosmology with multiple galaxies",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Simulation-based inference"
+  ],
+  "uncertain": []
+ },
+ "2309.07912": {
+  "title": "An Observationally Driven Multifield Approach for Probing the Circum-Galactic Medium with Convolutional Neural Networks",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA",
+   "Astrid"
+  ],
+  "data": [
+   "2D maps",
+   "Synthetic observables"
+  ],
+  "method": [
+   "CNN"
+  ],
+  "uncertain": []
+ },
+ "2308.14822": {
+  "title": "CASCO: Cosmological and AStrophysical parameters from Cosmological simulations and Observations -- I. Constraining physical processes in local star-forming galaxies",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA",
+   "Astrid"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2308.09751": {
+  "title": "Data Compression and Inference in Cosmology with Self-Supervised Machine Learning",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "Other ML",
+   "Simulation-based inference"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)",
+   "2D maps"
+  ]
+ },
+ "2307.14362": {
+  "title": "Learnable wavelet neural networks for cosmological inference",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "CNN"
+  ],
+  "uncertain": []
+ },
+ "2307.11832": {
+  "title": "Cosmological baryon spread and impact on matter clustering in CAMELS",
+  "suite": [
+   "SIMBA",
+   "IllustrisTNG",
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Particle snapshots"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2307.06967": {
+  "title": "A Hierarchy of Normalizing Flows for Modelling the Galaxy-Halo Relationship",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Normalizing flows",
+   "Generative models"
+  ],
+  "uncertain": []
+ },
+ "2307.06360": {
+  "title": "An Exploration of AGN and Stellar Feedback Effects in the Intergalactic Medium via the Low Redshift Lyman-$α$ Forest",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA"
+  ],
+  "data": [
+   "Synthetic observables",
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2306.10943": {
+  "title": "Probabilistic Matching of Real and Generated Data Statistics in Generative Adversarial Networks",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)",
+   "2D maps"
+  ]
+ },
+ "2306.07728": {
+  "title": "Multi-Epoch Machine Learning 2: Identifying physical drivers of galaxy properties in simulations",
+  "suite": [
+   "Non-CAMELS simulations",
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Halo & galaxy catalogs",
+   "Merger trees"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": []
+ },
+ "2305.07531": {
+  "title": "Forecasting the power of Higher Order Weak Lensing Statistics with automatically differentiable simulations",
+  "suite": [
+   "Non-CAMELS simulations",
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Synthetic observables",
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "Other ML"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)"
+  ]
+ },
+ "2305.00992": {
+  "title": "Interpreting Sunyaev-Zel'dovich observations with MillenniumTNG: Mass and environment scaling relations",
+  "suite": [
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "Synthetic observables",
+   "Profiles"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2304.06084": {
+  "title": "Cosmology with one galaxy? -- The ASTRID model and robustness",
+  "suite": [
+   "Astrid"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": []
+ },
+ "2304.02096": {
+  "title": "The CAMELS project: Expanding the galaxy formation model space with new ASTRID and 28-parameter TNG and SIMBA suites",
+  "suite": [
+   "Astrid",
+   "IllustrisTNG",
+   "SIMBA"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2303.07473": {
+  "title": "Invertible mapping between fields in CAMELS",
+  "suite": [
+   "IllustrisTNG"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": []
+ },
+ "2302.14591": {
+  "title": "A universal equation to predict $Ω_{\\rm m}$ from halo and galaxy catalogues",
+  "suite": [
+   "N-body (dark matter only)",
+   "Non-CAMELS simulations",
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Graph neural networks",
+   "Symbolic regression",
+   "Simulation-based inference"
+  ],
+  "uncertain": []
+ },
+ "2302.14101": {
+  "title": "Robust Field-level Likelihood-free Inference with Galaxies",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA",
+   "Astrid",
+   "Magneticum",
+   "Swift-EAGLE"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Graph neural networks",
+   "Simulation-based inference"
+  ],
+  "uncertain": []
+ },
+ "2302.01363": {
+  "title": "Topological data analysis reveals differences between simulated galaxies and dark matter haloes",
+  "suite": [
+   "Non-CAMELS simulations",
+   "CAMELS-SAM"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2301.09655": {
+  "title": "Perturbation-theory informed integrators for cosmological simulations",
+  "suite": [
+   "CAMELS (suite not stated)",
+   "N-body (dark matter only)"
+  ],
+  "data": [
+   "Particle snapshots"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)",
+   "N-body (dark matter only)"
+  ]
+ },
+ "2301.02253": {
+  "title": "On the choice of the most suitable indicator for the assembly state of dark matter haloes through cosmic time",
+  "suite": [
+   "CAMELS (suite not stated)",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)"
+  ]
+ },
+ "2301.02231": {
+  "title": "Predicting the impact of feedback on matter clustering with machine learning in CAMELS",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": []
+ },
+ "2301.02186": {
+  "title": "Inferring the impact of feedback on the matter distribution using the Sunyaev Zel'dovich effect: Insights from CAMELS simulations and ACT+DES data",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Profiles",
+   "Synthetic observables",
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "No ML"
+  ]
+ },
+ "2212.05964": {
+  "title": "Baryonic Imprints on DM Halos: The concentration-mass relation in the CAMELS simulations",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "Emulators & regression ML"
+  ]
+ },
+ "2211.16461": {
+  "title": "Calibrating cosmological simulations with implicit likelihood inference using galaxy growth observables",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "Simulation-based inference",
+   "Emulators & regression ML"
+  ],
+  "uncertain": []
+ },
+ "2211.15675": {
+  "title": "X-ray Absorption Lines in the Warm-Hot Intergalactic Medium: Probing Chandra observations with the CAMEL simulations",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Synthetic observables"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2211.12724": {
+  "title": "HIGlow: Conditional Normalizing Flows for High-Fidelity HI Map Modeling",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "Normalizing flows",
+   "Generative models"
+  ],
+  "uncertain": []
+ },
+ "2211.12444": {
+  "title": "Can denoising diffusion probabilistic models generate realistic astrophysical fields?",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)"
+  ]
+ },
+ "2211.05000": {
+  "title": "Emulating cosmological multifields with generative adversarial networks",
+  "suite": [
+   "IllustrisTNG"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": []
+ },
+ "2210.02467": {
+  "title": "Efficient long-range AGN feedback affects the low redshift Lyman-$α$ forest",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA"
+  ],
+  "data": [
+   "Synthetic observables",
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2209.06843": {
+  "title": "Robust field-level inference with dark matter halos",
+  "suite": [
+   "N-body (dark matter only)"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Graph neural networks",
+   "Simulation-based inference"
+  ],
+  "uncertain": []
+ },
+ "2209.02075": {
+  "title": "The SZ flux-mass ($Y$-$M$) relation at low halo masses: improvements with symbolic regression and strong constraints on baryonic feedback",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Halo & galaxy catalogs",
+   "Synthetic observables"
+  ],
+  "method": [
+   "Symbolic regression",
+   "Emulators & regression ML"
+  ],
+  "uncertain": []
+ },
+ "2209.00657": {
+  "title": "Studying the Warm Hot Intergalactic Medium in emission: a reprise",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Synthetic observables"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2208.08927": {
+  "title": "Predictive uncertainty on improved astrophysics recovery from multifield cosmology",
+  "suite": [
+   "IllustrisTNG"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "CNN"
+  ],
+  "uncertain": []
+ },
+ "2207.05509": {
+  "title": "Hybrid Physical-Neural ODEs for Fast N-body Simulations",
+  "suite": [
+   "CAMELS (suite not stated)",
+   "N-body (dark matter only)"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "Other ML"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)",
+   "N-body (dark matter only)"
+  ]
+ },
+ "2205.02245": {
+  "title": "The halo finding problem revisited: a deep revision of the ASOHF code",
+  "suite": [
+   "CAMELS (suite not stated)",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)"
+  ]
+ },
+ "2204.13713": {
+  "title": "Learning cosmology and clustering with cosmic graphs",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Graph neural networks",
+   "Simulation-based inference"
+  ],
+  "uncertain": []
+ },
+ "2204.02408": {
+  "title": "Constraining cosmology with machine learning and galaxy clustering: the CAMELS-SAM suite",
+  "suite": [
+   "CAMELS-SAM",
+   "N-body (dark matter only)"
+  ],
+  "data": [
+   "Halo & galaxy catalogs",
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": []
+ },
+ "2201.04142": {
+  "title": "Breaking baryon-cosmology degeneracy with the electron density power spectrum",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2201.02708": {
+  "title": "The Circumgalactic Medium from the CAMELS Simulations: Forecasting Constraints on Feedback Processes from Future Sunyaev-Zeldovich Observations",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA"
+  ],
+  "data": [
+   "Profiles",
+   "Synthetic observables"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": []
+ },
+ "2201.02202": {
+  "title": "Cosmology with one galaxy?",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Simulation-based inference"
+  ],
+  "uncertain": []
+ },
+ "2201.01300": {
+  "title": "The CAMELS project: public data release",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA",
+   "N-body (dark matter only)"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Halo & galaxy catalogs",
+   "Power spectra & summary statistics",
+   "Profiles",
+   "Synthetic observables"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2201.01305": {
+  "title": "Augmenting astrophysical scaling relations with machine learning: application to reducing the Sunyaev-Zeldovich flux-mass scatter",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Halo & galaxy catalogs",
+   "Synthetic observables"
+  ],
+  "method": [
+   "Symbolic regression"
+  ],
+  "uncertain": []
+ },
+ "2201.01663": {
+  "title": "Percent-level constraints on baryonic feedback with spectral distortion measurements",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Synthetic observables"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": []
+ },
+ "2111.14874": {
+  "title": "Weighing the Milky Way and Andromeda with Artificial Intelligence",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Graph neural networks",
+   "Simulation-based inference"
+  ],
+  "uncertain": []
+ },
+ "2111.08683": {
+  "title": "Inferring halo masses with Graph Neural Networks",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Graph neural networks"
+  ],
+  "uncertain": []
+ },
+ "2110.02983": {
+  "title": "HIFlow: Generating Diverse HI Maps and Inferring Cosmology while Marginalizing over Astrophysics using Normalizing Flows",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "Normalizing flows",
+   "Generative models"
+  ],
+  "uncertain": []
+ },
+ "2109.10915": {
+  "title": "The CAMELS Multifield Dataset: Learning the Universe's Fundamental Parameters with Artificial Intelligence",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA",
+   "N-body (dark matter only)"
+  ],
+  "data": [
+   "2D maps",
+   "3D fields"
+  ],
+  "method": [
+   "CNN",
+   "Simulation-based inference"
+  ],
+  "uncertain": []
+ },
+ "2109.10360": {
+  "title": "Robust marginalization of baryonic effects for cosmological inference at the field level",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "CNN",
+   "Simulation-based inference"
+  ],
+  "uncertain": []
+ },
+ "2109.09747": {
+  "title": "Multifield Cosmology with Artificial Intelligence",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "CNN",
+   "Simulation-based inference"
+  ],
+  "uncertain": []
+ },
+ "2109.07070": {
+  "title": "Inpainting hydrodynamical maps with deep learning",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "CNN"
+  ],
+  "uncertain": []
+ },
+ "2109.04484": {
+  "title": "Finding universal relations in subhalo properties with artificial intelligence",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": []
+ },
+ "2011.05992": {
+  "title": "Neural networks as optimal estimators to marginalize over baryonic effects",
+  "suite": [
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "Power spectra & summary statistics",
+   "2D maps"
+  ],
+  "method": [
+   "Emulators & regression ML"
+  ],
+  "uncertain": [
+   "Non-CAMELS simulations"
+  ]
+ },
+ "2010.00619": {
+  "title": "The CAMELS project: Cosmology and Astrophysics with MachinE Learning Simulations",
+  "suite": [
+   "IllustrisTNG",
+   "SIMBA",
+   "N-body (dark matter only)"
+  ],
+  "data": [
+   "Particle snapshots",
+   "Power spectra & summary statistics",
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ }
+}

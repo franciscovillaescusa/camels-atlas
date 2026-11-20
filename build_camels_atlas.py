@@ -375,6 +375,47 @@ def ads_author(a):
     return f"{first.strip()} {last.strip()}".strip()
 
 
+# ----------------------------------------------------------------------------- tags
+# Tags on three axes, assigned by reading each abstract and stored in atlas_tags.json (--tags), which
+# you can edit by hand: {id: {"title", "suite": [...], "data": [...], "method": [...], "uncertain": [...]}}.
+TAG_AXES = {
+    "suite": ["IllustrisTNG", "SIMBA", "Astrid", "Swift-EAGLE", "CROCODILE", "Magneticum", "Ramses",
+              "N-body (dark matter only)", "CAMELS-SAM", "Zoom-ins (zoomGZ)", "CAMELS (suite not stated)",
+              "Non-CAMELS simulations"],
+    "data": ["2D maps", "3D fields", "Particle snapshots", "Halo & galaxy catalogs", "Merger trees",
+             "Power spectra & summary statistics", "Profiles", "Synthetic observables"],
+    "method": ["CNN", "Graph neural networks", "Simulation-based inference", "Normalizing flows", "Generative models",
+               "Symbolic regression", "Emulators & regression ML", "Other ML", "No ML"],
+}
+
+
+def load_tags(path, uids, titles):
+    """Tags per paper from the tags file; warns about unknown tag names and untagged papers."""
+    tags = json.load(open(path)) if os.path.exists(path) else {}
+    out, untagged = [], []
+    for uid, title in zip(uids, titles):
+        t = tags.get(uid)
+        if not t:
+            untagged.append(title)
+            out.append(None)
+            continue
+        rec = {}
+        for ax, short in (("suite", "s"), ("data", "d"), ("method", "m")):
+            bad = [x for x in t.get(ax, []) if x not in TAG_AXES[ax]]
+            if bad:
+                log(f"tags file: unknown {ax} tag(s) {bad} for {uid}; allowed: {TAG_AXES[ax]}")
+            rec[short] = [x for x in t.get(ax, []) if x in TAG_AXES[ax]]
+        rec["u"] = t.get("uncertain", [])
+        if t.get("note"):
+            rec["n"] = t["note"]
+        out.append(rec)
+    if untagged:
+        log(f"{len(untagged)} paper(s) without tags (add them to {path}):")
+        for title in untagged:
+            log(f"      - {title[:90]}")
+    return out
+
+
 # ----------------------------------------------------------------------------- layouts
 # Positions are stored in a JSON file (--positions) and kept fixed on later builds, so the maps
 # don't rearrange when papers are added. Only new papers/authors are placed.
@@ -505,7 +546,7 @@ def recluster_topics(X, T, tv, emb):
     return {n: lab2topic[L[j]] for j, n in enumerate(emb)}
 
 
-def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, recluster=False):
+def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tags_path, recluster=False):
     # ---- one record per entry on the publications page
     recs = []
     for e, p in zip(entries, s2):
@@ -625,6 +666,7 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, rec
 
     # ---- layouts (stored positions are kept; only new items are placed)
     uids = [r["uid"] for r in recs]
+    tags = load_tags(tags_path, uids, [r["title"] for r in recs])
     pos2, pos3 = topic_positions(X, T, emb, uids, [r["title"] for r in recs], store)
     cs_ = np.array([n for n in range(N) for j in refs[n]], int)
     ct_ = np.array([j for n in range(N) for j in refs[n]], int)
@@ -667,7 +709,7 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, rec
         papers.append({
             "id": r["uid"], "t": r["title"], "ab": r["abstract"], "d": r["date"], "dq": int(r["dq"]),
             "y": int(r["date"][:4]), "au": au, "c": r["c"], "cs": r["cs"], "bib": r["bib"], "v": r["venue"],
-            "lk": r["link"], "url": r["url"],
+            "lk": r["link"], "url": r["url"], "tg": tags[n],
             "x": round(float(pos2[n][0]), 4), "yy": round(float(pos2[n][1]), 4),
             "p3": [round(float(v), 4) for v in pos3[n]], "c3": new_store["citations"][uids[n]],
             "k": topic[n], "r": refs[n],
@@ -681,7 +723,7 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, rec
             log(f"      - {p['t'][:90]}")
     data = {"topics": [n for n, _ in TOPICS], "authors": authors, "papers": papers,
             "co": {m: [new_store["coauthors" + m].get(a) for a in authors] for m in ("1", "2")},
-            "refsrc": {"both": n_both, "s2": n_s2, "ads": n_ads},
+            "refsrc": {"both": n_both, "s2": n_s2, "ads": n_ads}, "tagaxes": TAG_AXES,
             "fetched": fetched, "nads": sum(1 for p in papers if p["cs"] == 0)}
     return data, new_store
 
@@ -694,6 +736,8 @@ def main():
     ap.add_argument("--offline", action="store_true", help="rebuild from the cached downloads, no network")
     ap.add_argument("--recluster", action="store_true",
                     help="redo the k-means topic clustering instead of using the fixed TOPIC_SEED assignments")
+    ap.add_argument("--tags", default="atlas_tags.json",
+                    help="file with the suite/data/method tags of each paper (default: atlas_tags.json)")
     ap.add_argument("--positions", default="atlas_positions.json",
                     help="file with the stored layout positions (default: atlas_positions.json)")
     ap.add_argument("--relayout", action="store_true",
@@ -734,7 +778,8 @@ def main():
     store = {}
     if not args.relayout and os.path.exists(args.positions):
         store = json.load(open(args.positions))
-    data, new_store = build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, recluster=args.recluster)
+    data, new_store = build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, args.tags,
+                                 recluster=args.recluster)
     # same papers, citations and positions as the current page: keep its date, so nothing changes
     strip = lambda d: json.dumps({k: v for k, v in d.items() if k != "fetched"}, sort_keys=True)
     if prev and strip(prev) == strip(data):
@@ -817,6 +862,12 @@ h1 { font-family: var(--f-display); font-weight: 700; font-size: 22px; letter-sp
 .search input { width: 100%; padding: 7px 10px 7px 32px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
 .search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--muted); }
 select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-variant-numeric: tabular-nums; }
+.toolbar select { max-width: 190px; }
+.tagrow { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 8px; align-items: baseline; margin-bottom: 4px; }
+.tagax { font-size: 12px; color: var(--muted); }
+.tag { border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; font-size: 12px; color: var(--ink); background: var(--wash); }
+.tag.unsure { background: transparent; border-style: dashed; color: var(--ink-2); }
+.tagnote { font-size: 12px; margin-top: 4px; }
 .chk { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-2); cursor: pointer; }
 .ghost { border: 1px solid var(--line); background: var(--surface); padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--ink-2); }
 .ghost:hover { color: var(--ink); border-color: var(--muted); }
@@ -902,6 +953,9 @@ footer { font-size: 12px; color: var(--muted); }
   <label class="search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3.5 3.5"/></svg>
     <input id="q" type="search" placeholder="Search titles, authors or arXiv IDs" aria-label="Search papers"></label>
   <span class="field"><label for="y0">Years</label> <select id="y0"></select> <span aria-hidden="true">–</span> <select id="y1" aria-label="To year"></select></span>
+  <span class="field"><label for="f-suite">Suite</label> <select id="f-suite"></select></span>
+  <span class="field"><label for="f-data">Data</label> <select id="f-data"></select></span>
+  <span class="field"><label for="f-method">Method</label> <select id="f-method"></select></span>
   <label class="chk" id="minwrap" hidden><input type="checkbox" id="min2" checked> Only authors with 2+ papers</label>
   <button class="ghost" id="reset">Clear filters</button>
 </div>
@@ -946,7 +1000,7 @@ const CE = []; P.forEach(p => p.r.forEach(j => CE.push({ s: p.i, t: j })));
 const years = [...new Set(P.map(p => p.y))].sort();
 
 // ---------- state ----------
-const S = { view: 'topics', sel: null, hover: null, q: '', y0: years[0], y1: years[years.length - 1], on: new Set(TOP.map((_, k) => k)), min2: true, nTop: { topics: 25, citations: 25, coauthors: 25 } };
+const S = { view: 'topics', sel: null, hover: null, q: '', y0: years[0], y1: years[years.length - 1], on: new Set(TOP.map((_, k) => k)), min2: true, tag: { s: '', d: '', m: '' }, nTop: { topics: 25, citations: 25, coauthors: 25 } };
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -957,7 +1011,8 @@ const readColors = () => { C = { surface: css('--surface'), ink: css('--ink'), i
 let pOn = [], aOn = [], nShown = 0;
 function applyFilters() {
   const q = S.q.trim().toLowerCase();
-  pOn = P.map(p => p.y >= S.y0 && p.y <= S.y1 && S.on.has(p.k) && (!q || p.hay.includes(q)));
+  const tagOk = p => ['s', 'd', 'm'].every(ax => !S.tag[ax] || (p.tg && p.tg[ax].includes(S.tag[ax])));
+  pOn = P.map(p => p.y >= S.y0 && p.y <= S.y1 && S.on.has(p.k) && (!q || p.hay.includes(q)) && tagOk(p));
   const nameHit = q ? AU.filter(a => a.lc.includes(q)) : [];
   aOn = AU.map(a => nameHit.length ? a.lc.includes(q) : a.papers.some(j => pOn[j]));
   nShown = pOn.filter(Boolean).length;
@@ -1231,6 +1286,12 @@ function overview() {
     <div class="how"><div><b>Size</b><span>${size}</span></div><div><b>Color</b><span>${color}</span></div>
     <div><b>Use</b><span>${USE[S.view]}</span></div></div>${list}`;
 }
+function tagBlock(p) {
+  if (!p.tg) return '<div><h3>Tags</h3><p>Not tagged yet.</p></div>';
+  const row = (label, ax) => p.tg[ax].length ? `<div class="tagrow"><span class="tagax">${label}</span><span class="names">${p.tg[ax].map(t =>
+    `<span class="tag${p.tg.u.includes(t) ? ' unsure' : ''}"${p.tg.u.includes(t) ? ' title="Uncertain: not clearly stated in the abstract"' : ''}>${esc(t)}${p.tg.u.includes(t) ? ' ?' : ''}</span>`).join('')}</span></div>` : '';
+  return `<div><h3>Tags</h3>${row('Suite', 's')}${row('Data', 'd')}${row('Method', 'm')}${p.tg.n ? `<p class="tagnote">${esc(p.tg.n)}</p>` : ''}</div>`;
+}
 function paperPanel(i) {
   const p = P[i];
   const venue = p.v && p.v !== p.lk ? `<span>${esc(p.v)}</span>` : '';
@@ -1238,6 +1299,7 @@ function paperPanel(i) {
     <div class="eyebrow">${dot(p.k)}${esc(TOP[p.k])}</div>
     <h2>${esc(p.t)}</h2>
     <div class="meta">${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.lk)}</a>` : `<span>${esc(p.lk)}</span>`}<span>${p.dq ? p.y + ' (estimated from list position)' : p.d}</span>${venue}${p.bib ? `<a href="https://ui.adsabs.harvard.edu/abs/${encodeURIComponent(p.bib)}/abstract" target="_blank" rel="noopener">${p.c} citations (ADS)</a>` : `<span>${p.cs === 2 ? 'Citations unknown' : p.c + ' citations (Semantic Scholar)'}</span>`}</div>
+    ${tagBlock(p)}
     <div><h3>${p.au.length} author${p.au.length > 1 ? 's' : ''}</h3><div class="names">${p.au.map(a => `<button data-a="${a}">${esc(AU[a].name)}</button>`).join('')}</div></div>
     <div><h3>Abstract</h3>${p.ab ? `<p class="abstract">${esc(p.ab)}</p>` : '<p>No abstract available. Use the link above to read the full text.</p>'}</div>
     <div><h3>Cites ${p.r.length} CAMELS paper${p.r.length === 1 ? '' : 's'}</h3>${p.r.length ? `<ul class="list">${p.r.slice().sort((a, b) => P[b].d.localeCompare(P[a].d)).map(pItem).join('')}</ul>` : '<p>None found.</p>'}</div>
@@ -1290,7 +1352,16 @@ legend.addEventListener('click', e => { const b = e.target.closest('.chip'); if 
 let qt; $('q').addEventListener('input', e => { clearTimeout(qt); qt = setTimeout(() => { S.q = e.target.value; refresh(); }, 120); });
 $('min2').addEventListener('change', e => { S.min2 = e.target.checked; fit(false); draw(); });
 $('reset').addEventListener('click', () => { S.q = ''; $('q').value = ''; S.y0 = years[0]; S.y1 = years[years.length - 1]; $('y0').value = S.y0; $('y1').value = S.y1;
-  S.on = new Set(TOP.map((_, k) => k)); renderLegend(); refresh(); });
+  S.on = new Set(TOP.map((_, k) => k)); S.tag = { s: '', d: '', m: '' }; ['suite', 'data', 'method'].forEach(a => { $('f-' + a).value = ''; });
+  renderLegend(); refresh(); });
+// tag filters: one dropdown per axis, with paper counts
+[['suite', 's'], ['data', 'd'], ['method', 'm']].forEach(([axis, ax]) => {
+  const sel = $('f-' + axis), names = { suite: 'All suites', data: 'All data', method: 'All methods' };
+  const n = t => P.filter(p => p.tg && p.tg[ax].includes(t)).length;
+  sel.innerHTML = `<option value="">${names[axis]}</option>` + (D.tagaxes ? D.tagaxes[axis] : []).filter(n)
+    .map(t => `<option value="${esc(t)}">${esc(t)} (${n(t)})</option>`).join('');
+  sel.addEventListener('change', () => { S.tag[ax] = sel.value; refresh(); });
+});
 $('zin').addEventListener('click', () => d3.select(cv).transition().duration(200).call(zoom.scaleBy, 1.5));
 $('zout').addEventListener('click', () => d3.select(cv).transition().duration(200).call(zoom.scaleBy, 1 / 1.5));
 $('zfit').addEventListener('click', () => fit(true));
@@ -1301,7 +1372,7 @@ function updateStats() {
   $('stats').innerHTML = `<b>${filtered ? nShown + ' of ' : ''}${P.length}</b> papers · <b>${AU.length}</b> authors · <b>${CE.length}</b> citation links · ${years[0]}–${years[years.length - 1]}`;
 }
 function refresh() { applyFilters(); updateStats(); if (!S.sel) overview(); draw(); }
-$('foot').innerHTML = `Papers listed on the <a href="https://camels.readthedocs.io/en/latest/publications.html" target="_blank" rel="noopener">CAMELS publications page</a> (all ${P.length} entries). Abstracts and authors from arXiv, or from ADS and the publications page for entries without an arXiv ID; ${D.nads ? 'citation counts from NASA ADS (Semantic Scholar where ADS has no record)' : 'citation counts from Semantic Scholar'}; SPECTER2 embeddings from Semantic Scholar; citation links between papers from ${D.refsrc && D.refsrc.ads ? `Semantic Scholar and ADS combined (${D.refsrc.both} in both, ${D.refsrc.s2} only in Semantic Scholar, ${D.refsrc.ads} only in ADS)` : 'Semantic Scholar'}; data as of ${D.fetched}. Topics are k-means clusters of the embeddings, named by hand.`;
+$('foot').innerHTML = `Papers listed on the <a href="https://camels.readthedocs.io/en/latest/publications.html" target="_blank" rel="noopener">CAMELS publications page</a> (all ${P.length} entries). Abstracts and authors from arXiv, or from ADS and the publications page for entries without an arXiv ID; ${D.nads ? 'citation counts from NASA ADS (Semantic Scholar where ADS has no record)' : 'citation counts from Semantic Scholar'}; SPECTER2 embeddings from Semantic Scholar; citation links between papers from ${D.refsrc && D.refsrc.ads ? `Semantic Scholar and ADS combined (${D.refsrc.both} in both, ${D.refsrc.s2} only in Semantic Scholar, ${D.refsrc.ads} only in ADS)` : 'Semantic Scholar'}; data as of ${D.fetched}. Topics are k-means clusters of the embeddings, named by hand. Suite, data and method tags were assigned with AI assistance from each abstract and have not all been checked by hand; dashed tags marked "?" are uncertain.`;
 
 // ---------- boot ----------
 renderLegend(); applyFilters(); renderPanel();
