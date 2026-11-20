@@ -73,7 +73,19 @@ dialog#about::backdrop { background: rgba(10,12,16,.45); }
 .search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--muted); }
 select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-variant-numeric: tabular-nums; }
 .toolbar select { max-width: 175px; }
-@media (max-width: 1360px) { .toolbar select[id^="f-"] { max-width: 128px; } .search { flex-basis: 150px; } .toolbar { gap: 8px 9px; } }
+#fbtn { white-space: nowrap; }
+.fcount { color: var(--accent); font-weight: 600; }
+.active { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; min-width: 0; }
+.achip { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--accent); background: var(--wash); color: var(--ink);
+  border-radius: 999px; padding: 2px 9px; font-size: 12px; cursor: pointer; }
+.achip span { color: var(--muted); font-size: 13px; }
+.achip:hover span { color: var(--ink); }
+.fpanel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.08); }
+.frow { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+.frow select { max-width: 220px; }
+.ftitle { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+.ftitle span { text-transform: none; letter-spacing: 0; font-weight: 400; }
 #dlwrap { margin-left: auto; position: relative; }
 #dlwrap:not([hidden]) + #reset, #reset { margin-left: 0; }
 #dlwrap[hidden] + #reset { margin-left: auto; }
@@ -142,9 +154,6 @@ select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; ba
 .ghost:hover { color: var(--ink); border-color: var(--muted); }
 
 .legend { display: flex; flex-wrap: wrap; gap: 4px 5px; align-items: center; }
-.legtoggle { all: unset; font-size: 12px; font-weight: 600; color: var(--ink-2); cursor: pointer; padding: 2px 6px 2px 0; }
-.legtoggle:hover { color: var(--ink); }
-.legtoggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 .chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px 2px 7px; border-radius: 999px; border: 1px solid var(--line);
   background: var(--surface); cursor: pointer; font-size: 12px; color: var(--ink); }
 .chip i { width: 10px; height: 10px; border-radius: 50%; flex: none; }
@@ -213,8 +222,7 @@ footer { font-size: 12px; color: var(--muted); }
 }
 @media (max-width: 600px) {
   .field label[for^="f-"] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-  .toolbar .field:has(select[id^="f-"]) { flex: 1 1 30%; min-width: 0; }
-  .toolbar select[id^="f-"] { width: 100%; max-width: none; }
+  .frow .field { flex: 1 1 100%; } .frow select { width: 100%; max-width: none; }
   .search { flex-basis: 100%; max-width: none; }
 }
 @media (pointer: coarse) {
@@ -258,14 +266,21 @@ footer { font-size: 12px; color: var(--muted); }
   <label class="search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3.5 3.5"/></svg>
     <input id="q" type="search" placeholder="Search  ( / )" aria-label="Search papers, authors, abstracts and tags"><span class="qcount" id="qcount" aria-live="polite"></span></label>
   <span class="field"><label for="y0">Years</label> <select id="y0"></select> <span aria-hidden="true">–</span> <select id="y1" aria-label="To year"></select> <button class="ghost playbtn" id="play" type="button" title="Play the history: papers appear one by one in date order" aria-label="Play the history paper by paper">▶ Play</button></span>
-  <span class="field"><label for="f-suite">Suite</label> <select id="f-suite"></select></span>
-  <span class="field"><label for="f-data">Data</label> <select id="f-data"></select></span>
-  <span class="field"><label for="f-method">Method</label> <select id="f-method"></select></span>
+  <button class="ghost" id="fbtn" type="button" aria-expanded="false" aria-controls="fpanel">Filters <span class="fcount" id="fcount"></span> ▾</button>
+  <span class="active" id="active" aria-label="Active filters"></span>
   <span class="dlwrap" id="dlwrap" hidden><button class="ghost" id="dlbtn" type="button" aria-haspopup="true" aria-expanded="false" title="Download the papers currently shown">Download ▾</button>
     <span class="dlmenu" id="dlmenu" hidden><button type="button" data-dl="bib">BibTeX (.bib)</button><button type="button" data-dl="csv">Spreadsheet (.csv)</button></span></span>
   <button class="ghost" id="reset">Clear filters</button>
 </div>
-<div class="legend" id="legend" aria-label="Topics"></div>
+<div class="fpanel" id="fpanel" hidden>
+  <div class="frow">
+    <span class="field"><label for="f-suite">Suite</label> <select id="f-suite"></select></span>
+    <span class="field"><label for="f-data">Data</label> <select id="f-data"></select></span>
+    <span class="field"><label for="f-method">Method</label> <select id="f-method"></select></span>
+  </div>
+  <div class="ftitle">Topics <span>· click to show or hide; Alt-click to show only one</span></div>
+  <div class="legend" id="legend" aria-label="Topics"></div>
+</div>
 
 <main>
   <div class="stage" id="stage">
@@ -961,23 +976,12 @@ document.querySelectorAll('.modes button').forEach(b => b.addEventListener('clic
 window.addEventListener('hashchange', applyHash);
 window.addEventListener('popstate', applyHash);
 const legend = $('legend');
-// topic legend: compact (short names, one row) or full; the choice is remembered in this browser
-const LEG = { collapsed: true };
-try { const v = localStorage.getItem('atlas-legend'); if (v) LEG.collapsed = v !== 'full'; } catch (e) {}
 function renderLegend() {
-  const short = D.topicsShort || TOP;
-  legend.classList.toggle('collapsed', LEG.collapsed);
-  legend.innerHTML = `<button class="legtoggle" data-legtoggle aria-expanded="${!LEG.collapsed}" title="${LEG.collapsed ? 'Show full topic names' : 'Show compact topic list'}">Topics ${LEG.collapsed ? '▸' : '▾'}</button>` +
-    TOP.map((t, k) => !P.some(p => p.k === k) ? '' : `<button class="chip" data-k="${k}" aria-pressed="${S.on.has(k)}" title="${esc(t)} — click to show or hide"><i style="background:var(--t${k})"></i>${esc(LEG.collapsed ? short[k] : t)} <span class="n">${P.filter(p => p.k === k).length}</span></button>`).join('');
+  legend.innerHTML = TOP.map((t, k) => !P.some(p => p.k === k) ? '' : `<button class="chip" data-k="${k}" aria-pressed="${S.on.has(k)}"><i style="background:var(--t${k})"></i>${esc(t)} <span class="n">${P.filter(p => p.k === k).length}</span></button>`).join('');
   const nNew = P.filter(p => p.nw).length;
-  if (nNew) legend.querySelector('[data-legtoggle]').insertAdjacentHTML('afterend', `<button class="chip" data-new aria-pressed="${S.newOnly}" title="Papers added to the site in the last 30 days"><i style="background:var(--accent)"></i>New <span class="n">${nNew}</span></button>`);
+  if (nNew) legend.insertAdjacentHTML('afterbegin', `<button class="chip" data-new aria-pressed="${S.newOnly}" title="Papers added to the site in the last 30 days"><i style="background:var(--accent)"></i>New <span class="n">${nNew}</span></button>`);
 }
 legend.addEventListener('click', e => {
-  if (e.target.closest('[data-legtoggle]')) {
-    LEG.collapsed = !LEG.collapsed;
-    try { localStorage.setItem('atlas-legend', LEG.collapsed ? 'compact' : 'full'); } catch (err) {}
-    renderLegend(); return;
-  }
   const b = e.target.closest('.chip'); if (!b) return;
   if (b.dataset.new !== undefined) { S.newOnly = !S.newOnly; renderLegend(); refresh(); return; } const k = +b.dataset.k;
   if (e.altKey || e.metaKey) { S.on = new Set([k]); } else if (S.on.has(k)) S.on.delete(k); else S.on.add(k);
@@ -1036,7 +1040,7 @@ function updateStats() {
   const filtered = nShown < P.length;
   $('stats').innerHTML = `<b>${filtered ? nShown + ' of ' : ''}${P.length}</b> papers · <b>${AU.length}</b> authors · <b>${CE.length}</b> citation links · ${years[0]}–${years[years.length - 1]}`;
 }
-function refresh() { applyFilters(); updateStats(); if (!S.sel) overview(); if (S.view === 'table') renderTable(); if (S.view === 'trends') renderTrends(); draw(); writeHash(false); }
+function refresh() { applyFilters(); updateStats(); renderActive(); if (!S.sel) overview(); if (S.view === 'table') renderTable(); if (S.view === 'trends') renderTrends(); draw(); writeHash(false); }
 const nSelf = CE.filter(e => e.self).length;
 $('foot').innerHTML = `Data as of ${D.fetched} · ${P.length} papers · <button class="linkbtn" id="aboutbtn" type="button">About &amp; data sources</button> · <a href="${missingUrl()}" target="_blank" rel="noopener">Suggest a missing paper</a> · <a href="https://github.com/franciscovillaescusa/camels-atlas" target="_blank" rel="noopener">Source on GitHub</a>`;
 $('about-body').innerHTML = `
@@ -1128,6 +1132,32 @@ $('trendswrap').addEventListener('mousemove', e => {
   tip.hidden = false; tip.style.left = Math.min(box.width - tip.offsetWidth - 8, e.clientX - box.left + 14) + 'px'; tip.style.top = (e.clientY - box.top + 14) + 'px';
 });
 $('trendswrap').addEventListener('mouseleave', hideTip);
+
+// ---------- filters panel and active-filter chips ----------
+function renderActive() {
+  const shown = TOP.filter((_, k) => P.some(p => p.k === k)).length, onN = [...S.on].filter(k => P.some(p => p.k === k)).length;
+  const chips = [];
+  if (S.y0 !== years[0] || S.y1 !== years[years.length - 1]) chips.push(['years', S.y0 === S.y1 ? `${S.y0}` : `${S.y0}–${S.y1}`]);
+  if (onN < shown) chips.push(['topics', onN === 1 ? `Topic: ${(D.topicsShort || TOP)[[...S.on][0]]}` : `Topics: ${onN} of ${shown}`]);
+  [['s', 'Suite'], ['d', 'Data'], ['m', 'Method']].forEach(([ax, l]) => { if (S.tag[ax]) chips.push([ax, `${l}: ${S.tag[ax]}`]); });
+  if (S.newOnly) chips.push(['new', 'New papers']);
+  $('active').innerHTML = chips.map(([k, l]) => `<button class="achip" data-clear="${k}" title="Remove this filter">${esc(l)} <span aria-hidden="true">×</span></button>`).join('');
+  const n = chips.filter(c => c[0] !== 'years').length;
+  $('fcount').textContent = n ? `· ${n}` : '';
+}
+$('active').addEventListener('click', e => {
+  const b = e.target.closest('[data-clear]'); if (!b) return;
+  const k = b.dataset.clear;
+  if (k === 'years') { S.y0 = years[0]; S.y1 = years[years.length - 1]; $('y0').value = S.y0; $('y1').value = S.y1; }
+  else if (k === 'topics') { S.on = new Set(TOP.map((_, i) => i)); renderLegend(); }
+  else if (k === 'new') { S.newOnly = false; renderLegend(); }
+  else { S.tag[k] = ''; $('f-' + { s: 'suite', d: 'data', m: 'method' }[k]).value = ''; }
+  refresh();
+});
+const fPanel = open => { $('fpanel').hidden = !open; $('fbtn').setAttribute('aria-expanded', open); };
+$('fbtn').addEventListener('click', e => { e.stopPropagation(); fPanel($('fpanel').hidden); });
+document.addEventListener('click', e => { if (!$('fpanel').hidden && !e.target.closest('#fpanel, #fbtn')) fPanel(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fPanel(false); });
 
 // ---------- export the papers currently shown (public site only; claude.ai blocks downloads) ----------
 function shownPapers() { return P.filter(p => pOn[p.i]).sort((a, b) => b.d.localeCompare(a.d)); }
@@ -1270,7 +1300,7 @@ function applyHash() {
       setDim(q.get('dim') === '3' ? 3 : 2);
     }
     if (!viewInit || (VIEWINFO[v] && v !== S.view)) { viewInit = true; setView(VIEWINFO[v] ? v : 'topics', false); }
-    applyFilters(); updateStats();
+    applyFilters(); updateStats(); renderActive();
     let sel = null;
     if (URLSTATE && q.get('paper')) { const p = P.find(x => x.id === q.get('paper')); if (p) sel = { kind: 'p', i: p.i }; }
     if (URLSTATE && q.get('author')) { const a = AU.find(x => x.name === q.get('author')); if (a) sel = { kind: 'a', i: a.i }; }

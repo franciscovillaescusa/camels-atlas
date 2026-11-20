@@ -19,7 +19,8 @@ Colors show 10 topics, found by k-means clustering of the paper embeddings and n
 **▶ Play** (next to the years) animates the maps: papers appear one by one in date order (about 20 s in all).
 A *Color by* menu in the map corner switches the dot colours between topic, year, method and suite.
 Each paper's panel lists its 5 most similar papers by embedding similarity, and selecting a paper on
-the topic map highlights them. Search (press `/`) covers titles, authors, IDs, abstracts and tags, ignores accents, tolerates small typos
+the topic map highlights them. Topic, suite, data, method and "New" filters live in the **Filters** panel; active filters show as removable
+chips next to it. Search (press `/`) covers titles, authors, IDs, abstracts and tags, ignores accents, tolerates small typos
 and ranks title/author matches first. Search, the year range and the topic buttons filter every view. A selected paper or author
 stays highlighted when you switch views. The maps open in 2D (drag to pan, scroll or pinch to zoom); a
 2D/3D button next to the zoom controls switches them to rotatable 3D layouts (drag to rotate).
@@ -39,7 +40,7 @@ BibTeX (`.bib`, with DOI, arXiv ID and ADS link where available) or as a spreads
 ### New papers
 
 The build records when each paper first appeared on the site (in `atlas_positions.json`). Papers added in
-the last 30 days get a **New** badge, and a **New** chip in the topic legend filters to them.
+the last 30 days get a **New** badge, and a **New** option in the *Filters* panel filters to them.
 
 ### Sharing a view
 
