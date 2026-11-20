@@ -2,11 +2,41 @@
 const D = JSON.parse(document.getElementById('atlas-data').textContent);
 const P = D.papers, TOP = D.topics;
 const NAME = D.proj.name, PUBS = D.proj.pubs;   // the project (e.g. CAMELS, Quijote)
-const tex = s => s.replace(/\$([^$]*)\$/g, (m, x) => x
-  .replace(/\\text\{([^}]*)\}/g, '$1').replace(/\\rm\s*/g, '').replace(/\\Omega/g, 'Ω').replace(/\\sigma/g, 'σ')
-  .replace(/\\alpha/g, 'α').replace(/\\phi/g, 'φ').replace(/\\mu/g, 'μ').replace(/\\sim/g, '~').replace(/\\times/g, '×')
-  .replace(/[{}\\]/g, '').replace(/\^/g, '').replace(/_/g, '')).replace(/\s+/g, ' ').trim();
-P.forEach((p, i) => { p.i = i; p.t = tex(p.t); p.citers = []; });
+// ---------- LaTeX in titles and abstracts -> readable Unicode text ----------
+// Math ($...$, \(...\)) gets symbols and sub/superscripts; text outside math loses font commands and
+// grouping braces ({\sc SimBIG} -> SimBIG). The original title is kept for BibTeX (p.tRaw).
+const TEX_SYM = { alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', epsilon: 'ε', varepsilon: 'ε', zeta: 'ζ', eta: 'η',
+  theta: 'θ', vartheta: 'ϑ', iota: 'ι', kappa: 'κ', lambda: 'λ', mu: 'μ', nu: 'ν', xi: 'ξ', pi: 'π', rho: 'ρ', sigma: 'σ',
+  tau: 'τ', upsilon: 'υ', phi: 'φ', varphi: 'φ', chi: 'χ', psi: 'ψ', omega: 'ω', Gamma: 'Γ', Delta: 'Δ', Theta: 'Θ',
+  Lambda: 'Λ', Xi: 'Ξ', Pi: 'Π', Sigma: 'Σ', Phi: 'Φ', Psi: 'Ψ', Omega: 'Ω',
+  sim: '∼', simeq: '≃', approx: '≈', times: '×', pm: '±', mp: '∓', cdot: '·', le: '≤', leq: '≤', leqslant: '≤',
+  ge: '≥', geq: '≥', geqslant: '≥', lesssim: '≲', gtrsim: '≳', ll: '≪', gg: '≫', ne: '≠', neq: '≠', equiv: '≡',
+  propto: '∝', infty: '∞', in: '∈', ell: 'ℓ', odot: '⊙', star: '⋆', ast: '∗', circ: '∘', sum: 'Σ', prod: 'Π',
+  nabla: '∇', partial: '∂', parallel: '∥', perp: '⊥', bot: '⊥', top: '⊤', rightarrow: '→', to: '→', leftarrow: '←',
+  langle: '⟨', rangle: '⟩', sqrt: '√', prime: '′', AA: 'Å', Msun: 'M⊙', dots: '…', ldots: '…', cdots: '⋯',
+  log: 'log', ln: 'ln', exp: 'exp', max: 'max', min: 'min', lim: 'lim', sin: 'sin', cos: 'cos' };
+const TEX_DROP = /^(rm|it|bf|sc|sf|tt|cal|scriptsize|footnotesize|small|large|Large|normalsize|displaystyle|textstyle|left|right|big|Big|bigg|Bigg|smash|mathrm|mathit|mathbf|mathsf|mathtt|mathcal|mathbb|mathscr|mathfrak|boldsymbol|bm|text|textrm|textit|textbf|texttt|textsc|textsf|emph|operatorname|hat|tilde|bar|vec|dot|ddot|widehat|widetilde|overline|underline|url|href|mbox|hbox)$/;
+const SUP = Object.fromEntries([...'0123456789+-−=()ni'].map((c, i) => [c, '⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁻⁼⁽⁾ⁿⁱ'[i]]));
+const SUB = Object.fromEntries([...'0123456789+-=()aehijklmnoprstuvx'].map((c, i) => [c, '₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎ₐₑₕᵢⱼₖₗₘₙₒₚᵣₛₜᵤᵥₓ'[i]]));
+const texCmds = s => s
+  .replace(/\\([%&#_$])/g, '$1').replace(/\\[{}]/g, m => m[1] === '{' ? '\u0001' : '\u0002')   // escaped characters
+  .replace(/\\[,;:! ]/g, ' ')                                                                    // spacing
+  .replace(/\\([A-Za-z]+)\s*/g, (m, c) => TEX_SYM[c] !== undefined ? TEX_SYM[c] + (/\s$/.test(m) ? ' ' : '')
+    : TEX_DROP.test(c) ? '' : c);                                       // unknown (author) macros keep their name
+const texScripts = s => s.replace(/([_^])\s*(\{([^{}]*)\}|[^\s{}\\])/g, (m, op, g, inner) => {
+  const x = (inner !== undefined ? inner : g).trim(), map = op === '^' ? SUP : SUB;
+  return [...x].every(c => map[c]) ? [...x].map(c => map[c]).join('') : (op === '^' ? '^' + x : x);
+});
+const unnest = s => {   // drop grouping braces except the ones right after ^ or _ ({\rm m} became {m}: _{{m}} -> _{m})
+  for (let prev = null; prev !== s;) { prev = s; s = s.replace(/(^|[^_^\s]|\s)\{([^{}]*)\}/g, (m, pre, x) => /[_^]\s*$/.test(pre) ? m : pre + x); }
+  return s;
+};
+const tex = s => String(s || '').replace(/\$([^$]*)\$|\\\((.*?)\\\)/g, (m, a, b) => '\u0003' + (a !== undefined ? a : b) + '\u0004')
+  .split(/(\u0003[^\u0004]*\u0004)/).map(part => part[0] === '\u0003'
+    ? texScripts(unnest(texCmds(part.slice(1, -1)))).replace(/[{}]/g, '').replace(/~/g, ' ')
+    : texCmds(part).replace(/[{}]/g, ''))
+  .join('').replace(/---/g, '—').replace(/--/g, '–').replace(/\u0001/g, '{').replace(/\u0002/g, '}').replace(/\s+/g, ' ').trim();
+P.forEach((p, i) => { p.i = i; p.tRaw = p.t; p.t = tex(p.t); p.ab = tex(p.ab); p.citers = []; });
 P.forEach(p => p.r.forEach(j => P[j].citers.push(p.i)));
 // self-citation: the citing and cited paper share at least one author
 const shares = (i, j) => P[i].au.some(a => P[j].au.includes(a));
@@ -938,7 +968,7 @@ function bibtex(list) {
     used.add(k);
     const ax = /^\d{4}\.\d{4,5}$/.test(p.id) ? p.id : '';
     const journal = p.v && !/arxiv/i.test(p.v) ? p.v : '';
-    const f = [['title', `{${tex(p.t)}}`], ['author', p.au.map(a => tex(lastFirst(AU[a].name))).join(' and ')], ['year', p.y],
+    const f = [['title', `{${/[\\$]/.test(p.tRaw) ? p.tRaw.replace(/(^|[^\\])([&%#])/g, '$1\\$2') : tex(p.t)}}`], ['author', p.au.map(a => tex(lastFirst(AU[a].name))).join(' and ')], ['year', p.y],
       journal && ['journal', tex(journal)], p.doi && ['doi', p.doi], ax && ['eprint', ax], ax && ['archivePrefix', 'arXiv'],
       p.bib && ['adsurl', `https://ui.adsabs.harvard.edu/abs/${p.bib}`], ['url', p.url || (ax ? `https://arxiv.org/abs/${ax}` : '')]]
       .filter(x => x && x[1] !== '' && x[1] !== undefined);
