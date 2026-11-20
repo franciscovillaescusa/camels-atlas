@@ -72,4 +72,7 @@ top of `build_camels_atlas.py`). The topic of every paper checked at that time i
 `TOPIC_SEED`, so the names keep matching their papers when the site is rebuilt. New papers join the
 topic whose centre is nearest (or, without an embedding, the topic most common among the papers with
 the most similar words). Every run prints the papers in each topic and the topic given to each new paper.
+A new paper that is less similar to every topic centre than any existing paper is to its own topic goes
+into a gray "Unassigned (new papers)" group instead, and the build reports it, so new research directions
+stay visible; assign it by adding its arXiv ID to `TOPIC_SEED`, or recluster.
 `--recluster` redoes the clustering from scratch; after that, check the printed titles and edit `TOPICS`.

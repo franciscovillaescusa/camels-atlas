@@ -82,6 +82,10 @@ TOPICS = [
     ("Halo concentration & baryonic imprints", ["concentration", "concentration mass", "imprints"]),
 ]
 
+# Papers that fit no topic get this extra index (shown in gray as "Unassigned (new papers)").
+UNASSIGNED = len(TOPICS)
+TOPIC_NAMES = [n for n, _ in TOPICS] + ["Unassigned (new papers)"]
+
 # Hand-checked topic of every paper in the Nov 2026 clustering (arXiv ID -> index into TOPICS).
 # These stay fixed so the hand-written names keep matching their papers. New papers join the topic
 # whose centre (mean embedding) is nearest. Run with --recluster to redo the clustering from scratch.
@@ -602,12 +606,25 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
         seeded = [(j, TOPIC_SEED[recs[n]["uid"]]) for j, n in enumerate(emb) if recs[n]["uid"] in TOPIC_SEED]
         C = np.array([X[[j for j, k in seeded if k == t]].mean(0) for t in range(N_TOPICS)])
         C /= np.linalg.norm(C, axis=1, keepdims=True)
+        # cutoff: the lowest similarity of any known paper to its own topic centre. A new paper less
+        # similar than that to every topic fits none of them and goes to "Unassigned".
+        cutoff = min(float(C[k] @ X[j]) for j, k in seeded)
         topic = {}
         for j, n in enumerate(emb):
             uid = recs[n]["uid"]
-            topic[n] = TOPIC_SEED[uid] if uid in TOPIC_SEED else int(np.argmax(C @ X[j]))
-            if uid not in TOPIC_SEED:
-                log(f"new paper -> topic '{TOPICS[topic[n]][0]}':  {recs[n]['title'][:60]}")
+            if uid in TOPIC_SEED:
+                topic[n] = TOPIC_SEED[uid]
+                continue
+            sims = C @ X[j]
+            best = int(np.argmax(sims))
+            if sims[best] < cutoff:
+                topic[n] = UNASSIGNED
+                log(f"new paper fits no topic (similarity {sims[best]:.3f} < cutoff {cutoff:.3f}) -> Unassigned: "
+                    f"{recs[n]['title'][:60]}")
+            else:
+                topic[n] = best
+                log(f"new paper -> topic '{TOPICS[best][0]}' (similarity {sims[best]:.3f}, cutoff {cutoff:.3f}): "
+                    f"{recs[n]['title'][:50]}")
 
     for n in range(N):  # no embedding: most common topic among the 3 papers with the most similar words
         if n not in topic:
@@ -716,12 +733,14 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
         })
 
     log(f"\n{len(papers)} papers, {len(authors)} authors, {sum(len(p['r']) for p in papers)} citation links")
-    for k, (name, _) in enumerate(TOPICS):
+    for k, name in enumerate(TOPIC_NAMES):
         mem = sorted((p for p in papers if p["k"] == k), key=lambda p: -p["c"])
+        if k == UNASSIGNED and not mem:
+            continue
         log(f"\n[{k}] {name}  ({len(mem)} papers)")
         for p in mem[:4]:
             log(f"      - {p['t'][:90]}")
-    data = {"topics": [n for n, _ in TOPICS], "authors": authors, "papers": papers,
+    data = {"topics": TOPIC_NAMES, "authors": authors, "papers": papers,
             "co": {m: [new_store["coauthors" + m].get(a) for a in authors] for m in ("1", "2")},
             "refsrc": {"both": n_both, "s2": n_s2, "ads": n_ads}, "tagaxes": TAG_AXES,
             "fetched": fetched, "nads": sum(1 for p in papers if p["cs"] == 0)}
@@ -820,7 +839,7 @@ TEMPLATE = r'''<title>CAMELS Literature Atlas</title>
 :root {
   --bg: #f4f6f9; --surface: #ffffff; --ink: #12151c; --ink-2: #4c5361; --muted: #7d8492;
   --line: #e1e5eb; --edge: rgba(18,21,28,0.13); --edge-hi: #12151c; --accent: #2a78d6; --wash: rgba(42,120,214,0.08);
-  --t0: #2a78d6; --t1: #eb6834; --t2: #1baf7a; --t3: #eda100; --t4: #e87ba4; --t5: #008300; --t6: #6250d6; --t7: #e34948; --t8: #8c6d1f; --t9: #00a5b5;
+  --t0: #2a78d6; --t1: #eb6834; --t2: #1baf7a; --t3: #eda100; --t4: #e87ba4; --t5: #008300; --t6: #6250d6; --t7: #e34948; --t8: #8c6d1f; --t9: #00a5b5; --t10: #8b9099;
   --f-display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
   --f-body: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
@@ -828,11 +847,11 @@ TEMPLATE = r'''<title>CAMELS Literature Atlas</title>
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #0e1116; --surface: #161a21; --ink: #eef0f4; --ink-2: #b6bcc8; --muted: #858c99;
   --line: #2a303b; --edge: rgba(238,240,244,0.12); --edge-hi: #eef0f4; --accent: #3987e5; --wash: rgba(57,135,229,0.14);
-  --t0: #3987e5; --t1: #d95926; --t2: #199e70; --t3: #c98500; --t4: #d55181; --t5: #008300; --t6: #9085e9; --t7: #e66767; --t8: #9a7b26; --t9: #0f9fae; color-scheme: dark; } }
+  --t0: #3987e5; --t1: #d95926; --t2: #199e70; --t3: #c98500; --t4: #d55181; --t5: #008300; --t6: #9085e9; --t7: #e66767; --t8: #9a7b26; --t9: #0f9fae; --t10: #7b808a; color-scheme: dark; } }
 :root[data-theme="dark"] {
   --bg: #0e1116; --surface: #161a21; --ink: #eef0f4; --ink-2: #b6bcc8; --muted: #858c99;
   --line: #2a303b; --edge: rgba(238,240,244,0.12); --edge-hi: #eef0f4; --accent: #3987e5; --wash: rgba(57,135,229,0.14);
-  --t0: #3987e5; --t1: #d95926; --t2: #199e70; --t3: #c98500; --t4: #d55181; --t5: #008300; --t6: #9085e9; --t7: #e66767; --t8: #9a7b26; --t9: #0f9fae; color-scheme: dark; }
+  --t0: #3987e5; --t1: #d95926; --t2: #199e70; --t3: #c98500; --t4: #d55181; --t5: #008300; --t6: #9085e9; --t7: #e66767; --t8: #9a7b26; --t9: #0f9fae; --t10: #7b808a; color-scheme: dark; }
 
 html, body { height: 100%; }
 body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.5;
@@ -1033,7 +1052,7 @@ function topicLayout() {
   const labels = TOP.map((name, k) => {
     const pts = nodes.filter(n => P[n.id].k === k);
     return { k, name, x3: med(pts.map(n => n.x3)), y3: med(pts.map(n => n.y3)), z3: med(pts.map(n => n.z3)) };
-  });
+  }).filter(l => l.x3 !== undefined);
   return { nodes, links: [], labels, R, is3d: true };
 }
 // Network positions are computed by the Python build script and shipped with the data.
@@ -1342,7 +1361,7 @@ document.querySelectorAll('.modes button').forEach(b => b.addEventListener('clic
 window.addEventListener('hashchange', () => { const v = location.hash.slice(1); if (VIEWINFO[v] && v !== S.view) setView(v, true); });
 const legend = $('legend');
 function renderLegend() {
-  legend.innerHTML = TOP.map((t, k) => `<button class="chip" data-k="${k}" aria-pressed="${S.on.has(k)}"><i style="background:var(--t${k})"></i>${esc(t)} <span class="n">${P.filter(p => p.k === k).length}</span></button>`).join('');
+  legend.innerHTML = TOP.map((t, k) => !P.some(p => p.k === k) ? '' : `<button class="chip" data-k="${k}" aria-pressed="${S.on.has(k)}"><i style="background:var(--t${k})"></i>${esc(t)} <span class="n">${P.filter(p => p.k === k).length}</span></button>`).join('');
 }
 legend.addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; const k = +b.dataset.k;
   if (e.altKey || e.metaKey) { S.on = new Set([k]); } else if (S.on.has(k)) S.on.delete(k); else S.on.add(k);
