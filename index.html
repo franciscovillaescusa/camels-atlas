@@ -12,6 +12,9 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XRRM15GMS9"></script>
+<script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-XRRM15GMS9');</script>
 <title>CAMELS Literature Atlas</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%227%22%20fill%3D%22%2312151c%22/%3E%3Cg%20stroke%3D%22%235b9cf0%22%20stroke-width%3D%221.6%22%20opacity%3D%22.8%22%3E%3Cpath%20d%3D%22M8%2022%20L14%2011%20L23%209%20M14%2011%20L19%2020%20L8%2022%20M19%2020%20L25%2023%22/%3E%3C/g%3E%3Cg%20fill%3D%22%235b9cf0%22%3E%3Ccircle%20cx%3D%228%22%20cy%3D%2222%22%20r%3D%222.6%22/%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2211%22%20r%3D%223.2%22/%3E%3Ccircle%20cx%3D%2223%22%20cy%3D%229%22%20r%3D%222.2%22/%3E%3Ccircle%20cx%3D%2219%22%20cy%3D%2220%22%20r%3D%222.8%22/%3E%3Ccircle%20cx%3D%2225%22%20cy%3D%2223%22%20r%3D%221.8%22/%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -884,6 +887,7 @@ function renderPanel() { if (!S.sel) overview(); else if (S.sel.kind === 'p') pa
 panel.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.copy !== undefined) {
+    track('atlas_copy_link', { kind: S.sel ? S.sel.kind : '' });
     const done = ok => { b.textContent = ok ? 'Copied ✓' : 'Copy failed'; setTimeout(() => { b.textContent = 'Copy link'; }, 1600); };
     const url = location.href;
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(() => done(true), () => done(false));
@@ -949,7 +953,9 @@ $('tablewrap').addEventListener('keydown', e => {
 });
 
 // ---------- controls ----------
+let lastTracked = null;
 function setView(v, animate) {
+  if (v !== lastTracked) { if (lastTracked) track('atlas_view', { view: v }); lastTracked = v; }
   S.view = v; CAM.snap = true; ['topics', 'citations', 'coauthors', 'table', 'trends'].forEach(x => $('m-' + x).setAttribute('aria-pressed', x === v));
   $('selfwrap').hidden = v !== 'citations'; $('cbwrap').hidden = !!FLAT[v]; $('zspin').hidden = S.dim === 2; spinBtn();
   const flat = !!FLAT[v];
@@ -1000,13 +1006,14 @@ document.addEventListener('keydown', e => {   // "/" jumps to the search box
     e.preventDefault(); $('q').focus(); $('q').select();
   }
 });
-$('colorby').addEventListener('change', e => { S.colorBy = e.target.value; colorKey(); if (!S.sel) overview(); draw(); writeHash(false); });
+$('colorby').addEventListener('change', e => { S.colorBy = e.target.value; track('atlas_color_by', { by: S.colorBy }); colorKey(); if (!S.sel) overview(); draw(); writeHash(false); });
 const noteText = v => (v === 'topics' ? (S.dim === 2 ? 'Layout: 2D t-SNE of SPECTER2 abstract embeddings · axes have no units'
     : 'Layout: each paper pulled toward its 4 most similar papers (SPECTER2) · axes have no units')
   : v === 'citations' ? citeNote().replace(' · drag to rotate', '') : `${AU.length} authors · ${EM.size} co-author pairs`)
   + (S.dim === 3 ? ' · drag to rotate' : ' · drag to pan');
 function setDim(d) {
   if (S.dim === d) return;
+  if (!applying) track('atlas_dim', { dim: d + 'D' });
   S.dim = d;
   $('d2').setAttribute('aria-pressed', d === 2); $('d3').setAttribute('aria-pressed', d === 3);
   $('zspin').hidden = d === 2; CAM.snap = true;
@@ -1170,11 +1177,14 @@ function download(name, text, type) {
 if (D.urlstate) $('dlwrap').hidden = false;
 const dlMenu = open => { $('dlmenu').hidden = !open; $('dlbtn').setAttribute('aria-expanded', open); };
 $('dlbtn').addEventListener('click', e => { e.stopPropagation(); dlMenu($('dlmenu').hidden); });
-document.addEventListener('click', e => { if (!e.target.closest('#dlwrap')) dlMenu(false); });
+document.addEventListener('click', e => { if (!e.target.closest('#dlwrap')) dlMenu(false);
+  if (e.target.closest('.reportlink a')) track('atlas_report_problem');
+  if (e.target.closest('#foot a[href*="issues/new"]')) track('atlas_suggest_paper'); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') dlMenu(false); });
 $('dlmenu').addEventListener('click', e => {
   const b = e.target.closest('button[data-dl]'); if (!b) return;
   const list = shownPapers(), stamp = String(D.fetched);
+  track('atlas_download', { format: b.dataset.dl, papers: list.length });
   if (b.dataset.dl === 'bib') download(`camels-papers-${stamp}.bib`, bibtex(list), 'application/x-bibtex');
   else download(`camels-papers-${stamp}.csv`, '﻿' + csv(list), 'text/csv');
   dlMenu(false);
@@ -1203,9 +1213,12 @@ function startPlay() {
   };
   step();
 }
-$('play').addEventListener('click', e => { e.stopPropagation(); PLAY.on ? stopPlay(true) : startPlay(); });
+$('play').addEventListener('click', e => { e.stopPropagation(); if (!PLAY.on) track('atlas_play', { view: S.view }); PLAY.on ? stopPlay(true) : startPlay(); });
 cv.addEventListener('pointerdown', () => stopPlay(true));
 ['y0', 'y1'].forEach(id => $(id).addEventListener('change', () => stopPlay(false)));
+
+// ---------- usage events for Google Analytics (public site only; no-op when gtag is absent) ----------
+const track = (name, params) => { try { if (window.gtag) window.gtag('event', name, params || {}); } catch (e) {} };
 
 // ---------- shareable links ----------
 // On the public site the address holds the view, the selected paper/author, the filters and 2D/3D,

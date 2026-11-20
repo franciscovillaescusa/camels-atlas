@@ -49,6 +49,14 @@ share exactly what you see, e.g.
 `#coauthors&author=Shy Genel`. Paper and author panels have a **Copy link** button, and the browser's
 back button steps through your selections.
 
+### Analytics
+
+The public site loads Google Analytics 4 (`GA_ID` in `build_camels_atlas.py`, the same property as
+franciscovillaescusa.github.io; filter reports by page path `/camels-atlas/`). Besides page views it sends
+anonymous events: `atlas_view`, `atlas_dim`, `atlas_color_by`, `atlas_play`, `atlas_download`,
+`atlas_copy_link`, `atlas_report_problem` and `atlas_suggest_paper`. Search terms are not sent.
+Set `GA_ID = ""` to disable it.
+
 ## Data sources
 
 - Paper list: every entry on the [CAMELS publications page](https://camels.readthedocs.io/en/latest/publications.html)

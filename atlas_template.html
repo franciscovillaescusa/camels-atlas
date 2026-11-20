@@ -869,6 +869,7 @@ function renderPanel() { if (!S.sel) overview(); else if (S.sel.kind === 'p') pa
 panel.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.copy !== undefined) {
+    track('atlas_copy_link', { kind: S.sel ? S.sel.kind : '' });
     const done = ok => { b.textContent = ok ? 'Copied ✓' : 'Copy failed'; setTimeout(() => { b.textContent = 'Copy link'; }, 1600); };
     const url = location.href;
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(() => done(true), () => done(false));
@@ -934,7 +935,9 @@ $('tablewrap').addEventListener('keydown', e => {
 });
 
 // ---------- controls ----------
+let lastTracked = null;
 function setView(v, animate) {
+  if (v !== lastTracked) { if (lastTracked) track('atlas_view', { view: v }); lastTracked = v; }
   S.view = v; CAM.snap = true; ['topics', 'citations', 'coauthors', 'table', 'trends'].forEach(x => $('m-' + x).setAttribute('aria-pressed', x === v));
   $('selfwrap').hidden = v !== 'citations'; $('cbwrap').hidden = !!FLAT[v]; $('zspin').hidden = S.dim === 2; spinBtn();
   const flat = !!FLAT[v];
@@ -985,13 +988,14 @@ document.addEventListener('keydown', e => {   // "/" jumps to the search box
     e.preventDefault(); $('q').focus(); $('q').select();
   }
 });
-$('colorby').addEventListener('change', e => { S.colorBy = e.target.value; colorKey(); if (!S.sel) overview(); draw(); writeHash(false); });
+$('colorby').addEventListener('change', e => { S.colorBy = e.target.value; track('atlas_color_by', { by: S.colorBy }); colorKey(); if (!S.sel) overview(); draw(); writeHash(false); });
 const noteText = v => (v === 'topics' ? (S.dim === 2 ? 'Layout: 2D t-SNE of SPECTER2 abstract embeddings · axes have no units'
     : 'Layout: each paper pulled toward its 4 most similar papers (SPECTER2) · axes have no units')
   : v === 'citations' ? citeNote().replace(' · drag to rotate', '') : `${AU.length} authors · ${EM.size} co-author pairs`)
   + (S.dim === 3 ? ' · drag to rotate' : ' · drag to pan');
 function setDim(d) {
   if (S.dim === d) return;
+  if (!applying) track('atlas_dim', { dim: d + 'D' });
   S.dim = d;
   $('d2').setAttribute('aria-pressed', d === 2); $('d3').setAttribute('aria-pressed', d === 3);
   $('zspin').hidden = d === 2; CAM.snap = true;
@@ -1155,11 +1159,14 @@ function download(name, text, type) {
 if (D.urlstate) $('dlwrap').hidden = false;
 const dlMenu = open => { $('dlmenu').hidden = !open; $('dlbtn').setAttribute('aria-expanded', open); };
 $('dlbtn').addEventListener('click', e => { e.stopPropagation(); dlMenu($('dlmenu').hidden); });
-document.addEventListener('click', e => { if (!e.target.closest('#dlwrap')) dlMenu(false); });
+document.addEventListener('click', e => { if (!e.target.closest('#dlwrap')) dlMenu(false);
+  if (e.target.closest('.reportlink a')) track('atlas_report_problem');
+  if (e.target.closest('#foot a[href*="issues/new"]')) track('atlas_suggest_paper'); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') dlMenu(false); });
 $('dlmenu').addEventListener('click', e => {
   const b = e.target.closest('button[data-dl]'); if (!b) return;
   const list = shownPapers(), stamp = String(D.fetched);
+  track('atlas_download', { format: b.dataset.dl, papers: list.length });
   if (b.dataset.dl === 'bib') download(`camels-papers-${stamp}.bib`, bibtex(list), 'application/x-bibtex');
   else download(`camels-papers-${stamp}.csv`, '﻿' + csv(list), 'text/csv');
   dlMenu(false);
@@ -1188,9 +1195,12 @@ function startPlay() {
   };
   step();
 }
-$('play').addEventListener('click', e => { e.stopPropagation(); PLAY.on ? stopPlay(true) : startPlay(); });
+$('play').addEventListener('click', e => { e.stopPropagation(); if (!PLAY.on) track('atlas_play', { view: S.view }); PLAY.on ? stopPlay(true) : startPlay(); });
 cv.addEventListener('pointerdown', () => stopPlay(true));
 ['y0', 'y1'].forEach(id => $(id).addEventListener('change', () => stopPlay(false)));
+
+// ---------- usage events for Google Analytics (public site only; no-op when gtag is absent) ----------
+const track = (name, params) => { try { if (window.gtag) window.gtag('event', name, params || {}); } catch (e) {} };
 
 // ---------- shareable links ----------
 // On the public site the address holds the view, the selected paper/author, the filters and 2D/3D,

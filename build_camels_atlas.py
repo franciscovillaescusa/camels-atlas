@@ -68,7 +68,8 @@ from sklearn.manifold import TSNE
 
 PUBS_URL = "https://camels.readthedocs.io/en/latest/publications.html"
 SITE_URL = "https://franciscovillaescusa.github.io/camels-atlas/"
-NEW_DAYS = 30   # papers added to the site within this many days are marked "New"   # public address, used for link previews
+NEW_DAYS = 30
+GA_ID = "G-XRRM15GMS9"   # Google Analytics 4 (same property as franciscovillaescusa.github.io); "" disables it   # papers added to the site within this many days are marked "New"   # public address, used for link previews
 UA = {"User-Agent": "camels-atlas-builder/1.0"}
 N_TOPICS = 10
 SEED = 0
@@ -1034,6 +1035,9 @@ def main():
                 f'<meta property="og:image" content="{SITE_URL}preview.png">\n'
                 '<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n'
                 '<meta name="twitter:card" content="summary_large_image">\n'
+                + (f'<!-- Google tag (gtag.js) -->\n<script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>\n'
+                   f"<script>window.dataLayer = window.dataLayer || []; function gtag(){{dataLayer.push(arguments);}} "
+                   f"gtag('js', new Date()); gtag('config', '{GA_ID}');</script>\n" if GA_ID else "")
                 + head.strip() + '\n<style>body{margin:0}</style>\n</head>\n<body>\n<header>' + body + '\n</body>\n</html>\n')
     with open(args.positions, "w") as f:
         json.dump(new_store, f, separators=(",", ":"), sort_keys=True)
