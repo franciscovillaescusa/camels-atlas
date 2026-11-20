@@ -12,7 +12,8 @@ Pipeline
   3. NASA ADS            full records for entries that link to ADS instead of arXiv, and total
                          citation counts (token read from ~/.ads/dev_key or $ADS_TOKEN; without a
                          token, citation counts come from Semantic Scholar)
-  4. Semantic Scholar    SPECTER2 embeddings + references (citation links between CAMELS papers),
+  4. Semantic Scholar    SPECTER2 embeddings + references (citation links between CAMELS papers;
+                         an optional free API key in $S2_API_KEY avoids rate limits),
                          matched by arXiv ID, DOI or exact title
   Entries with no arXiv or ADS record (e.g. theses) use the title and authors from the
   publications page; if no date is known, the year is estimated from the entry's position
@@ -173,7 +174,8 @@ def fetch_arxiv(ids):
 def s2_get(url, method="GET", **kw):
     """Semantic Scholar request with back-off on rate limiting (HTTP 429)."""
     for attempt in range(8):
-        r = requests.request(method, url, headers=UA, timeout=120, **kw)
+        hdr = dict(UA, **({"x-api-key": os.environ["S2_API_KEY"]} if os.environ.get("S2_API_KEY") else {}))
+        r = requests.request(method, url, headers=hdr, timeout=120, **kw)
         if r.status_code in (200, 404):
             return r
         time.sleep(5 * (attempt + 1))
