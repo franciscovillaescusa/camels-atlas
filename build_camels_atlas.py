@@ -88,6 +88,10 @@ TOPICS = [
 # Papers that fit no topic get this extra index (shown in gray as "Unassigned (new papers)").
 UNASSIGNED = len(TOPICS)
 TOPIC_NAMES = [n for n, _ in TOPICS] + ["Unassigned (new papers)"]
+# short forms used where space is tight (e.g. the table view); same order as TOPIC_NAMES
+TOPIC_SHORT = ["HI & multifield", "Baryonic feedback", "SBI methods", "Primordial NG", "Fast simulators",
+               "Diffusion models", "Halos & clusters", "Galaxy properties", "Field-level inference",
+               "Halo concentration", "Unassigned"]
 
 # Hand-checked topic of every paper in the Nov 2026 clustering (arXiv ID -> index into TOPICS).
 # These stay fixed so the hand-written names keep matching their papers. New papers join the topic
@@ -884,7 +888,7 @@ def build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, tag
         log(f"\n[{k}] {name}  ({len(mem)} papers)")
         for p in mem[:4]:
             log(f"      - {p['t'][:90]}")
-    data = {"topics": TOPIC_NAMES, "authors": authors, "papers": papers,
+    data = {"topics": TOPIC_NAMES, "topicsShort": TOPIC_SHORT, "authors": authors, "papers": papers,
             "co": {m: [new_store["coauthors" + m].get(a) for a in authors] for m in ("1", "2")},
             "co2d": {m: [new_store["coauthors" + m + "_2d"].get(a) for a in authors] for m in ("1", "2")},
             "refsrc": {"both": n_both, "s2": n_s2, "ads": n_ads}, "tagaxes": TAG_AXES,
