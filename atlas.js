@@ -766,6 +766,7 @@ $('tablewrap').addEventListener('keydown', e => {
 // ---------- controls ----------
 let lastTracked = null;
 function setView(v, animate) {
+  if (FLAT[v]) stopPlay();   // the history animation is for the maps
   if (v !== lastTracked) { if (lastTracked) track('atlas_view', { view: v }); lastTracked = v; }
   S.view = v; CAM.snap = true; ['topics', 'citations', 'coauthors', 'table', 'trends'].forEach(x => $('m-' + x).setAttribute('aria-pressed', x === v));
   $('selfwrap').hidden = v !== 'citations'; $('cbwrap').hidden = !!FLAT[v]; $('spinrow').hidden = S.dim === 2; spinBtn();
@@ -1056,8 +1057,13 @@ function startPlay() {
   step();
 }
 $('play').addEventListener('click', e => { e.stopPropagation(); if (!PLAY.on) track('atlas_play', { view: S.view }); PLAY.on ? stopPlay() : startPlay(); });
+// The animation plays the papers that passed the filters when it started, so any change to the filters
+// (search, years, topics, tags, New, the active-filter chips, Clear filters) stops it, as does a click on
+// the map. Capture phase: it stops before the control's own handler refreshes the page.
 cv.addEventListener('pointerdown', () => stopPlay());
-['y0', 'y1'].forEach(id => $(id).addEventListener('change', () => stopPlay()));
+document.addEventListener('input', e => { if (e.target.closest('#q, #fpanel')) stopPlay(); }, true);
+document.addEventListener('change', e => { if (e.target.closest('#y0, #y1, #fpanel')) stopPlay(); }, true);
+document.addEventListener('click', e => { if (e.target.closest('#fpanel, #active, #reset')) stopPlay(); }, true);
 
 // ---------- usage events for Google Analytics (public site only; no-op when gtag is absent) ----------
 const track = (name, params) => { try { if (window.gtag) window.gtag('event', name, params || {}); } catch (e) {} };
@@ -1089,6 +1095,7 @@ function writeHash(push) {   // push: add a history entry (selections), else rep
   try { if (push) history.pushState(null, '', h); else history.replaceState(null, '', h); } catch (e) {}
 }
 function applyHash() {
+  stopPlay();   // another shared link, or Back/Forward
   const amp = location.hash.indexOf('&');
   const raw = amp < 0 ? location.hash.slice(1) : location.hash.slice(1, amp);
   const v = VIEWS.includes(raw) ? raw : 'topics';
