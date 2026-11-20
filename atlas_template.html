@@ -34,6 +34,21 @@ button, input, select { font: inherit; color: inherit; }
 header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
 .brand { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 h1 { font-family: var(--f-display); font-weight: 700; font-size: 22px; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+.linkbtn { all: unset; color: var(--accent); cursor: pointer; }
+.linkbtn:hover { text-decoration: underline; }
+.linkbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+dialog#about { max-width: min(680px, calc(100vw - 32px)); max-height: calc(100vh - 48px); border: 1px solid var(--line); border-radius: 12px;
+  padding: 0; background: var(--surface); color: var(--ink); box-shadow: 0 12px 40px rgba(0,0,0,.25); }
+dialog#about::backdrop { background: rgba(10,12,16,.45); }
+.about-head { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 14px 18px; background: var(--surface); border-bottom: 1px solid var(--line); }
+.about-head h2 { font-family: var(--f-display); font-size: 18px; margin: 0; }
+#about-body { padding: 4px 18px 18px; font-size: 13.5px; line-height: 1.55; color: var(--ink-2); }
+#about-body h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 16px 0 6px; }
+#about-body ul { margin: 0; padding-left: 18px; display: grid; gap: 5px; }
+#about-body p { margin: 0; }
+#about-body ul + p { margin-top: 14px; }
+#about-body b { color: var(--ink); font-weight: 600; }
 .tagline { margin: 0; color: var(--ink-2); font-size: 14px; max-width: 100ch; text-wrap: pretty; }
 .stats { color: var(--ink-2); font-size: 13px; font-variant-numeric: tabular-nums; }
 .stats b { color: var(--ink); font-weight: 600; }
@@ -205,6 +220,10 @@ footer { font-size: 12px; color: var(--muted); }
   <aside id="panel" aria-live="polite"></aside>
 </main>
 <footer id="foot"></footer>
+<dialog id="about" aria-labelledby="about-title">
+  <div class="about-head"><h2 id="about-title">About &amp; data sources</h2><button class="ghost" id="about-x" type="button" aria-label="Close">×</button></div>
+  <div id="about-body"></div>
+</dialog>
 
 <script type="application/json" id="atlas-data">__DATA__</script>
 <script>
@@ -746,7 +765,32 @@ function updateStats() {
   $('stats').innerHTML = `<b>${filtered ? nShown + ' of ' : ''}${P.length}</b> papers · <b>${AU.length}</b> authors · <b>${CE.length}</b> citation links · ${years[0]}–${years[years.length - 1]}`;
 }
 function refresh() { applyFilters(); updateStats(); if (!S.sel) overview(); if (S.view === 'table') renderTable(); draw(); }
-$('foot').innerHTML = `Papers listed on the <a href="https://camels.readthedocs.io/en/latest/publications.html" target="_blank" rel="noopener">CAMELS publications page</a> (all ${P.length} entries). Abstracts and authors from arXiv, or from ADS and the publications page for entries without an arXiv ID; ${D.nads ? 'citation counts from NASA ADS (Semantic Scholar where ADS has no record)' : 'citation counts from Semantic Scholar'}; SPECTER2 embeddings from Semantic Scholar; citation links between papers from ${D.refsrc && D.refsrc.ads ? `Semantic Scholar and ADS combined (${D.refsrc.both} in both, ${D.refsrc.s2} only in Semantic Scholar, ${D.refsrc.ads} only in ADS)` : 'Semantic Scholar'}; data as of ${D.fetched}. Topics are k-means clusters of the embeddings, named by hand. Suite, data and method tags were assigned with AI assistance from each abstract and have not all been checked by hand; dashed tags marked "?" are uncertain.`;
+const nSelf = CE.filter(e => e.self).length;
+$('foot').innerHTML = `Data as of ${D.fetched} · ${P.length} papers · <button class="linkbtn" id="aboutbtn" type="button">About &amp; data sources</button> · <a href="https://github.com/franciscovillaescusa/camels-atlas" target="_blank" rel="noopener">Source on GitHub</a>`;
+$('about-body').innerHTML = `
+  <h3>What this is</h3>
+  <p>Every entry on the <a href="https://camels.readthedocs.io/en/latest/publications.html" target="_blank" rel="noopener">CAMELS publications page</a> (${P.length} papers and theses), shown as a topic map, a citation network, a co-author network and a table. The site is rebuilt automatically every week.</p>
+  <h3>Data sources</h3>
+  <ul>
+    <li><b>Titles, abstracts, authors, dates:</b> arXiv; for entries without an arXiv ID, NASA ADS or the publications page itself. Theses without a known date get a year estimated from their position in the list (marked as estimated).</li>
+    <li><b>Citation counts:</b> ${D.nads ? 'NASA ADS (Semantic Scholar where ADS has no record)' : 'Semantic Scholar'}.</li>
+    <li><b>Citation links between CAMELS papers:</b> ${D.refsrc && D.refsrc.ads ? `Semantic Scholar and NASA ADS reference lists combined; a link counts if either has it (${D.refsrc.both} in both, ${D.refsrc.s2} only in Semantic Scholar, ${D.refsrc.ads} only in ADS)` : 'Semantic Scholar reference lists'}. Papers whose reference lists are in neither database say so in their panel.</li>
+    <li><b>Abstract embeddings:</b> SPECTER2, from Semantic Scholar.</li>
+  </ul>
+  <h3>How it is made</h3>
+  <ul>
+    <li><b>Topics:</b> k-means clusters of the embeddings, named by hand. New papers join the nearest topic, or "Unassigned" if they fit none.</li>
+    <li><b>Topic map:</b> in 2D, a t-SNE projection of the embeddings; in 3D, each paper pulled toward its 4 most similar papers. Positions are kept fixed as papers are added.</li>
+    <li><b>Most similar papers:</b> cosine similarity of the embeddings (word similarity for papers without one).</li>
+    <li><b>Tags</b> (suite, data, method): assigned with AI assistance from each abstract and not all checked by hand; dashed tags marked "?" are uncertain.</li>
+    <li><b>Self-citations:</b> a citation between papers that share at least one author (${nSelf} of ${CE.length} links); they can be hidden in the citation view.</li>
+    <li><b>Co-author links:</b> darker for closer collaborations; each shared paper counts 1/(number of authors − 1).</li>
+  </ul>
+  <p>Corrections are welcome: see the <a href="https://github.com/franciscovillaescusa/camels-atlas" target="_blank" rel="noopener">GitHub repository</a>.</p>`;
+const about = $('about');
+$('aboutbtn').addEventListener('click', () => { if (about.showModal) about.showModal(); else about.setAttribute('open', ''); });
+$('about-x').addEventListener('click', () => about.close ? about.close() : about.removeAttribute('open'));
+about.addEventListener('click', e => { if (e.target === about) about.close(); });
 
 // ---------- boot ----------
 renderLegend(); applyFilters(); renderPanel();
