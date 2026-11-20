@@ -37,7 +37,10 @@ recomputes every layout from scratch.
 
 Safety: before writing anything, the script checks that it found at least 90% as many papers as the
 previous build in --out, that arXiv returned >= 95% of the requested records and that >= 90% of
-entries have embeddings. If not, it stops without touching the page or the cache (--force overrides).
+entries have embeddings; after building, that the citation links, the links found by ADS and the
+papers with ADS citation counts did not drop by more than 10% from the current page (an API that fails
+part-way makes the build fall back silently). If a check fails it stops without touching the page or
+the cache (--force overrides). ADS requests are retried on rate limits, server errors and timeouts.
 
 Requirements: Python 3.9+, requests, numpy, scipy, scikit-learn.
 
@@ -206,13 +209,28 @@ def ads_token():
     return tok or None
 
 
-def ads_query(q, fl, rows=200):
+def ads_query(q, fl, rows=200, attempts=4):
+    """One ADS search. Rate limits (429), server errors (5xx), timeouts and dropped connections are
+    retried with growing waits (10, 20, 40 s); other errors (e.g. a bad token) fail at once."""
     tok = ads_token()
-    r = requests.get("https://api.adsabs.harvard.edu/v1/search/query", timeout=60,
-                     headers=dict(UA, Authorization=f"Bearer {tok}"), params={"q": q, "fl": fl, "rows": rows})
-    if r.status_code != 200:
-        raise RuntimeError(f"ADS HTTP {r.status_code}: {r.text[:200]}")
-    return r.json()["response"]["docs"]
+    for attempt in range(attempts):
+        last = attempt == attempts - 1
+        try:
+            r = requests.get("https://api.adsabs.harvard.edu/v1/search/query", timeout=60,
+                             headers=dict(UA, Authorization=f"Bearer {tok}"), params={"q": q, "fl": fl, "rows": rows})
+        except requests.RequestException as err:
+            if last:
+                raise RuntimeError(f"ADS request failed: {err}") from err
+            problem = type(err).__name__
+        else:
+            if r.status_code == 200:
+                return r.json()["response"]["docs"]
+            if r.status_code != 429 and r.status_code < 500 or last:
+                raise RuntimeError(f"ADS HTTP {r.status_code}: {r.text[:200]}")
+            problem = f"HTTP {r.status_code}"
+        wait = 10 * 2 ** attempt
+        log(f"ADS {problem}, retrying in {wait} s...")
+        time.sleep(wait)
 
 
 def fetch_ads_records(bibcodes):
@@ -320,6 +338,24 @@ def sanity_check(entries, arx, s2, prev_n):
     n_emb = sum(1 for p in s2 if p and p.get("embedding"))
     if n and n_emb < 0.9 * n:
         problems.append(f"Semantic Scholar embeddings for only {n_emb} of {n} entries (below 90%)")
+    return problems
+
+
+def compare_with_previous(data, prev, drop=0.9):
+    """Refuse to publish a page whose citation data collapsed compared with the current site. When an
+    API fails part-way, the build falls back silently (e.g. ADS down -> Semantic Scholar counts and no
+    ADS reference lists), so it would otherwise publish a site with far fewer links. Returns problems."""
+    if not prev:
+        return []
+    problems = []
+    def check(what, new, old, why):
+        if old >= 20 and new < drop * old:
+            problems.append(f"{what}: {new} now vs {old} on the current site (more than {round(100 * (1 - drop))}% fewer; {why})")
+    links = lambda d: sum(len(p["r"]) for p in d["papers"])
+    ads_links = lambda d: (d.get("refsrc") or {}).get("both", 0) + (d.get("refsrc") or {}).get("ads", 0)
+    check("citation links", links(data), links(prev), "did ADS or Semantic Scholar return partial reference lists?")
+    check("citation links found by ADS", ads_links(data), ads_links(prev), "did the ADS reference lists fail?")
+    check("papers with ADS citation counts", data["nads"], prev.get("nads", 0), "did the ADS citation query fail?")
     return problems
 
 
@@ -976,9 +1012,6 @@ def main():
         if not args.force:
             sys.exit(f"{msg}\nNothing was written. Rerun with --force if this is expected.")
         log(f"{msg}\n--force given: building anyway.")
-    for path, d in PENDING_CACHE.items():
-        with open(path, "w") as f:
-            json.dump(d, f)
 
     store = {}
     if os.path.exists(args.positions):
@@ -988,6 +1021,16 @@ def main():
     overrides = json.load(open(args.overrides)) if os.path.exists(args.overrides) else {}
     data, new_store = build_data(entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetched, args.tags, overrides,
                                  recluster=args.recluster)
+    problems = compare_with_previous(data, prev)
+    if problems:
+        msg = "\n  - ".join(["checks against the current site failed:"] + problems)
+        if not args.force:
+            sys.exit(f"{msg}\nNothing was written. Rerun with --force if this is expected.")
+        log(f"{msg}\n--force given: publishing anyway.")
+    # the downloads are kept only once both checks passed, so a failed fetch never replaces a good cache
+    for path, d in PENDING_CACHE.items():
+        with open(path, "w") as f:
+            json.dump(d, f)
     # same papers, citations and positions as the current page: keep its date, so nothing changes
     strip = lambda d: json.dumps({k: v for k, v in d.items() if k != "fetched"}, sort_keys=True)
     if prev and strip(prev) == strip(data):
