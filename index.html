@@ -141,7 +141,25 @@ footer { font-size: 12px; color: var(--muted); }
   aside { overflow: visible; }
   .modes button span { display: none; }
   .modes button { padding: 8px 12px; }
+  .legend { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+  .chip { flex: none; }
+  .tapcard:not([hidden]) { display: flex; }
 }
+@media (max-width: 600px) {
+  .field label[for^="f-"] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .toolbar .field:has(select[id^="f-"]) { flex: 1 1 30%; min-width: 0; }
+  .toolbar select[id^="f-"] { width: 100%; max-width: none; }
+  .search { flex-basis: 100%; max-width: none; }
+}
+@media (pointer: coarse) {
+  .zoom button { width: 40px; height: 40px; }
+  .chip, .ghost, .names button { min-height: 34px; }
+}
+.tapcard { display: none; position: absolute; left: 10px; right: 10px; bottom: 10px; gap: 10px; align-items: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; box-shadow: 0 4px 16px rgba(0,0,0,.12); }
+.tapcard .tt { flex: 1; min-width: 0; font-size: 13px; line-height: 1.35; color: var(--ink); overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.tapcard button { flex: none; }
 @media (min-width: 881px) { .modes button span.short { display: none; } }
 </style>
 <style>body{margin:0}</style>
@@ -188,6 +206,7 @@ footer { font-size: 12px; color: var(--muted); }
     <div class="stage-note" id="note"></div>
     <div class="tip" id="tip" hidden></div>
     <div class="tablewrap" id="tablewrap" hidden></div>
+    <div class="tapcard" id="tapcard" hidden><span class="tt" id="tapcard-t"></span><button class="ghost" id="tapcard-go">Details ↓</button><button class="ghost" id="tapcard-x" aria-label="Close">×</button></div>
   </div>
   <aside id="panel" aria-live="polite"></aside>
 </main>
@@ -327,7 +346,7 @@ let W = 0, H = 0, raf = 0;
 // ---------- zoom & pan (own small implementation: screen = (x, y) + k * world) ----------
 const T = { k: 1, x: 0, y: 0, applyX(v) { return this.x + this.k * v; }, applyY(v) { return this.y + this.k * v; } };
 const ZMIN = 0.05, ZMAX = 40;
-let zAnim = 0, zTarget = null;   // zTarget: where a running zoom animation will end
+let zAnim = 0, zTarget = null, userMoved = false;   // userMoved: stop auto-fitting once the user zooms or pans   // zTarget: where a running zoom animation will end
 function setView2(k, x, y) { T.k = k; T.x = x; T.y = y; hideTip(); draw(); }
 function animateTo(k, x, y, ms) {
   cancelAnimationFrame(zAnim);
@@ -348,7 +367,7 @@ function zoomAt(f, px, py, ms) {   // zoom by factor f keeping screen point (px,
   animateTo(k, px - (px - b.x) * r, py - (py - b.y) * r, ms);
 }
 cv.addEventListener('wheel', e => {
-  e.preventDefault();
+  e.preventDefault(); userMoved = true;
   const r = cv.getBoundingClientRect();
   zoomAt(Math.pow(2, -e.deltaY * (e.deltaMode ? 0.05 : 0.002)), e.clientX - r.left, e.clientY - r.top);
 }, { passive: false });
@@ -361,7 +380,7 @@ cv.addEventListener('pointermove', e => {
   if (pointers.size !== 2) return;
   const [a, b] = [...pointers.values()], r = cv.getBoundingClientRect();
   const d = Math.hypot(a[0] - b[0], a[1] - b[1]), mx = (a[0] + b[0]) / 2 - r.left, my = (a[1] + b[1]) / 2 - r.top;
-  if (pinch) zoomAt(d / pinch.d, mx, my);
+  if (pinch) { userMoved = true; zoomAt(d / pinch.d, mx, my); }
   pinch = { d };
 });
 const dropPointer = e => { pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null; };
@@ -514,7 +533,7 @@ cv.addEventListener('pointerdown', e => {
 cv.addEventListener('pointermove', e => {
   if (!rot || !e.buttons) return;
   if (pointers.size > 1) { rot.x = e.clientX; rot.y = e.clientY; dragged = true; return; }
-  if (S.dim === 2) { cancelAnimationFrame(zAnim); zTarget = null; T.x += e.clientX - rot.x; T.y += e.clientY - rot.y; }
+  if (S.dim === 2) { cancelAnimationFrame(zAnim); zTarget = null; userMoved = true; T.x += e.clientX - rot.x; T.y += e.clientY - rot.y; }
   else { CAM.yaw += (e.clientX - rot.x) * 0.008; CAM.pitch = Math.max(-1.45, Math.min(1.45, CAM.pitch + (e.clientY - rot.y) * 0.008)); }
   rot.x = e.clientX; rot.y = e.clientY; if (Math.hypot(e.clientX - rot.x0, e.clientY - rot.y0) > 4) dragged = true;
   hideTip(); draw();
@@ -619,7 +638,17 @@ panel.addEventListener('click', e => {
   else if (b.dataset.p) select({ kind: 'p', i: +b.dataset.p });
   else if (b.dataset.a) select({ kind: 'a', i: +b.dataset.a });
 });
-function select(s) { S.sel = s; renderPanel(); draw(); if (S.view === 'table') markTableSelection(); }
+function select(s) { S.sel = s; renderPanel(); draw(); if (S.view === 'table') markTableSelection(); tapCard(); }
+// narrow screens: the details panel is below the map, so show a small card on the map after a tap
+const narrow = () => matchMedia('(max-width: 880px)').matches;
+function tapCard() {
+  const c = $('tapcard');
+  if (!S.sel || !narrow() || S.view === 'table') { c.hidden = true; return; }
+  $('tapcard-t').textContent = S.sel.kind === 'p' ? P[S.sel.i].t : AU[S.sel.i].name + ' · ' + AU[S.sel.i].papers.length + ' papers';
+  c.hidden = false;
+}
+$('tapcard-go').addEventListener('click', () => { panel.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); });
+$('tapcard-x').addEventListener('click', () => { $('tapcard').hidden = true; });
 
 // ---------- table view (accessible alternative to the canvas views)
 const COLS = [
@@ -669,7 +698,7 @@ function setView(v, animate) {
   cv.tabIndex = 0;
   $('note').textContent = noteText(v);
   try { if (location.hash !== '#' + v) history.replaceState(null, '', '#' + v); } catch (e) {}
-  S.hover = null; hideTip(); fit(animate); if (!S.sel) overview(); draw(); updateStats();
+  S.hover = null; hideTip(); userMoved = false; fit(animate); if (!S.sel) overview(); draw(); updateStats(); tapCard();
 }
 document.querySelectorAll('.modes button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view, true)));
 window.addEventListener('hashchange', () => { const v = location.hash.slice(1); if (VIEWINFO[v] && v !== S.view) setView(v, true); });
@@ -690,7 +719,7 @@ $('zdim').addEventListener('click', () => {
   S.dim = S.dim === 3 ? 2 : 3;
   const b = $('zdim'); b.textContent = S.dim === 3 ? '2D' : '3D'; b.setAttribute('aria-label', `Switch to ${S.dim === 3 ? '2D' : '3D'} view`);
   $('zspin').hidden = S.dim === 2; CAM.snap = true;
-  $('note').textContent = noteText(S.view); S.hover = null; hideTip(); fit(false); if (!S.sel) overview(); draw();
+  $('note').textContent = noteText(S.view); S.hover = null; hideTip(); userMoved = false; fit(false); if (!S.sel) overview(); draw();
 });
 $('min2').addEventListener('change', e => { S.min2 = e.target.checked; fit(false); draw(); });
 $('selfc').addEventListener('change', e => {
@@ -709,9 +738,9 @@ $('reset').addEventListener('click', () => { S.q = ''; $('q').value = ''; S.y0 =
     .map(t => `<option value="${esc(t)}">${esc(t)} (${n(t)})</option>`).join('');
   sel.addEventListener('change', () => { S.tag[ax] = sel.value; refresh(); });
 });
-$('zin').addEventListener('click', () => zoomAt(1.5, W / 2, H / 2, 200));
-$('zout').addEventListener('click', () => zoomAt(1 / 1.5, W / 2, H / 2, 200));
-$('zfit').addEventListener('click', () => fit(true));
+$('zin').addEventListener('click', () => { userMoved = true; zoomAt(1.5, W / 2, H / 2, 200); });
+$('zout').addEventListener('click', () => { userMoved = true; zoomAt(1 / 1.5, W / 2, H / 2, 200); });
+$('zfit').addEventListener('click', () => { userMoved = false; fit(true); });
 const spinBtn = () => { const b = $('zspin'); b.textContent = CAM.spin ? '⏸' : '⟳'; b.setAttribute('aria-label', CAM.spin ? 'Pause rotation' : 'Start rotation'); b.setAttribute('aria-pressed', CAM.spin); };
 $('zspin').addEventListener('click', () => { CAM.spin = !CAM.spin; spinBtn(); });
 function updateStats() {
@@ -723,7 +752,7 @@ $('foot').innerHTML = `Papers listed on the <a href="https://camels.readthedocs.
 
 // ---------- boot ----------
 renderLegend(); applyFilters(); renderPanel();
-new ResizeObserver(() => { const first = !W; resize(); if (first) fit(false); }).observe(stage);
+new ResizeObserver(() => { resize(); if (!userMoved) fit(false); }).observe(stage);
 const mq = matchMedia('(prefers-color-scheme: dark)'); mq.addEventListener && mq.addEventListener('change', draw);
 new MutationObserver(draw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 const h = location.hash.slice(1); setView(VIEWINFO[h] ? h : 'topics', false);
