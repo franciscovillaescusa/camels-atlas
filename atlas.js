@@ -104,13 +104,16 @@ function cbSeries(axis) {   // tag values in config order, one colour each; the 
   const ax = axis === 'method' ? 'm' : 's', cnt = tg => P.filter(p => p.tg && p.tg[ax].includes(tg)).length;
   let names = (D.tagaxes[axis] || []).filter(tg => cnt(tg) > 0), small = [];
   if (axis === 'suite') { small = names.filter(tg => cnt(tg) < RARE_SUITE_MIN); names = names.filter(tg => cnt(tg) >= RARE_SUITE_MIN); }
+  // "No ML" is the absence of a method: it is drawn in the neutral grey, so the methods stand out
+  const neutral = axis === 'method' ? names.filter(tg => tg === 'No ML') : [];
+  names = names.filter(tg => !neutral.includes(tg));
   if (names.length > NCOLORS) {   // more tags than colours: the least used go to "Other" (filters still list them)
     const keep = new Set(names.slice().sort((a, b) => cnt(b) - cnt(a)).slice(0, NCOLORS));
     small = small.concat(names.filter(tg => !keep.has(tg)));
     names = names.filter(tg => keep.has(tg));
   }
   const slot = tg => { const i = names.indexOf(tg); return i >= 0 ? i : GREY; };
-  return { names, small, slot, ax };
+  return { names, small, neutral, slot, ax };
 }
 const CB = { method: cbSeries('method'), suite: cbSeries('suite') };
 const yMin = Math.min(...P.map(p => p.y)), yMax = Math.max(...P.map(p => p.y));
@@ -142,18 +145,31 @@ function colorOf(n, isP) {   // {fill, ring} for a node in the current color mod
   if (by === 'method' || by === 'suite') return { fill: a['cb_' + by] ? C.t[CB[by].slot(a['cb_' + by])] : C.t[10] };
   return { fill: C.t[a.topic] };
 }
+// the colour legend (Color by year / method / suite), bottom-left of the map; it can be collapsed to a chip,
+// remembered in this browser
+let keyOpen = true;
+try { keyOpen = localStorage.getItem('atlasKeyOpen') !== '0'; } catch (e) {}
+$('cbkey').addEventListener('click', e => {
+  if (!e.target.closest('.keytoggle')) return;
+  keyOpen = !keyOpen; try { localStorage.setItem('atlasKeyOpen', keyOpen ? '1' : '0'); } catch (err) {}
+  colorKey(); const t = $('cbkey').querySelector('.keytoggle'); if (t) t.focus();
+});
 function colorKey() {
   const k = $('cbkey'), by = S.colorBy;
   if (by === 'topic' || FLAT[S.view]) { k.hidden = true; return; }
+  const title = { year: 'Year', method: 'Method', suite: 'Suite' }[by];
+  k.classList.toggle('closed', !keyOpen); k.hidden = false;
+  if (!keyOpen) { k.innerHTML = `<button class="keytoggle" type="button" aria-expanded="false" title="Show the legend">Legend ▴</button>`; return; }
+  const head = `<div class="keyhead"><span>${title}</span><button class="keytoggle" type="button" aria-expanded="true" aria-label="Hide the legend" title="Hide the legend">–</button></div>`;
   if (by === 'year') {
-    k.innerHTML = `<div class="ramp"></div><div class="ends"><span>${yMin}</span><span>${yMax}</span></div><div class="hint">${S.view === 'coauthors' ? `Year of first ${NAME} paper` : 'Year of first appearance'}</div>`;
+    k.innerHTML = head + `<div class="ramp"></div><div class="ends"><span>${yMin}</span><span>${yMax}</span></div><div class="hint">${S.view === 'coauthors' ? `Year of first ${NAME} paper` : 'Year of first appearance'}</div>`;
   } else {
     const s = CB[by];
-    k.innerHTML = s.names.map(tg => `<div class="row"><i style="background:var(--t${s.slot(tg)})"></i>${esc(tg)}</div>`).join('') +
-      (s.small.length ? `<div class="row" title="${esc('Other: ' + s.small.join(', '))}"><i style="background:var(--t10)"></i>Other / none</div>` : `<div class="row"><i style="background:var(--t10)"></i>No tag</div>`) +
+    const grey = [...s.neutral, ...(s.small.length ? ['other'] : []), 'no tag'].join(' / ');   // e.g. "No ML / no tag"
+    k.innerHTML = head + s.names.map(tg => `<div class="row"><i style="background:var(--t${s.slot(tg)})"></i>${esc(tg)}</div>`).join('') +
+      `<div class="row"${s.small.length ? ` title="${esc('Other: ' + s.small.join(', '))}"` : ''}><i style="background:var(--t10)"></i>${esc(grey[0].toUpperCase() + grey.slice(1))}</div>` +
       `<div class="hint">${S.view === 'coauthors' ? 'Each author’s most frequent ' + by : 'First ' + by + ' tag; a ring shows a second one'}</div>`;
   }
-  k.hidden = false;
 }
 
 const PLAY = { on: false, timer: 0, upto: null, flash: null, total: 20000 };   // Play: ~20 s for the whole history
@@ -952,8 +968,8 @@ const TR = { by: 'topic' };
 function trendSeries() {
   if (TR.by === 'topic') return TOP.map((name, k) => ({ label: name, color: `var(--t${k})`, match: p => p.k === k,
     apply: () => { S.on = new Set([k]); renderLegend(); } })).filter(s => P.some(s.match));
-  const axis = TR.by, { names, small, slot, ax } = CB[axis];   // same colours and "Other" as Color by
-  const s = names.map(tg => ({ label: tg, color: `var(--t${slot(tg)})`, match: p => !!(p.tg && p.tg[ax].includes(tg)),
+  const axis = TR.by, { names, small, neutral, slot, ax } = CB[axis];   // same colours and "Other" as Color by
+  const s = [...names, ...neutral].map(tg => ({ label: tg, color: `var(--t${slot(tg)})`, match: p => !!(p.tg && p.tg[ax].includes(tg)),
     apply: () => { S.tag[ax] = tg; $('f-' + axis).value = tg; } }));
   if (small.length) s.push({ label: 'Other (' + small.join(', ') + ')', color: 'var(--t10)',
     match: p => !!(p.tg && small.some(tg => p.tg[ax].includes(tg))), apply: null });

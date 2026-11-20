@@ -86,7 +86,8 @@ select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; ba
   background: var(--surface); border: 1px solid var(--line); border-radius: 9px; box-shadow: 0 8px 24px rgba(0,0,0,.14); padding: 4px; }
 .dlmenu button { all: unset; padding: 7px 10px; border-radius: 6px; font-size: 13px; color: var(--ink); cursor: pointer; }
 .dlmenu button:hover, .dlmenu button:focus-visible { background: var(--wash); }
-.mapopts { position: absolute; left: 10px; top: 10px; z-index: 2; display: flex; flex-direction: column; gap: 4px; }
+.mapopts { position: absolute; left: 10px; bottom: 32px; z-index: 2; display: flex; flex-direction: column; gap: 4px; }   /* above the note */
+@media (max-width: 600px) { .mapopts { bottom: 46px; } }   /* the note wraps to two lines */
 .playbtn { padding: 5px 0; width: 32px; text-align: center; font-size: 12px; }
 .playbtn[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
 .playyear { position: absolute; right: 64px; bottom: 26px; font-family: var(--f-display); font-size: 48px; font-weight: 700; text-align: right;
@@ -100,6 +101,10 @@ select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; ba
 .cbkey .ramp { height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--seq0), var(--seq1)); }
 .cbkey .ends { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; }
 .cbkey .hint { color: var(--muted); }
+.cbkey .keyhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 600; color: var(--ink); }
+.cbkey .keytoggle { border: 0; background: none; color: var(--muted); font: inherit; padding: 0 2px; cursor: pointer; line-height: 1; }
+.cbkey .keytoggle:hover, .cbkey .keytoggle:focus-visible { color: var(--ink); }
+.cbkey.closed { padding: 3px 9px; }
 .mapopts .chk { background: color-mix(in srgb, var(--surface) 88%, transparent); border: 1px solid var(--line); border-radius: 8px; padding: 4px 9px; font-size: 12.5px; }
 .tablewrap { position: absolute; inset: 44px 0 0 0; overflow: auto; }
 .tablebar { position: absolute; left: 0; right: 0; top: 0; height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
