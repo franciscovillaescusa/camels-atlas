@@ -602,7 +602,7 @@ def similar_papers(sim, kind, n_best=5):
         own = kind[i] == "e"
         pool = np.where(own)[0] if own.sum() > 1 else np.arange(len(sim))  # compare like with like
         pool = pool[pool != i]
-        best = pool[np.argsort(-sim[i, pool])[:n_best]]
+        best = pool[np.argsort(-sim[i, pool], kind="stable")[:n_best]]   # stable: ties ordered the same on every platform
         out.append({"k": "e" if own.sum() > 1 else "w",
                     "l": [[int(j), round(float(sim[i, j]), 3)] for j in best]})
     return out

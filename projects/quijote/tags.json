@@ -954,7 +954,8 @@
  "2509.13207": {
   "title": "Parity in Composite-Field Galaxy Correlators",
   "suite": [
-   "Quijote (set not stated)",
+   "Fiducial",
+   "Quijote-Odd (parity-violating)",
    "Non-Quijote simulations"
   ],
   "data": [
@@ -968,7 +969,9 @@
    "No ML"
   ],
   "uncertain": [
-   "Non-Quijote simulations"
+   "Non-Quijote simulations",
+   "Quijote-Odd (parity-violating)",
+   "Fiducial"
   ]
  },
  "2509.08884": {
@@ -1663,7 +1666,7 @@
  "title:inspectingsignaturesofparityviolationwithangularredshiftfluctuations": {
   "title": "Inspecting signatures of parity violation with angular redshift fluctuations",
   "suite": [
-   "Quijote (set not stated)"
+   "Quijote-Odd (parity-violating)"
   ],
   "data": [
    "Galaxy mocks (HOD)",
@@ -1675,12 +1678,12 @@
    "No ML"
   ],
   "uncertain": [
-   "Quijote (set not stated)",
    "Galaxy mocks (HOD)",
    "Higher-order statistics",
    "Redshift space",
    "Weak lensing & 2D maps",
-   "No ML"
+   "No ML",
+   "Quijote-Odd (parity-violating)"
   ],
   "note": "No abstract available: tags guessed from the title only; please check."
  },
@@ -3533,7 +3536,7 @@
  "2306.11782": {
   "title": "Signatures of a Parity-Violating Universe",
   "suite": [
-   "Quijote (set not stated)"
+   "Quijote-Odd (parity-violating)"
   ],
   "data": [
    "Density fields",
