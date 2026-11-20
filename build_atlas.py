@@ -94,6 +94,11 @@ def configure(cfg):
     global NAME, PUBS_URL, SITE_URL, HOMEPAGE, GA_ID, N_TOPICS, UNASSIGNED
     global TOPICS, TOPIC_NAMES, TOPIC_SHORT, TOPIC_SEED, TAG_AXES
     NAME, PUBS_URL, SITE_URL, HOMEPAGE = cfg["name"], cfg["pubs_url"], cfg["site_url"], cfg["homepage"]
+    if not re.fullmatch(r"[\w .+-]+", NAME):   # it goes into page text, file names and the <title>
+        sys.exit(f"config: name {NAME!r} may use only letters, digits, spaces and . + -")
+    for key in ("pubs_url", "site_url", "homepage"):
+        if not re.match(r"https?://", cfg[key]):
+            sys.exit(f"config: {key} must be an http(s) address, not {cfg[key]!r}")
     GA_ID = cfg.get("ga_id", "")
     # (name, probe terms used to match the name to a k-means cluster)
     TOPICS = [(t["name"], t.get("probes", [])) for t in cfg["topics"]]
