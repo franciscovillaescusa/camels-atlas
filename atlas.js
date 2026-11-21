@@ -785,14 +785,15 @@ $('tapcard-go').addEventListener('click', () => { panel.scrollIntoView({ behavio
 $('tapcard-x').addEventListener('click', () => { $('tapcard').hidden = true; });
 
 // ---------- table view (accessible alternative to the canvas views)
+const tableMethods = p => (p.tg ? p.tg.m : []).filter(m => m !== 'No ML');
 const COLS = [
   { k: 't', label: 'Title', v: p => p.t, show: p => esc(p.t) + (p.nw ? ' <span class="newb">New</span>' : ''), cls: 'tt', html: true },
   { k: 'a', label: 'First author', v: p => p.au.length ? AU[p.au[0]].name : '', show: p => { const n = p.au.length ? AU[p.au[0]].name : '';
       return `<span title="${esc(n)}${p.au.length > 1 ? ` + ${p.au.length - 1} more` : ''}">${esc(n)}</span>`; }, cls: 'sm one', html: true },
   { k: 'y', label: 'Year', v: p => p.d, show: p => p.dq ? p.y + '*' : p.y, cls: 'num' },
-  { k: 'k', label: 'Topic', v: p => TOP[p.k], show: p => `<span title="${esc(TOP[p.k])}"><i style="background:var(--t${p.k})"></i>${esc((D.topicsShort || TOP)[p.k])}</span>`, cls: 'sm one', html: true },
-  { k: 'm', label: 'Methods', v: p => p.tg ? p.tg.m.join(', ') : '', show: p => { const m = p.tg ? p.tg.m.join(', ') : '';
-      return `<span title="${esc(m)}">${esc(m)}</span>`; }, cls: 'sm one', html: true },
+  { k: 'k', label: 'Topic', v: p => TOP[p.k], show: p => `<span title="${esc(TOP[p.k])}"><i style="background:var(--t${p.k})"></i>${esc((D.topicsShort || TOP)[p.k])}</span>`, cls: 'sm tp', html: true },
+  // methods as small tags; "No ML" (the absence of a method) is left out here (it stays in filters, panel, downloads)
+  { k: 'm', label: 'Methods', v: p => tableMethods(p).join(', '), show: p => tableMethods(p).map(m => `<span class="mtag">${esc(m)}</span>`).join(''), cls: 'sm mt', html: true },
   { k: 'c', label: 'Citations', v: p => p.cs === 2 ? -1 : p.c, show: p => p.cs === 2 ? '–' : p.c, cls: 'num', num: true },
   { k: 'ci', label: `In ${NAME}`, v: p => citeCount(p), cls: 'num', num: true },
 ];

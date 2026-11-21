@@ -142,8 +142,13 @@ select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; ba
 .ptable td.tt { min-width: 280px; color: var(--ink); line-height: 1.35; }
 .ptable td.sm { color: var(--ink-2); font-size: 12px; }
 .ptable td.one { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 145px; }
-@media (max-width: 1360px) { .ptable td.tt { min-width: 200px; } .ptable td.one { max-width: 120px; } }
+@media (max-width: 1360px) { .ptable td.tt { min-width: 200px; } .ptable td.one { max-width: 120px; } .ptable td.tp { min-width: 125px; } .ptable td.mt { min-width: 182px; max-width: 190px; } .ptable td.tt { min-width: 180px; } }
 .ptable tbody tr { cursor: pointer; }
+.ptable tbody tr:nth-child(even) { background: color-mix(in srgb, var(--ink) 4%, transparent); }   /* zebra; hover/selection below win */
+.ptable td.tp { min-width: 150px; max-width: 170px; line-height: 1.3; }
+.ptable td.mt { min-width: 190px; max-width: 215px; line-height: 1.2; }
+.mtag { display: inline-block; margin: 1px 4px 2px 0; padding: 0 6px; border: 1px solid var(--line); border-radius: 9px;
+  font-size: 11px; line-height: 15px; padding-top: 1px; padding-bottom: 1px; color: var(--ink-2); background: var(--surface); }   /* long names wrap inside the tag */
 .ptable tbody tr:hover { background: var(--wash); }
 .ptable tbody tr[aria-selected="true"] { background: var(--wash); box-shadow: inset 3px 0 0 var(--accent); }
 .ptable tbody tr:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
