@@ -429,6 +429,9 @@ function drawIslands(nodes, on, sx, sy, dim) {
     const tmp = document.createElement('canvas'); tmp.width = w; tmp.height = h;
     const tc = tmp.getContext('2d', { willReadFrequently: true });
     const R = sig * 2.6 / sc;
+    // dark mode: fainter outlines and fill (bright contours look busy on a dark background)
+    const dark = (s => (parseInt(s.slice(1, 3), 16) + parseInt(s.slice(3, 5), 16) + parseInt(s.slice(5, 7), 16)) / 3 < 100)(C.surface);
+    const LF = dark ? 0.5 : 1, FF = dark ? 0.8 : 1;
     for (let k = 0; k < TOP.length; k++) {
       if (/^Unassigned/.test(TOP[k])) continue;
       const mem = nodes.filter(n => on(n) && P[n.id].k === k);
@@ -446,8 +449,8 @@ function drawIslands(nodes, on, sx, sy, dim) {
       for (let p = 3; p < a.length; p += 4) {
         const v = a[p]; if (v < T1 - 10) continue;
         // soft fill (land, then a denser core) plus soft contour lines at both levels
-        const fill = 34 * smooth(T1 - 6, T1 + 6, v) + 28 * smooth(T2 - 10, T2 + 10, v);
-        const line = 150 * Math.max(0, 1 - Math.abs(v - T1) / 7) + 70 * Math.max(0, 1 - Math.abs(v - T2) / 9);
+        const fill = FF * (34 * smooth(T1 - 6, T1 + 6, v) + 28 * smooth(T2 - 10, T2 + 10, v));
+        const line = LF * (150 * Math.max(0, 1 - Math.abs(v - T1) / 7) + 70 * Math.max(0, 1 - Math.abs(v - T2) / 9));
         const al = Math.min(255, fill + line);
         if (al > od[p]) { od[p - 3] = rgb[0]; od[p - 2] = rgb[1]; od[p - 1] = rgb[2]; od[p] = al; }
       }

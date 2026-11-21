@@ -1134,6 +1134,14 @@ def build_data(proj, entries, arx, s2, ads_rec, ads_cit, ads_refs, store, fetche
     return data, new_store
 
 
+def favicon(name):
+    """Browser-tab icon: the first letter of the project name on a dark rounded square, as a data URI."""
+    letter = html_mod.escape(name.strip()[:1].upper() or "A")
+    svg = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#12151c"/>'
+           f'<text x="16" y="23" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="700" fill="#5b9cf0">{letter}</text></svg>')
+    return "data:image/svg+xml," + urllib.parse.quote(svg)
+
+
 # ----------------------------------------------------------------------------- link-preview image
 def make_preview(data, template, path, proj):
     """1200x630 image shown when the site link is shared: the 2D topic map plus title and counts.
@@ -1265,6 +1273,7 @@ def main():
     read = lambda path: open(path, encoding="utf-8").read()
     template = read(args.template).replace("__CSS__", read(base + ".css")).replace("__JS__", read(base + ".js"))
     template = template.replace("__NAME__", html_mod.escape(proj.name)).replace("__HOME__", html_mod.escape(proj.homepage))
+    template = template.replace("__ICON__", favicon(proj.name))
     html = template.replace("__DATA__", blob)
     # complete document: <head> with description, link-preview and analytics tags
     head, body = html.split("<header>", 1)

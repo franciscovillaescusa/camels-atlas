@@ -272,3 +272,11 @@ def test_s2_title_matches_are_kept_between_runs(B, monkeypatch):
 def test_recheck_days_spread(B):
     days = {B.recheck_days(f"title{i}") for i in range(200)}
     assert min(days) >= 30 and max(days) <= 59 and len(days) > 20
+
+
+def test_favicon(B):
+    import urllib.parse
+    for name, letter in (("CAMELS", "C"), ("Quijote", "Q"), ("x<y", "X")):
+        uri = B.favicon(name)
+        svg = urllib.parse.unquote(uri.split(",", 1)[1])
+        assert uri.startswith("data:image/svg+xml,") and f">{letter}</text>" in svg and "<y" not in svg
