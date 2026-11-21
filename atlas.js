@@ -723,6 +723,11 @@ function issueUrl(p) {
     `What is wrong?\n- [ ] Wrong topic\n- [ ] Wrong or missing tags\n- [ ] Missing or wrong citation links\n- [ ] Wrong date, authors or link\n- [ ] Other\n\nDetails (what should it be?):\n\n`);
 }
 const missingUrl = () => newIssue('Missing paper: ', `**Title:**\n**arXiv ID or DOI:**\n\nNote: the atlas lists the papers on the ${NAME} publications page (${PUBS}). If the paper is missing there too, it may need to be added to that page first.\n`);
+// a paper's authors: the first AU_SHOWN, then a "+N more" button that lists the rest (for that paper)
+const AU_SHOWN = 8; let auAll = -1;
+const authorList = p => { const all = auAll === p.i || p.au.length <= AU_SHOWN + 1, list = all ? p.au : p.au.slice(0, AU_SHOWN);
+  return `<div><h3>${p.au.length} author${p.au.length > 1 ? 's' : ''}</h3><div class="names">${list.map(a => `<button data-a="${a}">${esc(AU[a].name)}</button>`).join('')}${
+    all ? '' : `<button class="more" data-allau="${p.i}" aria-label="Show all ${p.au.length} authors">+${p.au.length - AU_SHOWN} more</button>`}</div></div>`; };
 function paperPanel(i) {
   const p = P[i];
   const venue = p.v && p.v !== p.lk ? `<span>${esc(p.v)}</span>` : '';
@@ -731,8 +736,8 @@ function paperPanel(i) {
     <h2>${esc(p.t)}</h2>
     <div class="meta">${safeUrl(p.url) ? `<a href="${esc(safeUrl(p.url))}" target="_blank" rel="noopener">${esc(p.lk)}</a>` : `<span>${esc(p.lk)}</span>`}<span>${p.dq ? esc(p.y) + ' (estimated from list position)' : esc(p.d)}</span>${venue}${p.bib ? `<a href="https://ui.adsabs.harvard.edu/abs/${encodeURIComponent(p.bib)}/abstract" target="_blank" rel="noopener">${p.c} citations (ADS)</a>` : `<span>${p.cs === 2 ? 'Citations unknown' : p.c + ' citations (Semantic Scholar)'}</span>`}</div>
     ${tagBlock(p)}
-    <div><h3>${p.au.length} author${p.au.length > 1 ? 's' : ''}</h3><div class="names">${p.au.map(a => `<button data-a="${a}">${esc(AU[a].name)}</button>`).join('')}</div></div>
     <div><h3>Abstract</h3>${p.ab && p.abx ? `<p class="abstract">${esc(p.ab)} … <a href="https://ui.adsabs.harvard.edu/abs/${encodeURIComponent(p.bib)}/abstract" target="_blank" rel="noopener">Read the full abstract on ADS</a></p>` : p.ab ? `<p class="abstract">${esc(p.ab)}</p>` : '<p>No abstract available. Use the link above to read the full text.</p>'}</div>
+    ${authorList(p)}
     ${p.sim && p.sim.l.length ? `<div><h3>Most similar papers <span style="text-transform:none;letter-spacing:0;font-weight:400">· by ${p.sim.k === 'e' ? 'abstract embedding (1 = identical)' : 'shared words (no embedding available)'}</span></h3><ul class="list">${p.sim.l.map(([j, s]) =>
       `<li><button data-p="${j}">${dot(P[j].k)}<span class="tt">${esc(P[j].t)}</span><span class="num">${s.toFixed(3)}</span></button></li>`).join('')}</ul></div>` : ''}
     <div><h3>${p.rm && !p.r.length ? 'Cites' : `Cites ${p.r.length} ${NAME} paper${p.r.length === 1 ? '' : 's'}`}</h3>${p.rm ? `<p class="tagnote">${p.r.length ? 'This list may be incomplete: ' : ''}The reference list of this ${p.lk && /thesis|project/i.test(p.lk) ? 'work' : 'paper'} is not yet available from ADS or Semantic Scholar${p.r.length ? '.' : `, so the ${NAME} papers it cites are unknown.`}</p>` : ''}${p.r.length ? `<ul class="list">${p.r.slice().sort((a, b) => P[b].d.localeCompare(P[a].d)).map(j => pItem(j, shares(j, p.i))).join('')}</ul>` : (p.rm ? '' : '<p>None found.</p>')}</div>
@@ -755,6 +760,10 @@ function authorPanel(i) {
 function renderPanel() { if (!S.sel) overview(); else if (S.sel.kind === 'p') paperPanel(S.sel.i); else authorPanel(S.sel.i); panel.scrollTop = 0; }
 panel.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.allau !== undefined) {   // "+N more" authors: list them all, focus the first newly shown one
+    const y = panel.scrollTop; auAll = +b.dataset.allau; renderPanel(); panel.scrollTop = y;
+    const nb = panel.querySelectorAll('.names button[data-a]')[AU_SHOWN]; if (nb) nb.focus({ preventScroll: true }); return;
+  }
   if (b.dataset.copy !== undefined) {
     track('atlas_copy_link', { kind: S.sel ? S.sel.kind : '' });
     const done = ok => { b.textContent = ok ? 'Copied ✓' : 'Copy failed'; setTimeout(() => { b.textContent = 'Copy link'; }, 1600); };
@@ -772,7 +781,18 @@ panel.addEventListener('click', e => {
   else if (b.dataset.p) select({ kind: 'p', i: +b.dataset.p });
   else if (b.dataset.a) select({ kind: 'a', i: +b.dataset.a });
 });
-function select(s) { S.sel = s; renderPanel(); draw(); if (S.view === 'table') markTableSelection(); tapCard(); writeHash(true); }
+// the side panel can be collapsed on wide screens (remembered in this browser); selecting something opens it
+let panelOpen = true;
+try { panelOpen = localStorage.getItem('atlasPanel') !== '0'; } catch (e) {}
+function setPanel(open) {
+  panelOpen = open; document.body.classList.toggle('nopanel', !open);
+  const t = $('paneltab'); t.textContent = open ? '›' : '‹'; t.setAttribute('aria-expanded', open);
+  t.title = t.ariaLabel = open ? 'Hide the side panel' : 'Show the side panel';
+  try { localStorage.setItem('atlasPanel', open ? '1' : '0'); } catch (e) {}
+}
+$('paneltab').addEventListener('click', () => setPanel(!panelOpen));
+setPanel(panelOpen);
+function select(s) { if (s && !panelOpen && !narrow()) setPanel(true); S.sel = s; renderPanel(); draw(); if (S.view === 'table') markTableSelection(); tapCard(); writeHash(true); }
 // narrow screens: the details panel is below the map, so show a small card on the map after a tap
 const narrow = () => matchMedia('(max-width: 880px)').matches;
 function tapCard() {

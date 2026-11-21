@@ -170,7 +170,14 @@ select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; ba
 .chip[aria-pressed="false"] i { background: transparent !important; box-shadow: inset 0 0 0 1.5px var(--muted); }
 .chip .n { color: var(--muted); font-variant-numeric: tabular-nums; }
 
-main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 12px; }
+main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 12px; position: relative; }
+/* the side panel can be collapsed on wide screens: a small tab on the edge between map and panel */
+.paneltab { position: absolute; top: 50%; right: 366px; transform: translate(50%, -50%); z-index: 3; width: 20px; height: 46px; padding: 0;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink-2); font-size: 15px; line-height: 1; cursor: pointer; }
+.paneltab:hover, .paneltab:focus-visible { color: var(--ink); border-color: var(--ink-2); }
+body.nopanel main { grid-template-columns: minmax(0, 1fr) 0; gap: 0; }
+body.nopanel aside { display: none; }
+body.nopanel .paneltab { right: 0; transform: translate(0, -50%); border-radius: 8px 0 0 8px; border-right: 0; }
 .stage { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; min-height: 420px; }
 canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
 canvas.hovering { cursor: pointer; }
@@ -214,6 +221,7 @@ a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: un
 .names { display: flex; flex-wrap: wrap; gap: 4px; }
 .names button { border: 1px solid var(--line); background: transparent; border-radius: 6px; padding: 2px 7px; font-size: 12.5px; cursor: pointer; color: var(--ink); }
 .names button:hover { background: var(--wash); border-color: var(--accent); }
+.names button.more { border-style: dashed; color: var(--accent); }
 .list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .list button { width: 100%; text-align: left; border: 0; background: transparent; padding: 7px 6px; border-radius: 6px; cursor: pointer;
   display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 9px; align-items: baseline; }
@@ -235,6 +243,8 @@ a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: un
 footer { font-size: 12px; color: var(--muted); }
 
 @media (max-width: 880px) {
+  .paneltab { display: none; }   /* the panel is below the map here */
+  body.nopanel main { grid-template-columns: minmax(0, 1fr); gap: 12px; } body.nopanel aside { display: block; }
   body { height: auto; }
   main { grid-template-columns: minmax(0, 1fr); }
   .stage { height: 62vh; min-height: 380px; }
