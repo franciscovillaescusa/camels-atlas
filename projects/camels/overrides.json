@@ -11,5 +11,25 @@
  "Leveraging Machine Learning and Hydrodynamic Simulations of Galaxy Formation to Illuminate the Effects of Incident Radiation Fields on Atomic Gas Cooling and Heating Functions": {
   "topic": "Unassigned (new papers)",
   "comment": "PhD thesis without abstract; the automatic topic (from its title) was wrong."
+ },
+ "2027NewA..13002638B": {
+  "topic": "Galaxy properties & CAMELS releases",
+  "comment": "was Unassigned; gas reservoirs and galaxy growth (approved 2026-11-21)"
+ },
+ "2609.17618": {
+  "topic": "Baryonic feedback: CGM, IGM, FRBs & SZ",
+  "comment": "was Unassigned; CMB spectral distortions: thermal SZ y from feedback (approved 2026-11-21)"
+ },
+ "2609.16194": {
+  "topic": "Baryonic feedback: CGM, IGM, FRBs & SZ",
+  "comment": "was Unassigned; CMB spectral distortions: thermal SZ y from feedback (approved 2026-11-21)"
+ },
+ "2026MLS&T...7c5014G": {
+  "topic": "Fast & differentiable simulators",
+  "comment": "was Unassigned; data compression, like the other compression paper in this topic (approved 2026-11-21)"
+ },
+ "2512.24422": {
+  "topic": "Field-level inference & graph networks",
+  "comment": "was Unassigned; foundation model on halo point clouds (CosmoBench) (approved 2026-11-21)"
  }
 }

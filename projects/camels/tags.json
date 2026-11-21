@@ -2313,5 +2313,270 @@
    "No ML"
   ],
   "uncertain": []
+ },
+ "2611.17299": {
+  "title": "Simulation-Based Priors and BAO Shifts from the Lyman-$α$ Forest at the Field Level",
+  "suite": [
+   "CAMELS (suite not stated)",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "3D fields",
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)"
+  ]
+ },
+ "2611.06333": {
+  "title": "Understanding galaxies and the origin of the golden mass through the study of scaling relations across cosmic history",
+  "suite": [
+   "IllustrisTNG",
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "IllustrisTNG"
+  ]
+ },
+ "2026PRXI....121001V": {
+  "title": "DENARIO Project: Deep Knowledge Artificial Intelligence Agents for Scientific Discovery",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "Other ML"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)",
+   "Power spectra & summary statistics"
+  ]
+ },
+ "2609.40239": {
+  "title": "Two bits about lossy compression: On the limits of compression in cosmology",
+  "suite": [
+   "N-body (dark matter only)",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "Particle snapshots",
+   "2D maps"
+  ],
+  "method": [
+   "Other ML"
+  ],
+  "uncertain": []
+ },
+ "2609.16194": {
+  "title": "Peering Beyond the Veil of Last Scattering: A View of the Universe with CMB Spectral Distortions",
+  "suite": [
+   "SIMBA"
+  ],
+  "data": [
+   "Synthetic observables"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "SIMBA"
+  ]
+ },
+ "2609.17618": {
+  "title": "FOSSIL: A future mission for CMB spectral distortion measurements",
+  "suite": [
+   "SIMBA"
+  ],
+  "data": [
+   "Synthetic observables"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2607.10983": {
+  "title": "Fast(er)PM and Moving Mesh: JAX-native Geometric Multigrid Methods",
+  "suite": [
+   "N-body (dark matter only)"
+  ],
+  "data": [
+   "Particle snapshots",
+   "3D fields"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2026A&C....5601095F": {
+  "title": "Exploring the potential of Quantum Graph Neural Networks in analyzing Large-Scale Structure of Universe",
+  "suite": [
+   "CAMELS-SAM"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Graph neural networks"
+  ],
+  "uncertain": [
+   "Halo & galaxy catalogs"
+  ]
+ },
+ "2602.04987": {
+  "title": "The Impact of Galaxy Formation on Galaxy Biasing, and Implications for Primordial non-Gaussianity Constraints",
+  "suite": [
+   "CAMELS-SAM"
+  ],
+  "data": [
+   "Halo & galaxy catalogs",
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2601.07543": {
+  "title": "CASCO: Cosmological and AStrophysical parameters from Cosmological simulations and Observations IV. Testing warm dark matter cosmologies with galaxy scaling relations: A joint simulation-observation study using DREAMS simulations",
+  "suite": [
+   "IllustrisTNG",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "IllustrisTNG"
+  ]
+ },
+ "2512.24422": {
+  "title": "OmniCosmos: Transferring Particle Physics Knowledge Across the Cosmos",
+  "suite": [
+   "CAMELS (suite not stated)",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "Other ML"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)"
+  ]
+ },
+ "2511.11787": {
+  "title": "Towards Mitigating Systematics in Large-Scale Surveys via Few-Shot Optimal Transport-Based Feature Alignment",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "2D maps"
+  ],
+  "method": [
+   "CNN",
+   "Other ML"
+  ],
+  "uncertain": [
+   "CNN"
+  ]
+ },
+ "2506.08086": {
+  "title": "Large, fast and accurate HI intensity maps with latent overlap diffusion",
+  "suite": [
+   "IllustrisTNG",
+   "N-body (dark matter only)"
+  ],
+  "data": [
+   "3D fields",
+   "Power spectra & summary statistics"
+  ],
+  "method": [
+   "Generative models",
+   "CNN"
+  ],
+  "uncertain": [
+   "IllustrisTNG"
+  ]
+ },
+ "2412.00217": {
+  "title": "CASCO: Cosmological and AStrophysical parameters from Cosmological simulations and Observations -- II. Constraining cosmology and astrophysical processes with early- and late-type galaxies",
+  "suite": [
+   "IllustrisTNG"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": []
+ },
+ "2408.00839": {
+  "title": "Inpainting Galaxy Counts onto N-Body Simulations over Multiple Cosmologies and Astrophysics",
+  "suite": [
+   "CAMELS (suite not stated)",
+   "N-body (dark matter only)"
+  ],
+  "data": [
+   "3D fields"
+  ],
+  "method": [
+   "Generative models"
+  ],
+  "uncertain": [
+   "CAMELS (suite not stated)",
+   "N-body (dark matter only)"
+  ]
+ },
+ "2205.05499": {
+  "title": "Cosmology with X-RAY galaxy cluster surveys ?",
+  "suite": [
+   "CAMELS (suite not stated)"
+  ],
+  "data": [
+   "Halo & galaxy catalogs",
+   "Synthetic observables"
+  ],
+  "method": [
+   "Other ML"
+  ],
+  "uncertain": [
+   "Halo & galaxy catalogs",
+   "Synthetic observables"
+  ]
+ },
+ "2112.15305": {
+  "title": "Properties beyond mass for unresolved haloes across redshift and cosmology using correlations with local halo environment",
+  "suite": [
+   "N-body (dark matter only)",
+   "Non-CAMELS simulations"
+  ],
+  "data": [
+   "Halo & galaxy catalogs"
+  ],
+  "method": [
+   "No ML"
+  ],
+  "uncertain": [
+   "N-body (dark matter only)",
+   "No ML"
+  ]
  }
 }
